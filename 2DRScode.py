@@ -12,8 +12,8 @@ def print_matrix(title, matrix):
 # SETUP & PARAMETERS
 # ---------------------------------------------------------
 k_rows, k_cols = 4, 6      # Original Data Matrix (4 rows x 6 cols = 24 bytes)
-row_nsym = 2                # Horizontal parity bytes (adds 2 cols -> n1 = 8)
-col_nsym = 2                # Vertical parity bytes (adds 2 rows -> n2 = 6)
+row_nsym = 3                # Horizontal parity bytes (adds 3 cols -> n1 = 9)
+col_nsym = 3                # Vertical parity bytes (adds 3 rows -> n2 = 7)
 
 row_rsc = reedsolo.RSCodec(row_nsym)
 col_rsc = reedsolo.RSCodec(col_nsym)
@@ -79,9 +79,14 @@ print("=" * 65)
 
 # Pass 1: Vertical Decoding (Fixes missing values along erased rows)
 for c in range(recovered.shape[1]):
+    # For each column, we know the erased row indices.
+    # If the current column is also an erased column, all its bytes are erasures.
+    current_erase_pos = erased_rows
+    if c in erased_cols:
+        current_erase_pos = list(range(recovered.shape[0]))
     try:
         # Pass copy of column with erased row index relative to column length
-        _, full_col, _ = col_rsc.decode(bytes(recovered[:, c]), erase_pos=erased_rows)
+        _, full_col, _ = col_rsc.decode(bytes(recovered[:, c]), erase_pos=current_erase_pos)
         recovered[:, c] = list(full_col)
     except reedsolo.ReedSolomonError:
         pass
@@ -91,8 +96,10 @@ print_matrix("STEP 5A: After Vertical Pass", recovered)
 # Pass 2: Horizontal Decoding (Fixes missing values along erased columns)
 for r in range(recovered.shape[0]):
     try:
-        # Pass copy of row with erased col index relative to row length
-        _, full_row, _ = row_rsc.decode(bytes(recovered[r, :]), erase_pos=erased_cols)
+        # After the vertical pass, we no longer treat columns as fully erased.
+        # Instead, we let the row decoder use its full power to find and fix
+        # any remaining errors (like the random byte flip).
+        _, full_row, _ = row_rsc.decode(bytes(recovered[r, :]))
         recovered[r, :] = list(full_row)
     except reedsolo.ReedSolomonError:
         pass
