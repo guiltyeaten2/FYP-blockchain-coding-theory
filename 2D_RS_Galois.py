@@ -4,36 +4,68 @@
     pip install galois
 
 Requires blob_generator.py in the same directory -- input data comes
-from bg.random_blob() (galois.GF.Random()-backed, statistically random,
-no seed), not a hardcoded message.
+from real application bytes, packed into blob(s) via
+bg.bytes_to_blobs() using the ACTUAL EIP-4844 packing convention (31
+usable bytes per 32-byte field element), not a hardcoded message and
+not raw unstructured field elements.
 
 Compared to the earlier small demo, this version:
   - Sizes the grid to Ethereum's actual FIELD_ELEMENTS_PER_BLOB = 4096
     (64x64), instead of an arbitrary 4x6.
   - Chunks arbitrary-length input into as many 4096-element blobs as
     needed, instead of assuming everything fits in one hardcoded matrix.
+  - Packs real application bytes at the real 31-bytes-per-element rate
+    (bg.bytes_to_blobs), instead of using raw random field elements as
+    stand-in data.
   - Encodes via NTT (galois.ntt), matching the O(n log n) mechanism
     real PeerDAS extension uses, instead of O(n*k) evaluation.
-  - Decodes via erasure-only interpolation, but inverts the recovery
-    matrix ONCE per pass and reuses it for every row/column in that
-    pass (all lines in a pass share the same erasure positions), which
-    is what keeps decode fast without a full NTT-based erasure decoder.
+  - Decodes via NTT-based erasure decoding (the same FFT erasure-code
+    recovery technique PeerDAS-style systems use -- see e.g.
+    https://ethresear.ch/t/reed-solomon-erasure-code-recovery-in-n-log-2-n-time-with-ffts/3039),
+    instead of classical Gaussian-elimination matrix inversion. Concretely,
+    per pass (all lines in a pass share the same erasure positions, so
+    the erasure-locator polynomial and its NTT are built ONCE and reused
+    for every row/column in that pass):
+        1. Build the erasure-locator polynomial Z(x), which is exactly
+           zero at every erased evaluation point, via ordinary
+           polynomial multiplication of monic linear factors (cheap:
+           degree = number of erasures).
+        2. NTT-evaluate Z(x) at all n points (galois.ntt) -- O(n log n).
+        3. For each line: multiply the received values (erasures already
+           zero) by Z's evaluations, POINTWISE -- this is an O(n) step
+           that stands in for the convolution "received(x) * Z(x)".
+        4. Inverse-NTT (galois.intt) that product back to coefficient
+           form -- O(n log n). Because Z vanishes exactly at the erased
+           points, this recovers the TRUE coefficients of
+           original_poly(x) * Z(x) with no aliasing (its degree is
+           always < n).
+        5. Divide that product by Z(x) (polynomial division) to recover
+           original_poly(x) directly -- this step is the one part of
+           decode that is NOT NTT-based here (see below).
+        6. Re-encode via NTT to fill in the full line, same as step 1
+           of encoding.
+  - Recovers the final blob purely via inverse NTT (galois.intt) rather
+    than by inverting a Vandermonde matrix, since by the time
+    extraction runs, every erasure has already been filled in by the
+    decode passes above.
 
 WHAT'S STILL A SIMPLIFICATION:
-  - Real blobs pack ~31 bytes per field element to stay under P; this
-    uses 1 byte/element for readability.
   - Real spec applies a bit-reversal permutation to the evaluation
     domain ordering; this version uses natural order. That matters for
     exactly which "half" of extended data maps to which peer/subnet in
     real PeerDAS, but doesn't affect whether recovery works.
-  - Decode here is the classical erasure-only approach (Gaussian
-    elimination), not a matching NTT-based erasure decoder so encode
-    is O(n log n) but decode is still effectively O(k^2) per line
-    (O(k^3) once per pass for the shared matrix inverse, O(k^2) per
-    line after that).
-
+  - Step 5 above (dividing the recovered product polynomial by the
+    erasure-locator polynomial) is done via ordinary polynomial long
+    division, not a Newton-iteration-based power-series inversion.
+    That means encode is a clean O(n log n) via NTT, and decode is
+    O(n log n) for the NTT/INTT calls plus the cost of that division
+    per line -- NOT the fully NTT-based O(n log^2 n) erasure decoder
+    real systems can use, but it is a genuine FFT-based erasure
+    decoder (multiply-by-locator + INTT + divide + re-NTT), not the
+    O(k^3)-matrix-inversion approach from the earlier version.
 """
 
+import os
 import galois
 import numpy as np
 import time
@@ -77,9 +109,10 @@ for n in (BLOB_ROWS, BLOB_COLS, EXT_ROWS, EXT_COLS):
 # ENCODE: NTT-based line extension
 # ---------------------------------------------------------------------------
 def encode_line(data_line, n_out):
-    """Treat data_line (length k) as polynomial coefficients, zero-pad to
-    n_out, and evaluate at all n_out roots of unity via NTT: O(n log n)
-    instead of the O(n*k) Vandermonde evaluation used in the small demo."""
+    """Treat data_line (length k) as polynomial coefficients (ascending,
+    index 0 = constant term), zero-pad to n_out, and evaluate at all
+    n_out roots of unity via NTT: O(n log n) instead of the O(n*k)
+    Vandermonde evaluation used in the small demo."""
     padded = [int(v) for v in data_line] + [0] * (n_out - len(data_line))
     evals = galois.ntt(padded, size=n_out, modulus=P)
     return np.array([int(v) for v in evals], dtype=object)
@@ -96,7 +129,7 @@ def encode_blob(data_matrix):
     return col_ext  # (EXT_ROWS, EXT_COLS)
 
 # ---------------------------------------------------------------------------
-# DECODE: erasure-only interpolation, shared matrix inverse per pass
+# DECODE: NTT-based erasure decoding, shared locator polynomial per pass
 # ---------------------------------------------------------------------------
 def root_of_unity(n, p):
     g = galois.primitive_root(p)
@@ -104,60 +137,86 @@ def root_of_unity(n, p):
     assert pow(a, n, p) == 1 and pow(a, n // 2, p) != 1
     return a
 
-def mat_inv_mod(A, p):
-    k = len(A)
-    M = [row[:] + [1 if i == j else 0 for j in range(k)] for i, row in enumerate(A)]
-    for col in range(k):
-        piv = next(r for r in range(col, k) if M[r][col] % p != 0)
-        M[col], M[piv] = M[piv], M[col]
-        inv = pow(M[col][col], p - 2, p)
-        M[col] = [(x * inv) % p for x in M[col]]
-        for r in range(k):
-            if r != col and M[r][col] % p != 0:
-                f = M[r][col]
-                M[r] = [(M[r][c] - f * M[col][c]) % p for c in range(2 * k)]
-    return [row[k:] for row in M]
+def build_erasure_locator(erased_positions, n, k, alpha, p):
+    """Build the erasure-locator polynomial Z(x), monic with a root at
+    alpha^i for every erased position i, plus its evaluations at all n
+    points (via NTT). Z(x) is zero EXACTLY at the erased points and
+    nonzero everywhere else, which is what makes step 5 in decode_pass
+    work: multiplying by Z "erases the erasures" regardless of what
+    arbitrary value sits in those slots.
 
-def matvec_mod(A, v, p):
-    return [sum(A[i][j] * v[j] for j in range(len(v))) % p for i in range(len(A))]
-
-def build_recovery_matrix(erased_positions, n, k, alpha, p):
-    """One matrix inverse, reused for every line in a pass since they all
-    share the same erased positions -- turns an O(lines * k^3) decode into
-    O(k^3 + lines * k^2)."""
-    surviving = [j for j in range(n) if j not in erased_positions][:k]
-    if len(surviving) < k:
+    Returns (Z_poly, Z_evals) or (None, None) if there are more
+    erasures than this pass can recover alone (i.e. more than n - k,
+    the redundancy budget) -- in that case the other pass is expected
+    to fill in enough of this axis first.
+    """
+    if len(erased_positions) > n - k:
         return None, None
-    A = [[pow(alpha, i * j, p) for i in range(k)] for j in surviving]
-    return mat_inv_mod(A, p), surviving
+    Z_poly = galois.Poly([1], field=GF)  # the constant polynomial 1
+    for i in erased_positions:
+        root = pow(alpha, i, p)
+        factor = galois.Poly([1, (-root) % p], field=GF)  # (x - root)
+        Z_poly = Z_poly * factor
+    Z_coeffs_desc = [int(c) for c in Z_poly.coeffs]       # highest degree first
+    Z_coeffs_asc = list(reversed(Z_coeffs_desc))           # constant term first
+    Z_padded = Z_coeffs_asc + [0] * (n - len(Z_coeffs_asc))
+    Z_evals = [int(v) for v in galois.ntt(Z_padded, size=n, modulus=p)]
+    return Z_poly, Z_evals
+
+def recover_line_ntt(received_line, Z_poly, Z_evals, n, k, p, label=""):
+    """Recover one erased line via the NTT erasure-decoding steps
+    described at the top of this file: pointwise-multiply by the
+    locator's evaluations, inverse-NTT, divide out the locator
+    polynomial, then re-encode (NTT) to fill in the full line."""
+    R = [int(v) for v in received_line]
+    G_evals = [(R[i] * Z_evals[i]) % p for i in range(n)]
+    prod_coeffs_asc = [int(v) for v in galois.intt(G_evals, size=n, modulus=p)]
+
+    Prod_poly = galois.Poly(list(reversed(prod_coeffs_asc)), field=GF)
+    quotient = Prod_poly // Z_poly
+    remainder = Prod_poly % Z_poly
+    rem_coeffs = [int(c) for c in remainder.coeffs]
+    if any(c != 0 for c in rem_coeffs):
+        print(f"  [{label}] WARNING: nonzero remainder recovering a line -- "
+              f"erasure pattern may exceed this pass's recoverable budget")
+
+    P_coeffs_desc = [int(c) for c in quotient.coeffs]
+    P_coeffs_asc = list(reversed(P_coeffs_desc))
+    if len(P_coeffs_asc) < k:
+        P_coeffs_asc = P_coeffs_asc + [0] * (k - len(P_coeffs_asc))
+    else:
+        P_coeffs_asc = P_coeffs_asc[:k]
+
+    return encode_line(P_coeffs_asc, n)
 
 def decode_pass(grid, axis, erased_positions, k, n, alpha, p, label=""):
     """axis=0: decode along columns (fixing a row-erasure). axis=1: decode
     along rows (fixing a column-erasure). Returns a new grid with every
-    recoverable line's first k coefficients reconstructed and
-    re-extended to full length n."""
+    recoverable line's erasures filled back in via NTT-based erasure
+    decoding. The erasure-locator polynomial and its NTT are built ONCE
+    per pass (all lines in a pass share the same erasure positions) and
+    reused for every line -- this is what keeps decode from redoing the
+    O(n log n) locator setup per line."""
     t0 = time.time()
-    Ainv, surviving = build_recovery_matrix(erased_positions, n, k, alpha, p)
-    t_inv = time.time() - t0
+    Z_poly, Z_evals = build_erasure_locator(erased_positions, n, k, alpha, p)
+    t_locator = time.time() - t0
     out = grid.copy()
-    if Ainv is None:
+    if Z_poly is None:
         print(f"  [{label}] cannot recover this axis alone "
-              f"(fewer than {k} surviving positions) -- skipping, "
+              f"(more than {n - k} erasures) -- skipping, "
               f"expecting the other pass to fix it")
         return out
     lines = range(grid.shape[1]) if axis == 0 else range(grid.shape[0])
     n_lines = len(list(lines))
     for i in (range(grid.shape[1]) if axis == 0 else range(grid.shape[0])):
         line = grid[:, i] if axis == 0 else grid[i, :]
-        b = [int(line[j]) for j in surviving]
-        coeffs = matvec_mod(Ainv, b, p)
-        fixed = encode_line(coeffs, n)
+        fixed = recover_line_ntt(line, Z_poly, Z_evals, n, k, p, label=label)
         if axis == 0:
             out[:, i] = fixed
         else:
             out[i, :] = fixed
     t_total = time.time() - t0
-    print(f"  [{label}] matrix inverse: {t_inv:.3f}s, "
+    print(f"  [{label}] locator build (NTT): {t_locator:.3f}s, "
           f"{n_lines} lines processed, total pass time: {t_total:.3f}s")
     return out
 
@@ -166,18 +225,23 @@ def decode_pass(grid, axis, erased_positions, k, n, alpha, p, label=""):
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("=" * 70)
-    print(" 2D REED-SOLOMON PRODUCT CODE -- BLOB SCALE, NTT-BASED")
+    print(" 2D REED-SOLOMON PRODUCT CODE -- BLOB SCALE, NTT ENCODE + DECODE")
     print("=" * 70)
 
-    print(f"\nRequesting one fully random blob from blob_generator "
-          f"(galois.GF.Random()-backed, no seed)...")
-    random_blob = bg.random_blob()
+    print(f"\nGenerating real application bytes and packing them into a blob "
+          f"the actual EIP-4844 way: {bg.USABLE_BYTES_PER_FIELD_ELEMENT} usable "
+          f"bytes per {bg.BYTES_PER_FIELD_ELEMENT}-byte field element "
+          f"({bg.USABLE_BYTES_PER_BLOB} usable bytes/blob), "
+          f"via bg.bytes_to_blobs() -- not raw random field elements.")
+    app_bytes = os.urandom(bg.USABLE_BYTES_PER_BLOB)  # exactly one blob's worth
+    random_blob = bg.bytes_to_blobs(app_bytes)[0]
     bg.validate_blob(random_blob)
     original_len = FIELD_ELEMENTS_PER_BLOB
     data_matrix = np.array(random_blob, dtype=object).reshape(BLOB_ROWS, BLOB_COLS)
-    print(f"  received {len(random_blob)} field elements, reshaped to "
+    print(f"  packed {len(app_bytes)} application bytes into "
+          f"{len(random_blob)} field elements, reshaped to "
           f"{BLOB_ROWS}x{BLOB_COLS}")
-    preview(data_matrix, "STEP 1: blob grid (random field elements, read as coefficients)")
+    preview(data_matrix, "STEP 1: blob grid (real packed bytes, read as coefficients)")
 
     print("\n--- STEP 2: ENCODING (NTT-based row then column extension) ---")
     t0 = time.time()
@@ -217,7 +281,7 @@ if __name__ == "__main__":
           f"budget is {EXT_COLS - BLOB_COLS} per row, plenty of room)")
     preview(corrupted, "corrupted grid")
 
-    print("\n--- STEP 5: ITERATIVE DECODING (two-pass product-code recovery) ---")
+    print("\n--- STEP 5: ITERATIVE DECODING (two-pass product-code recovery, NTT-based) ---")
     alpha_cols = root_of_unity(EXT_COLS, P)
     alpha_rows = root_of_unity(EXT_ROWS, P)
 
@@ -231,46 +295,58 @@ if __name__ == "__main__":
                              label="pass 2: horizontal (fixing erased columns)")
     preview(recovered, "after horizontal pass (should match STEP 3 exactly)")
 
-    print("\n--- STEP 6: EXTRACTION (invert BOTH transform stages, in reverse) ---")
+    print("\n--- STEP 6: EXTRACTION (inverse NTT, both stages, in reverse) ---")
     t0 = time.time()
 
     # encode_blob ran in two stages: row-encode then column-encode, so each
     # cell of `recovered` is a genuine 2D mix of the original data -- NOT
     # simply "row r's first 64 values = data row r". Undoing this requires
-    # two separate inversions, in reverse order of how encoding ran.
+    # two inverse-NTTs, in reverse order of how encoding ran. By this point
+    # `recovered` has NO remaining erasures (the two passes above already
+    # filled everything in), so this is a plain inverse NTT -- no locator
+    # polynomial or division needed here, unlike STEP 5.
 
-    # Stage A: undo the COLUMN extension. For each column, its 128 values
-    # are evaluations (along the ROW axis) of a degree<64 polynomial whose
-    # coefficients are exactly row_ext's values for that column. Solve
-    # using any 64 known row-positions.
-    Ainv_stageA, _ = build_recovery_matrix(
-        erased_positions=[], n=EXT_ROWS, k=BLOB_ROWS, alpha=alpha_rows, p=P
-    )
+    # Stage A: undo the COLUMN extension. Each column's 128 values are the
+    # NTT of a zero-padded-to-128 vector whose first 64 entries are
+    # row_ext's values for that column. Inverse-NTT and keep the first 64.
     row_ext_recovered = np.array(
-        [matvec_mod(Ainv_stageA, [int(v) for v in recovered[:BLOB_ROWS, c]], P)
-         for c in range(EXT_COLS)],
+        [
+            [int(v) for v in galois.intt(
+                [int(x) for x in recovered[:, c]], size=EXT_ROWS, modulus=P
+            )][:BLOB_ROWS]
+            for c in range(EXT_COLS)
+        ],
         dtype=object,
     ).T  # (EXT_COLS, BLOB_ROWS) stacked, then transposed -> (BLOB_ROWS, EXT_COLS)
 
-    # Stage B: undo the ROW extension. For each row of the now-recovered
-    # row_ext, its 128 values are evaluations (along the COLUMN axis) of a
-    # degree<64 polynomial whose coefficients are the true original data.
-    Ainv_stageB, _ = build_recovery_matrix(
-        erased_positions=[], n=EXT_COLS, k=BLOB_COLS, alpha=alpha_cols, p=P
-    )
+    # Stage B: undo the ROW extension. Each row of row_ext_recovered is the
+    # NTT of a zero-padded-to-128 vector whose first 64 entries are the
+    # true original data. Inverse-NTT and keep the first 64.
     data_out = np.array(
-        [matvec_mod(Ainv_stageB, [int(v) for v in row_ext_recovered[r, :BLOB_COLS]], P)
-         for r in range(BLOB_ROWS)],
+        [
+            [int(v) for v in galois.intt(
+                [int(x) for x in row_ext_recovered[r, :]], size=EXT_COLS, modulus=P
+            )][:BLOB_COLS]
+            for r in range(BLOB_ROWS)
+        ],
         dtype=object,
     )
     t_extract = time.time() - t0
-    print(f"  stage A (undo column-extension) + stage B (undo row-extension): "
-          f"{t_extract:.3f}s")
+    print(f"  stage A (inverse-NTT, undo column-extension) + "
+          f"stage B (inverse-NTT, undo row-extension): {t_extract:.3f}s")
 
     grid_match = bool(np.array_equal(np.array(encoded_grid, dtype=object),
                                       np.array(recovered, dtype=object)))
     data_match = bool(np.array_equal(np.array(data_matrix, dtype=object),
                                       np.array(data_out, dtype=object)))
+
+    print("\n--- STEP 7: REAL-WORLD ROUND TRIP (recovered blob -> application bytes) ---")
+    recovered_blob = [int(v) for v in data_out.reshape(-1)]
+    bg.validate_blob(recovered_blob)
+    recovered_bytes = bg.blob_to_bytes(recovered_blob)
+    bytes_match = recovered_bytes == app_bytes
+    print(f"  unpacked {len(recovered_bytes)} bytes via bg.blob_to_bytes(); "
+          f"matches original application bytes: {bytes_match}")
 
     print("\n" + "=" * 70)
     print(" RESULTS")
@@ -278,5 +354,7 @@ if __name__ == "__main__":
     print(f"Full encoded grid recovered exactly: {grid_match}")
     print(f"Original blob data recovered exactly: {data_match}  "
           f"({FIELD_ELEMENTS_PER_BLOB} field elements checked)")
+    print(f"Original application bytes recovered exactly: {bytes_match}  "
+          f"({len(app_bytes)} bytes checked)")
     print(f"\nTiming summary: encode {t_row + t_col:.3f}s, "
           f"decode+extract {t_extract:.3f}s (see per-pass lines above for the rest)")
