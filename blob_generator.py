@@ -1,5 +1,5 @@
 """
-Ethereum-standard blob generator.
+Ethereum-standard blob generator. based on EIP-4844 configuration: https://eips.ethereum.org/EIPS/eip-4844 
 
     pip install galois
 

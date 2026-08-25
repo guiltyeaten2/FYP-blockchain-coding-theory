@@ -1,6 +1,6 @@
 import numpy as np
 import galois
-
+import blob_generator 
 # ==============================================================================
 # STEP 1: PARAMETER SPECIFICATION
 # ==============================================================================
@@ -23,7 +23,7 @@ print(f"Global Code [n, k, d]: [{n}, {k}, {d}]")
 print(f"Local Codes [n0, k0, d0]: [{n0}, {k0}, {d0}]\n")
 
 # Field creation: Prime field F_11
-GF = galois.GF(11)
+GF = blob_generator.random_blob
 
 
 # ==============================================================================
