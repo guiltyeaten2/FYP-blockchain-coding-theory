@@ -1,0 +1,312 @@
+{
+  "rates": [
+    0.05,
+    0.15,
+    0.25,
+    0.35,
+    0.45
+  ],
+  "seed": 20260827,
+  "trials_per_rate": {
+    "1D-RS": 1,
+    "2D-RS": 3,
+    "BC": 10
+  },
+  "results": [
+    {
+      "scheme": "1D-RS",
+      "k": 4096,
+      "n": 8192,
+      "overhead": 2.0,
+      "encode_time_s": 0.4623,
+      "setup_time_s": 0.0,
+      "trials": [
+        {
+          "scheme": "1D-RS",
+          "rate": 0.05,
+          "n_erased": 419,
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 11.3896,
+          "decode_times_s": [
+            11.3896
+          ]
+        },
+        {
+          "scheme": "1D-RS",
+          "rate": 0.15,
+          "n_erased": 1252,
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 30.7462,
+          "decode_times_s": [
+            30.7462
+          ]
+        },
+        {
+          "scheme": "1D-RS",
+          "rate": 0.25,
+          "n_erased": 2079,
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 48.5337,
+          "decode_times_s": [
+            48.5337
+          ]
+        },
+        {
+          "scheme": "1D-RS",
+          "rate": 0.35,
+          "n_erased": 2957,
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 65.7153,
+          "decode_times_s": [
+            65.7153
+          ]
+        },
+        {
+          "scheme": "1D-RS",
+          "rate": 0.45,
+          "n_erased": 3696,
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 76.8473,
+          "decode_times_s": [
+            76.8473
+          ]
+        }
+      ]
+    },
+    {
+      "scheme": "2D-RS",
+      "k": 4096,
+      "n": 16384,
+      "overhead": 4.0,
+      "encode_time_s": 3.1431,
+      "setup_time_s": 0.0,
+      "trials": [
+        {
+          "scheme": "2D-RS",
+          "rate": 0.05,
+          "n_erased": 823,
+          "n": 16384,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 4.1513,
+          "decode_times_s": [
+            4.1421,
+            4.1325,
+            4.1795
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.15,
+          "n_erased": 2394,
+          "n": 16384,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 4.9295,
+          "decode_times_s": [
+            4.9511,
+            4.9324,
+            4.9051
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.25,
+          "n_erased": 4015,
+          "n": 16384,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 5.6032,
+          "decode_times_s": [
+            5.5694,
+            5.6677,
+            5.5724
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.35,
+          "n_erased": 5774,
+          "n": 16384,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 6.3123,
+          "decode_times_s": [
+            6.3186,
+            6.3256,
+            6.2928
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.45,
+          "n_erased": 7409,
+          "n": 16384,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "mean_decode_time_s": 10.4766,
+          "decode_times_s": [
+            10.3887,
+            10.6554,
+            10.3857
+          ]
+        }
+      ]
+    },
+    {
+      "scheme": "BC",
+      "k": 4096,
+      "n": 8192,
+      "overhead": 2.0,
+      "encode_time_s": 0.9173,
+      "setup_time_s": 0.9069,
+      "trials": [
+        {
+          "scheme": "BC",
+          "rate": 0.05,
+          "n_erased": 418,
+          "n": 8192,
+          "k": 4096,
+          "trials": 10,
+          "successes": 9,
+          "success_rate": 0.9,
+          "mean_decode_time_s": 0.14,
+          "decode_times_s": [
+            0.1424,
+            0.1284,
+            0.1352,
+            0.1474,
+            0.1407,
+            0.1451,
+            0.1351,
+            0.123,
+            0.1675,
+            0.1353
+          ]
+        },
+        {
+          "scheme": "BC",
+          "rate": 0.15,
+          "n_erased": 1267,
+          "n": 8192,
+          "k": 4096,
+          "trials": 10,
+          "successes": 0,
+          "success_rate": 0.0,
+          "mean_decode_time_s": 0.4416,
+          "decode_times_s": [
+            0.4174,
+            0.4584,
+            0.4178,
+            0.5082,
+            0.4689,
+            0.4315,
+            0.4388,
+            0.4294,
+            0.3714,
+            0.4742
+          ]
+        },
+        {
+          "scheme": "BC",
+          "rate": 0.25,
+          "n_erased": 2018,
+          "n": 8192,
+          "k": 4096,
+          "trials": 10,
+          "successes": 0,
+          "success_rate": 0.0,
+          "mean_decode_time_s": 1.3624,
+          "decode_times_s": [
+            1.6073,
+            1.5455,
+            1.3045,
+            1.3961,
+            1.3011,
+            1.3,
+            1.3645,
+            1.12,
+            1.4525,
+            1.2323
+          ]
+        },
+        {
+          "scheme": "BC",
+          "rate": 0.35,
+          "n_erased": 2868,
+          "n": 8192,
+          "k": 4096,
+          "trials": 10,
+          "successes": 0,
+          "success_rate": 0.0,
+          "mean_decode_time_s": 3.8725,
+          "decode_times_s": [
+            4.265,
+            4.2055,
+            3.487,
+            3.5777,
+            3.7897,
+            3.7462,
+            3.9601,
+            3.9954,
+            3.6233,
+            4.0749
+          ]
+        },
+        {
+          "scheme": "BC",
+          "rate": 0.45,
+          "n_erased": 3681,
+          "n": 8192,
+          "k": 4096,
+          "trials": 10,
+          "successes": 0,
+          "success_rate": 0.0,
+          "mean_decode_time_s": 8.8018,
+          "decode_times_s": [
+            8.8117,
+            8.8561,
+            8.4969,
+            9.3085,
+            9.0541,
+            8.8477,
+            8.9512,
+            8.3713,
+            9.1023,
+            8.2178
+          ]
+        }
+      ]
+    }
+  ]
+}
