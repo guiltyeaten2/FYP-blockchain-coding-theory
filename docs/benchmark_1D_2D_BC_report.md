@@ -522,13 +522,66 @@ not an immutable ranking of the three coding schemes.
 at every tested rate, well inside their formal ceilings. **BC collapses
 almost immediately**: one failure already at 5%, and *zero* successes out of
 ten independent trials at 15% and above, despite running at the identical
-2× overhead as 1D-RS. This was verified as real, not a fluke of one unlucky
-random draw: independent re-testing at rate 0.15 with different seeds
-produced both 5/5 successes (small `μ`) and 0/10 successes (blob-scale
-`μ=2048`) depending on scale, confirming it's a property of the decoder at
-this problem size, not a coincidence of one draw.
+2× overhead as 1D-RS.
 
-The mechanism is exactly the `DecCBC[2]` radius limitation described above:
+**An earlier version of this section attributed that collapse to an honest
+"stopping-set"-style decoder-radius limitation — a real, plausible-sounding
+mechanism, but not, on closer inspection, the one actually responsible for
+these numbers.** Revisiting it against this project's own cited literature
+(which expects BC to tolerate *more* erasures than 2D-RS, not far fewer)
+was reason enough to dig further rather than accept the first explanation
+that fit. What that dig found is a specific, traceable bug — not a
+fundamental property of BC codes, and not a benchmark artefact either.
+
+### What's actually happening: `dec_cbc_2` reports success on wrong data
+
+`dec_cbc_2` declares success by checking that no erasures remain flagged
+(`remaining` is empty) — it never re-checks the recovered values against
+anything. Comparing its output directly against the true codeword (not just
+trusting its own `remaining` flag) shows that at `ρ=2` it reports "fully
+resolved" while the data is **silently wrong**, in every one of the
+benchmark's failing trials — not an honest "stuck, couldn't finish" case at
+all.
+
+The root cause traces to one specific gap. Phase 2's pairwise decode checks
+only `0 < num_pair_erasures <= 2·ρ` — a count, not a rank check. That count
+can pass while the actual system is still unsolvable, if the erasures
+happen to concentrate on one side of the pair. A concrete instance,
+reproduced directly from a real trial: local blocks 117 and 118 are
+decoded jointly (3 erasures, within the `2·ρ = 4` budget), but all 3
+erased positions fall inside block 118's own exclusive window — block
+117's two parity-check equations contribute nothing to them at all. The
+real system therefore has rank 2 for 3 unknowns, not rank 3. `gf_solve`
+does not detect this: its Gaussian elimination simply never finds a pivot
+for the third column and leaves that unknown at its `GF.Zeros(...)`
+default of **zero**, without raising anything. `dec_cbc_2` then writes that
+zero into the codeword and clears its mask bit exactly as if it had been
+solved correctly. Five rounds later, a different block's decode used that
+same now-wrong position as trusted "known" input, corrupting its own
+result too — which is how one silent wrong value becomes a codeword
+that's extensively wrong rather than missing a few isolated symbols.
+
+This also explains the parameter-scan result below more precisely than
+"more local redundancy helps": re-running it with the recovered values
+actually checked against ground truth (not just `remaining`), `ρ=8` and
+`ρ=32` give **exact** recovery at the same 15% rate, `ρ=2` doesn't. That's
+consistent with a bug whose trigger — erasures concentrated past one
+block's own budget while the raw pair-count check still passes — gets
+rarer as each block's own budget grows, not proof that BC inherently needs
+bigger blocks to be competitive.
+
+**The benchmark itself handled this correctly.** `benchmark_1D_2D_BC.py`
+never trusts `dec_cbc_2`'s own success signal — its `blob_matches()` check
+verifies the actual recovered bytes round-trip to the original application
+data. That's precisely what caught this: a benchmark that trusted
+`remaining` the way `dec_cbc_2` trusts it would have reported a false
+100% success rate for BC instead of the real 0/10.
+
+The diagram below illustrates a *different*, genuinely honest failure mode
+this decoder can also hit — erasures spread so no single block or adjacent
+pair ever falls within budget, correctly left unresolved rather than wrong.
+It remains a real possibility worth knowing about, but it is not what
+produced the results above; the rank-deficient silent-zero-fill bug is.
 
 <figure>
 <svg viewBox="0 0 720 340" role="img" aria-label="Three consecutive local blocks each with 3 of 4 symbols erased: too many for any single block, and too many for either adjacent pair, so this decoder can never resolve them even though most of the codeword is fine">
@@ -581,40 +634,54 @@ The mechanism is exactly the `DecCBC[2]` radius limitation described above:
 <figcaption>Three consecutive local blocks (A, B, C) each with 3 of 4 symbols erased. No single block and no adjacent pair falls within DecCBC[2]'s budget, so these erasures stay unresolved forever — even though every other block in the codeword is perfectly healthy. This is the exact mechanism behind BC's success-rate collapse in the benchmark.</figcaption>
 </figure>
 
-At `μ=2048` independent local blocks, i.i.d. random erasure at even modest
-rates makes it likely that *some* run of three or more consecutive blocks
-collectively exceeds what any single block or adjacent pair can resolve —
-and this decoder never looks further than one neighbour. Once that happens,
-those blocks are stuck permanently, regardless of how healthy the rest of
-the 8192-symbol codeword is.
+At `μ=2048` independent local blocks, this bug's trigger condition
+(erasures concentrated past one side's own `ρ`-equation budget, while the
+raw pair-total count check still passes) gets many independent chances to
+occur, and once it does, the wrong value it writes propagates into every
+later block that treats it as trusted input. That is a real, reproducible
+weakness of *this implementation* — not evidence about what BC codes can
+achieve under a correct decoder.
 
-**This is a decoder limitation, not necessarily a limitation of BC codes
-themselves.** The literature this project is drawing on (Sasidharan,
-Viterbo, and Feist) expects BC codes to sit in the *intermediate* region
-between 1D-RS and 2D-RS in erasure tolerance — which implies a
-sufficiently powerful decoder should do substantially better than a
-radius-2 heuristic. The gap between "what BC code can theoretically
-tolerate" and "what `DecCBC[2]` actually achieves" is itself a legitimate,
-citable finding for the report: it says something specific and useful about
-*decoder design*, not just about the code.
+**This is a decoder bug, not a limitation of BC codes themselves.** The
+literature this project is drawing on (Sasidharan, Viterbo, and Feist)
+expects BC codes to sit in the *intermediate* region between 1D-RS and
+2D-RS in erasure tolerance, and — separately — reports BC allowing for a
+*much higher* number of tolerable erasures than 2D-RS, not far fewer. A
+benchmark result running directly opposite to that expectation was itself
+the reason to keep digging rather than accept "the decoder is just weak"
+as the final answer. The gap between "what BC code can theoretically
+tolerate" and "what this specific, buggy `DecCBC[2]` achieves" is not
+closeable by re-tuning parameters alone — it needs the underlying
+correctness issue fixed first.
 
 ## What this means for the report, and options going forward
 
 - As a **documented finding**: BC code, as currently decoded, is not yet
-  competitive with 1D-RS/2D-RS on reliability at blob scale, despite
-  matching 1D-RS's overhead and beating both on raw decode speed at low
-  erasure rates. This is a real, defensible result for the comparative
-  framework the report's Phase 2/3 methodology calls for.
-- As a **next step**: `dec_cbc_2` could be extended to try wider windows
-  (three or more consecutive blocks, not just adjacent pairs) to see how
-  much of the gap to 1D-RS/2D-RS's reliability that closes, and at what
-  cost to decode time. That is a real algorithm change to a file a
-  teammate is actively iterating on (`BCcodeEthereum.py`), so it's worth
-  agreeing on before making it, rather than changing it unilaterally.
+  competitive with 1D-RS/2D-RS on reliability at blob scale — but the
+  reason is a specific, fixable correctness bug in `dec_cbc_2` (see
+  above), not evidence about BC codes' actual erasure-tolerance ceiling,
+  which the cited literature expects to be *better* than 2D-RS's, not
+  worse. That distinction matters for how this result should be cited in
+  the report: as "this implementation has a bug" rather than "BC codes
+  underperform."
+- As a **next step**, two independent, scoped fixes, both in
+  `BCcodeEthereum.py`: (1) `gf_solve` should detect when a column never
+  received a pivot (rank-deficient / inconsistent system) and signal that
+  rather than silently returning zero for it; (2) `dec_cbc_2`'s Phase 2
+  should catch that signal and skip the pair (leaving it honestly
+  unresolved, as its existing `try/except` already intends to do for
+  singular systems) rather than writing a wrong value. That would turn
+  today's silent-corruption failures into the honest "stays unresolved"
+  failures the diagram above illustrates — a strictly weaker and more
+  defensible failure mode, and a fair basis for then asking whether
+  `DecCBC[2]`'s radius is *also* worth extending. Since this touches a
+  file a teammate is actively iterating on, worth agreeing on before
+  changing it unilaterally.
 - Either way, the benchmark itself (`benchmark_1D_2D_BC.py`) doesn't need
-  to change to accommodate a future, stronger BC decoder — the adapter
-  pattern means swapping in a new `dec_cbc_2` is enough to re-run the exact
-  same comparison.
+  to change to accommodate a fixed `dec_cbc_2` — the adapter pattern means
+  swapping in a corrected version is enough to re-run the exact same
+  comparison, and its byte-level correctness check (not just trusting
+  `remaining`) is exactly what will confirm whether the fix worked.
 
 ## Appendix: reproducing this
 
