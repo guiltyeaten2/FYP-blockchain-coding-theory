@@ -16,15 +16,34 @@ GF_BLS12_381 = GF
 # ==============================================================================
 # HELPER: GALOIS FIELD LINEAR SYSTEM SOLVER (F_q)
 # ==============================================================================
-def gf_solve(A, b):
+class GFSolveError(ValueError):
+    """Raised when A * x = b has no unique solution over GF(p).
+
+    This matters more than it looks: the previous version of gf_solve
+    returned zero for any unknown whose column never received a pivot,
+    which is indistinguishable (to the caller) from having genuinely
+    solved for zero. A decoder built on top of that will happily write
+    those zeros into the codeword and clear the erasure flags, reporting
+    success on data it never recovered.
+    """
+
+
+def gf_solve(A, b, require_unique=True):
     """
     Solves A * x = b over GF(p) using Gaussian elimination (full pivoting).
-    
+
     Args:
         A: GF matrix of shape (m, n)
         b: GF vector of shape (m,)
+        require_unique: when True (default), raise GFSolveError unless the
+            system has exactly one solution -- i.e. every column received a
+            pivot (not underdetermined) and no row reduced to 0 = nonzero
+            (not inconsistent). Callers that genuinely want a particular
+            solution of an underdetermined system must opt out explicitly.
     Returns:
         x: GF vector of shape (n,)
+    Raises:
+        GFSolveError: if require_unique and the solution is not unique.
     """
     A = A.copy()
     b = b.copy()
@@ -64,6 +83,25 @@ def gf_solve(A, b):
 
         col_map.append((row, col))
         row += 1
+
+    if require_unique:
+        # Inconsistent: a row reduced to 0 = nonzero has no solution at all.
+        pivot_rows = {r for r, _ in col_map}
+        for r in range(m):
+            if r in pivot_rows:
+                continue
+            if not np.any(A[r, :] != 0) and b[r] != 0:
+                raise GFSolveError(
+                    f"inconsistent system: row {r} reduced to 0 = {int(b[r])}")
+        # Underdetermined: an unknown whose column never received a pivot is
+        # NOT determined by these equations. Returning zero for it would be a
+        # fabricated value, so refuse instead.
+        if len(col_map) < n:
+            missing = sorted(set(range(n)) - {c for _, c in col_map})
+            raise GFSolveError(
+                f"underdetermined system: {len(missing)} of {n} unknown(s) "
+                f"have no pivot (columns {missing[:8]}) -- rank "
+                f"{len(col_map)} < {n} unknowns")
 
     # Extract solution: only pivot columns have values; others remain zero
     x = GF_BLS12_381.Zeros(n)
@@ -278,9 +316,15 @@ def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho):
                 H_k = H_local_sub[:, known_pos]
                 r_k = r[[indices[p] for p in known_pos]]
 
-                # Solve H_e * r_e = - H_k * r_k
+                # Solve H_e * r_e = - H_k * r_k. With <= rho erasures and rho
+                # parity rows drawn from distinct GRS evaluation points this
+                # is always uniquely solvable, but the solve is guarded anyway
+                # so a parameter change can never silently fabricate values.
                 syndrome = -H_k @ r_k
-                r_e = gf_solve(H_e[:, :num_local_erasures], syndrome)
+                try:
+                    r_e = gf_solve(H_e, syndrome)
+                except GFSolveError:
+                    continue   # leave this block's erasures flagged
 
                 # Fill recovered values
                 for idx_e, val in zip(erased_pos, r_e):
@@ -302,6 +346,15 @@ def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho):
                 pair_mask = mask[combined_indices]
                 num_pair_erasures = np.sum(pair_mask)
 
+                # NOTE: `<= 2*rho` is necessary but NOT sufficient. These four
+                # rows are block i's own rho parity checks stacked on block
+                # i+1's -- not the auxiliary [2(w+p), 2w, 2p+1] GRS code over
+                # the union of the two supports that the source paper's
+                # Algorithm 1 builds. The stacked form is not MDS, so a split
+                # like "3 erasures inside block i's support, 1 inside i+1's"
+                # leaves block i's 2 equations facing 3 unknowns. gf_solve now
+                # raises on exactly that case and the pair is skipped, rather
+                # than zero-filling the undetermined positions.
                 if 0 < num_pair_erasures <= 2 * rho:
                     # Rows of H_BC corresponding to the two local blocks
                     rows_pair = list(range(i * rho, (i + 1) * rho)) + \
@@ -318,14 +371,19 @@ def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho):
                     syndrome = -H_k @ r_k
                     try:
                         r_e = gf_solve(H_e, syndrome)
-                        for idx_e, val in zip(erased_pos, r_e):
-                            global_idx = combined_indices[idx_e]
-                            r[global_idx] = val
-                            mask[global_idx] = False
-                        progress = True
-                        break   # restart from Phase 1 after successful pair decode
-                    except Exception:
-                        continue  # try next pair
+                    except GFSolveError:
+                        continue   # this pair is not jointly determined; leave it
+                    for idx_e, val in zip(erased_pos, r_e):
+                        global_idx = combined_indices[idx_e]
+                        r[global_idx] = val
+                        mask[global_idx] = False
+                    progress = True
+                    # Continue scanning the remaining pairs in this same pass.
+                    # The previous version broke out to restart Phase 1 after
+                    # every single pair fixed, paying a full O(mu) rescan per
+                    # recovered pair -- which is why round counts ran into the
+                    # hundreds. Each pair re-reads the live mask, so fixing
+                    # several per pass is equivalent and far cheaper.
 
     print(f"Decoder finished in {iterations} iterations.")
     return r, mask

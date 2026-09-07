@@ -34,25 +34,59 @@ shape, reported as a result, not forced equal):
             per-axis-doubling tradeoff (see 2D_RS_Galois.py's docstring
             and docs/1D_vs_2D_RS_comparison.md); not a real PeerDAS ratio.
 
-WHY MULTIPLE TRIALS PER RATE, NOT JUST ONE:
-1D-RS and 2D-RS decode via a formal erasure-budget check (build_erasure_
-locator / decode_pass): any pattern within budget succeeds with certainty,
-any pattern over budget fails with certainty -- a single trial at a rate
-comfortably below the ceiling is representative of every trial at that
-rate. BC's DecCBC[2] decoder is NOT like this: it only resolves erasures
+WHY THE RATE SWEEP NOW CROSSES EACH SCHEME'S OWN CEILING, NOT JUST
+APPROACHES IT (methodology revision -- see docs/benchmark_1D_2D_BC_report.md
+for the full writeup):
+An earlier version of this sweep stopped at rate=0.45, comfortably inside
+every scheme's formal erasure budget (1D-RS/BC: n-k=k, i.e. rate=0.50;
+2D-RS: 50% per line, with cross-axis rescue on top). That is a real gap,
+not a stylistic choice: it means the sweep could report "1D-RS and 2D-RS
+both succeed at every tested rate" without ever actually finding out where
+either one stops succeeding, or whether 2D-RS's iterative cross-axis
+rescue buys it any real headroom past 1D-RS's hard single-shot ceiling --
+which is the project's central hypothesis about 2D-RS's advantage, and it
+was going untested. RATES now adds a fine-grained band (0.46-0.55)
+straddling the 50% boundary for exactly this reason: below it, an i.i.d.
+erasure mask at the nominal rate almost always draws fewer than n-k
+erased cells and decode is deterministic; at/above it, binomial sampling
+variance in the ACTUAL erased count (not just the nominal rate) starts to
+matter -- a mask drawn at rate=0.49 can, by chance, still exceed the n-k
+budget, and one drawn at rate=0.51 can, by chance, still fall under it.
+That is a genuine per-trial probability, not a certainty, for ALL THREE
+schemes near their own boundary -- which is why trial counts below are now
+a function of (scheme, rate), not a flat per-scheme constant.
+
+WHY TRIAL COUNTS ARE A FUNCTION OF (SCHEME, RATE), NOT A FLAT CONSTANT:
+Deep inside a scheme's safe zone (well under its erasure budget), 1D-RS
+and 2D-RS decode via a formal budget check (build_erasure_locator /
+decode_pass): any pattern within budget succeeds with certainty, any
+pattern over budget fails with certainty, so one trial is genuinely
+representative of every trial at that rate -- more trials there would just
+burn runtime confirming the same deterministic outcome. That stops being
+true near the boundary (see above), where trial counts step up sharply
+(see `trials_for()`) to actually characterise the transition rather than
+sample it once and call it representative. BC's DecCBC[2] decoder is
+different in kind, not just near a boundary: it only resolves erasures
 within a single local block (<=rho) or a pair of ADJACENT local blocks
-(<=2*rho) at a time. At mu=2048 independent blocks, i.i.d. random erasure
-at a given rate can -- purely by chance -- cluster more than 2*rho
-erasures across a run of 3+ consecutive blocks, which this decoder has no
+(<=2*rho) at a time, so at mu=2048 independent blocks, i.i.d. random
+erasure at ANY rate can -- purely by chance -- cluster more than 2*rho
+erasures across 3+ consecutive blocks, which this decoder has no
 mechanism to resolve. This was observed directly during development: at
 rate=0.15, one random mask failed (erasures remained unresolved) while a
 different random mask at the SAME rate succeeded 5/5. That makes BC's
-recoverability a per-trial PROBABILITY at a given rate, not a certainty,
-so it needs repeated trials to characterise -- unlike the other two,
-where one trial is representative. BC's decode is cheap (sub-10s even at
-high rates), so this is affordable; 1D-RS's decode is the expensive one
-(its cost is discussed in docs/1D_vs_2D_RS_comparison.md), so it keeps a
-single trial per rate to keep total runtime reasonable.
+recoverability a per-trial probability at every rate, not just near a
+ceiling, so it keeps a flat, comparatively high trial count throughout.
+BC's decode is cheap (sub-10s even at high rates), so this is affordable;
+1D-RS's decode is the expensive one (its cost is discussed in
+docs/1D_vs_2D_RS_comparison.md) and its per-trial cost peaks almost
+exactly at its own boundary (division cost ~ O((n-e)*e), maximised at
+e=n/2=n-k) -- the worst possible place to also want more trials -- so its
+trial counts stay the most conservative of the three even in the
+boundary band.
+
+Every success_rate reported below is also given a 95% Wilson score
+confidence interval (see `wilson_ci()`), computed from its own trial
+count -- so a "0/1" and a "0/10" no longer look like the same claim.
 
 This script imports 1D_RS_Galois.py / 2D_RS_Galois.py / BCcodeEthereum.py
 as libraries (their own demos stay behind `if __name__ == "__main__":` and
@@ -108,14 +142,55 @@ BC_OMEGA, BC_RHO, BC_LAMBDA = bc.omega, bc.rho, bc.lambda_
 BC_MU = bc.mu
 assert BC_MU * BC_OMEGA == K, "BC parameters must span exactly one blob's worth of message symbols"
 
-RATES = [0.05, 0.15, 0.25, 0.35, 0.45]
+RATES = [0.05, 0.08, 0.10, 0.12, 0.15, 0.25, 0.35,
+         0.45, 0.48, 0.50, 0.52, 0.55, 0.58, 0.60]
 RNG_SEED = 20260827  # fixed seed -> reproducible sweep across runs
 
-# Trials per rate, per scheme. 1D-RS/2D-RS decode deterministically against
-# a formal budget (see module docstring), so 1 trial is representative;
-# BC's decoder is probabilistic at a given rate, so it gets more trials to
-# produce a meaningful success-rate estimate.
-TRIALS_PER_RATE = {"1D-RS": 1, "2D-RS": 3, "BC": 10}
+# Each scheme's OWN empirical transition point -- these are NOT all 0.50.
+#
+#   1D-RS: n-k = k, and RS is MDS, so it succeeds iff the drawn erasure
+#          count is <= n-k. Transition sits exactly at rate 0.50, and the
+#          sweep confirms it (success <=> erased <= 4096, 0 exceptions).
+#   BC:    same n and k as 1D-RS, so the same 0.50 *formal* limit, but its
+#          radius-2 local/pairwise decoder gives out far below that, around
+#          0.10-0.15. Its guaranteed-correct radius is only d-1 = 4 erasures
+#          globally; everything above that depends on the erasures staying
+#          spread thinly enough across the mu=2048 local blocks.
+#   2D-RS: 4x overhead, so k/n = 0.25 and its information-theoretic limit
+#          is 1 - 0.25 = 0.75, NOT 0.50. Its iterative decoder gives out
+#          earlier than that, between 0.58 and 0.60.
+SCHEME_BOUNDARY = {"1D-RS": 0.50, "2D-RS": 0.59, "BC": 0.12}
+BOUNDARY_RATE = SCHEME_BOUNDARY["1D-RS"]  # kept for the shared-mask sizing below
+
+
+def trials_for(scheme_name, rate):
+    """Trial count as a function of (scheme, rate) -- see the module
+    docstring's "WHY TRIAL COUNTS ARE A FUNCTION OF (SCHEME, RATE)"
+    section for the reasoning. More trials near THAT SCHEME'S OWN
+    transition (where binomial variance in the erased count can flip the
+    outcome); fewer far from it, where the result is not in doubt and
+    extra trials only cost runtime -- 1D-RS's decode is the expensive
+    one, and its worst-case cost lands almost exactly on its boundary,
+    so it stays the most conservative even there."""
+    dist = abs(rate - SCHEME_BOUNDARY.get(scheme_name, 0.50))
+    if scheme_name == "1D-RS":
+        if dist <= 0.03:
+            return 3
+        if rate <= 0.35:
+            return 1
+        return 2
+    if scheme_name == "2D-RS":
+        if dist <= 0.05:
+            return 5
+        if rate <= 0.35:
+            return 3
+        return 5
+    if scheme_name == "BC":
+        # BC's failures are not a boundary effect at all -- its decoder is
+        # wrong at every rate above ~0.05 -- so a flat, comparatively high
+        # count everywhere is what characterises it.
+        return 10
+    return 1
 
 
 # ---------------------------------------------------------------------------
@@ -250,11 +325,30 @@ def blob_matches(candidate_ints, original_blob, app_bytes):
         return False
 
 
-def run_scheme(adapter, blob, app_bytes, rates, rng, trials_per_rate,
+def wilson_ci(successes, n, z=1.96):
+    """95% Wilson score confidence interval for a binomial proportion --
+    unlike the naive successes/n +/- 1.96*sqrt(p(1-p)/n) normal
+    approximation, it stays inside [0,1] and is well-behaved at n=1 and at
+    p=0 or p=1, which the raw fractions in this sweep hit constantly (a
+    lot of "0/1" and "10/10" results). Returns (low, high)."""
+    if n == 0:
+        return (0.0, 1.0)
+    p = successes / n
+    denom = 1 + z**2 / n
+    centre = p + z**2 / (2 * n)
+    half_width = z * ((p * (1 - p) / n + z**2 / (4 * n**2)) ** 0.5)
+    lo = (centre - half_width) / denom
+    hi = (centre + half_width) / denom
+    return (max(0.0, lo), min(1.0, hi))
+
+
+def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
                shared_masks_by_rate=None):
-    """shared_masks_by_rate: optional {rate: [mask, mask, ...]} -- when
-    given, these exact masks are used instead of drawing fresh ones (used
-    to give 1D-RS and BC the literal same erased positions per trial)."""
+    """trials_fn(scheme_name, rate) -> int trial count for that point (see
+    trials_for()). shared_masks_by_rate: optional {rate: [mask, ...]} --
+    when given, these exact masks are used instead of drawing fresh ones
+    (used to give 1D-RS and BC the literal same erased positions per
+    trial)."""
     print(f"\n{'='*70}\n {adapter.name}  (k={adapter.k}, n={adapter.n}, "
           f"overhead={adapter.n/adapter.k:.1f}x)\n{'='*70}")
 
@@ -273,30 +367,53 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_per_rate,
 
     results = []
     for rate in rates:
-        n_trials = trials_per_rate.get(adapter.name, 1)
+        n_trials = trials_fn(adapter.name, rate)
         successes = 0
+        claimed_ok = 0          # decoder's OWN success signal, before verification
+        silent_corruption = 0   # decoder claimed success but the bytes are wrong
         decode_times = []
-        n_erased = None
+        success_times = []      # decode times of byte-exact trials only
+        n_erased_list = []
         for trial_idx in range(n_trials):
             if shared_masks_by_rate is not None:
                 mask = shared_masks_by_rate[rate][trial_idx]
             else:
                 mask = adapter.random_mask(rate, rng)
-            n_erased = int(np.sum(mask))
+            n_erased_list.append(int(np.sum(mask)))
             corrupted = adapter.corrupt(encoded, mask)
             recovered, ok, t_decode = adapter.decode(corrupted, mask)
+            ok = bool(ok)
             exact = ok and blob_matches(adapter.extract_message(recovered), blob, app_bytes)
             decode_times.append(t_decode)
+            if exact:
+                success_times.append(t_decode)
+            claimed_ok += ok
+            silent_corruption += (ok and not exact)
             successes += exact
         mean_t = sum(decode_times) / len(decode_times)
-        print(f"  rate={rate:.2f}  erased={n_erased:5d}/{adapter.n}  "
-              f"decode(mean of {n_trials})={mean_t:7.3f}s  "
-              f"success={successes}/{n_trials}")
+        # A decode that bails out on the budget check costs ~0.0003s while a
+        # real decode costs ~40s, so a mean across both describes no actual
+        # trial. Report the success-only mean alongside it.
+        mean_ok_t = (sum(success_times) / len(success_times)) if success_times else None
+        mean_erased = sum(n_erased_list) / len(n_erased_list)
+        ci_lo, ci_hi = wilson_ci(successes, n_trials)
+        ok_t_str = f"{mean_ok_t:7.3f}s" if mean_ok_t is not None else "      --"
+        print(f"  rate={rate:.2f}  erased(mean)={mean_erased:7.1f}/{adapter.n}  "
+              f"decode(all)={mean_t:7.3f}s  decode(ok only)={ok_t_str}  "
+              f"success={successes}/{n_trials}  claimed_ok={claimed_ok}/{n_trials}  "
+              f"silent_corruption={silent_corruption}/{n_trials}  "
+              f"95% CI=[{ci_lo:.2f},{ci_hi:.2f}]")
         results.append({
-            "scheme": adapter.name, "rate": rate, "n_erased": n_erased,
+            "scheme": adapter.name, "rate": rate,
+            "n_erased_mean": mean_erased, "n_erased_per_trial": n_erased_list,
             "n": adapter.n, "k": adapter.k, "trials": n_trials,
             "successes": successes, "success_rate": successes / n_trials,
+            "success_rate_ci95": [round(ci_lo, 4), round(ci_hi, 4)],
+            "claimed_ok": claimed_ok,
+            "silent_corruption": silent_corruption,
             "mean_decode_time_s": round(mean_t, 4),
+            "mean_decode_time_success_only_s": (round(mean_ok_t, 4)
+                                                if mean_ok_t is not None else None),
             "decode_times_s": [round(t, 4) for t in decode_times],
         })
     return {
@@ -331,15 +448,15 @@ if __name__ == "__main__":
     # different n (16384) so it draws its own masks at the same RATE.
     shared_n = OneDAdapter.n
     assert BCAdapter.n == shared_n, "1D-RS and BC were expected to share n"
-    shared_n_trials = max(TRIALS_PER_RATE["1D-RS"], TRIALS_PER_RATE["BC"])
     shared_masks = {
-        rate: [(rng.random(shared_n) < rate) for _ in range(shared_n_trials)]
+        rate: [(rng.random(shared_n) < rate)
+               for _ in range(max(trials_for("1D-RS", rate), trials_for("BC", rate)))]
         for rate in RATES
     }
 
     for adapter in adapters:
         use_shared = adapter.n == shared_n
-        result = run_scheme(adapter, blob, app_bytes, RATES, rng, TRIALS_PER_RATE,
+        result = run_scheme(adapter, blob, app_bytes, RATES, rng, trials_for,
                              shared_masks_by_rate=shared_masks if use_shared else None)
         all_results.append(result)
 
@@ -360,17 +477,19 @@ if __name__ == "__main__":
             row.append(f"{t['mean_decode_time_s']:>7.3f}s".rjust(14))
         print(" ".join(row))
 
-    print(f"\nSuccess rate per rate (successes/trials):")
+    print(f"\nSuccess rate per rate (successes/trials, 95% Wilson CI):")
     print(f"{'scheme':<8} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
     for r in all_results:
         row = [r["scheme"].ljust(8)]
         for t in r["trials"]:
             row.append(f"{t['successes']}/{t['trials']}".rjust(14))
         print(" ".join(row))
+    print(f"\n(95% CI widths shrink toward 0 as trial counts rise near the")
+    print(f" boundary band -- see trials_for() and success_rate_ci95 in the JSON)")
 
     out_path = os.path.join(HERE, "benchmark_results.json")
     with open(out_path, "w") as f:
         json.dump({"rates": RATES, "seed": RNG_SEED,
-                    "trials_per_rate": TRIALS_PER_RATE, "results": all_results},
+                    "boundary_rate": BOUNDARY_RATE, "results": all_results},
                    f, indent=2)
     print(f"\nFull results written to {out_path}")
