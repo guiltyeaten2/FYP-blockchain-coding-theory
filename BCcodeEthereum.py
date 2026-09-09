@@ -225,6 +225,7 @@ def build_local_grs(GF, rho, n0):
 #   global codeword length n = mu * block_size = 8192
 #   global message length k = mu * omega = 4096
 #   minimum distance d = lambda * rho + 1 = 5
+#   code Rate = omega/(rho+omega) = 2/4 = 0.5
 #   local code length (number of symbols involved in one local equation)
 #       n0 = rho + lambda * omega = 2 + 4 = 6
 omega = 2                             # Information symbols per local block (w)
