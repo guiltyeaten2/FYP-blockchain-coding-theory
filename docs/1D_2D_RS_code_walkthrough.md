@@ -1,5 +1,16 @@
 # Code walkthrough: `1D_RS_Galois.py` and `2D_RS_Galois.py`
 
+> **Superseded in part — 2D-RS geometry changed on 2026-09-09.**
+> The worked examples below use the old 64→128 per-axis extension (128×128
+> codeword, 4× overhead). `2D_RS_Galois.py` now extends 64→88 (88×88
+> codeword, 1.89× overhead, component rate 8/11 per axis), so every
+> numeric example involving 128, 16384, or 4× overhead is out of date. The
+> transform mechanics are unchanged apart from one detail: bit-reversal
+> permutation is only defined for power-of-two lengths, so for the length-88
+> axis the code falls back to natural NTT order. That is a domain *ordering*
+> convention, not a change to the mathematics.
+
+
 This document explains what the two Reed-Solomon simulation scripts actually
 do — the mechanics, the maths behind each step, and worked numeric examples
 you can check by hand — plus the correctness checks that were run against

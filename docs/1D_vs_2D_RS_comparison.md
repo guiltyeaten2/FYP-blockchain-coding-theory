@@ -1,5 +1,24 @@
 # 1D-RS vs 2D-RS: how they work, and how they compare
 
+> **Superseded in part — 2D-RS geometry changed on 2026-09-09.**
+> This document was written when `2D_RS_Galois.py` extended each axis
+> 64→128, giving a 128×128 codeword at **4× overhead and rate 0.25**. The
+> file now extends each axis 64→88, giving an 88×88 codeword at **1.89×
+> overhead and rate 0.529**, so that its storage cost is comparable to
+> 1D-RS's and BC's 2× and the erasure-rate comparison is fair. Component
+> rate is 8/11 per axis; exactly rate 0.5 is unreachable for any genuine 2D
+> product code on a 4096-element blob, and `2D_RS_Galois.py` explains why.
+>
+> Everything below about *mechanism* — bivariate polynomials, why every row
+> and column is independently a codeword, how the cross-axis cascade works —
+> still holds. Everything about *numbers* does not. Specifically superseded:
+> every "4× overhead", every "16384", every "128×128", the per-line erasure
+> budget (now 24 of 88 rather than 64 of 128), and the measured tolerance
+> (2D-RS now recovers to 35% and fails from 38%, against a theoretical limit
+> of 0.471). For current measurements see
+> [benchmark_1D_2D_BC_report.md](benchmark_1D_2D_BC_report.md).
+
+
 This document explains the two coding schemes conceptually and summarises
 what running the simulations actually shows, framed against the report's
 methodology (Phase 2 analytical modelling / Phase 3 empirical benchmarking)

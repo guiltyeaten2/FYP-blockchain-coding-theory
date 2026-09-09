@@ -1,6 +1,8 @@
 """
 Benchmark: 1D-RS vs 2D-RS vs Block-Circulant (BC) codes.
 
+Five schemes: 1D-RS, 2D-RS, and three BC parameterisations.
+
 Runs all three coding schemes against the SAME real Ethereum blob, over the
 SAME field, at each scheme's own Ethereum-relevant (n, k) parameterisation,
 and sweeps the same set of erasure rates -- producing the comparative
@@ -24,15 +26,29 @@ and input" the report needs for a fair comparison):
     round-trips through blob_generator.blob_to_bytes() back to the exact
     original application bytes -- not just a field-element comparison.
 
-WHAT'S DELIBERATELY LEFT DIFFERENT (each scheme's own Ethereum-relevant
-shape, reported as a result, not forced equal):
-  - 1D-RS:  n=8192,  2x total overhead  -- PeerDAS's actual extension ratio.
-  - BC:     n=8192,  2x total overhead  -- same ratio as 1D-RS/PeerDAS,
-            via mu=2048 local blocks, omega=2, rho=2, lambda=2 (d=5),
-            i.e. the SAME parameters BCcodeEthereum.py already documents.
-  - 2D-RS:  n=16384, 4x total overhead  -- this project's own documented
-            per-axis-doubling tradeoff (see 2D_RS_Galois.py's docstring
-            and docs/1D_vs_2D_RS_comparison.md); not a real PeerDAS ratio.
+STORAGE COST IS NOW NEARLY MATCHED, WHICH IT PREVIOUSLY WAS NOT:
+  - 1D-RS:   n=8192,  2.00x overhead, rate 0.500 -- PeerDAS's actual ratio.
+  - BC-*:    n=8192,  2.00x overhead, rate 0.500 -- three parameterisations,
+             all with rho=omega and lambda=mu (see BC_VARIANTS below).
+  - 2D-RS:   n=7744,  1.89x overhead, rate 0.529 -- an 88x88 grid, replacing
+             the previous 128x128 which ran at 4x overhead and rate 0.25.
+
+  The 2D-RS change matters for fairness. A product code's rate is the
+  PRODUCT of its two component rates, so doubling both axes gives rate 1/4:
+  the earlier sweep compared a 4x-overhead code against two 2x-overhead
+  codes at equal erasure rate, which flattered 2D-RS. Component rate 8/11 on
+  each axis (64 -> 88, using the length-88 NTT this field admits) brings it
+  to 0.529. Exactly 0.500 is unreachable -- see 2D_RS_Galois.py for why no
+  genuine 2D product code on a 4096-element blob can have rate 0.5.
+
+WHY THE BC PARAMETERISATIONS CHANGED:
+The previously benchmarked (omega, rho, lambda) = (2, 2, 2) with mu=2048 has
+minimum distance d = lambda*rho + 1 = 5, so its guaranteed correction is four
+erasures in an 8192-symbol codeword -- everything above that was luck about
+how the mask fell. The three rows swept here instead set lambda = mu (full
+overlap), which lifts d to 4097 = n - k + 1. That is the Singleton bound: as
+CODES these are MDS, exactly as good as Reed-Solomon. What remains local is
+the DECODER, and separating those two things is the point of this sweep.
 
 WHY THE RATE SWEEP NOW CROSSES EACH SCHEME'S OWN CEILING, NOT JUST
 APPROACHES IT (methodology revision -- see docs/benchmark_1D_2D_BC_report.md
@@ -66,17 +82,16 @@ burn runtime confirming the same deterministic outcome. That stops being
 true near the boundary (see above), where trial counts step up sharply
 (see `trials_for()`) to actually characterise the transition rather than
 sample it once and call it representative. BC's DecCBC[2] decoder is
-different in kind, not just near a boundary: it only resolves erasures
-within a single local block (<=rho) or a pair of ADJACENT local blocks
-(<=2*rho) at a time, so at mu=2048 independent blocks, i.i.d. random
-erasure at ANY rate can -- purely by chance -- cluster more than 2*rho
-erasures across 3+ consecutive blocks, which this decoder has no
-mechanism to resolve. This was observed directly during development: at
-rate=0.15, one random mask failed (erasures remained unresolved) while a
-different random mask at the SAME rate succeeded 5/5. That makes BC's
-recoverability a per-trial probability at every rate, not just near a
-ceiling, so it keeps a flat, comparatively high trial count throughout.
-BC's decode is cheap (sub-10s even at high rates), so this is affordable;
+different in kind: it only resolves erasures within a single local block
+(<=rho) or a pair of ADJACENT local blocks (<=2*rho) at a time, and never
+looks at the codeword as a whole. With lambda = mu every local support
+contains the entire message, so a block succeeds when the erasures falling
+in it -- all the message erasures, plus that block's own parity erasures --
+number at most rho. Whether any of the mu blocks comes in under that budget
+is a matter of how the mask happens to fall, so BC's recoverability is a
+per-trial probability rather than a certainty, and it keeps a flat,
+comparatively high trial count throughout rather than only near a ceiling.
+BC's decode is cheap (a few seconds at most), so this is affordable;
 1D-RS's decode is the expensive one (its cost is discussed in
 docs/1D_vs_2D_RS_comparison.md) and its per-trial cost peaks almost
 exactly at its own boundary (division cost ~ O((n-e)*e), maximised at
@@ -138,58 +153,102 @@ K = bg.FIELD_ELEMENTS_PER_BLOB  # 4096, shared by all three schemes
 # repeated here explicitly so this file's parameterisation is self-evident
 # and doesn't rely on reading BCcodeEthereum.py to know what it benchmarks.
 # ---------------------------------------------------------------------------
-BC_OMEGA, BC_RHO, BC_LAMBDA = bc.omega, bc.rho, bc.lambda_
-BC_MU = bc.mu
-assert BC_MU * BC_OMEGA == K, "BC parameters must span exactly one blob's worth of message symbols"
+# Each entry is (omega, rho, lambda_); mu is forced to K // omega so that
+# every variant carries exactly one blob, and every variant here sets
+# rho = omega (rate 1/2, matching 1D-RS) and lambda = mu (full overlap).
+#
+# lambda = mu is what makes these different in kind from the (2, 2, 2)
+# parameterisation benchmarked previously. With full overlap every local
+# parity block is computed from ALL mu information blocks, so the minimum
+# distance rises from d = lambda*rho + 1 = 5 to d = 4097 = n - k + 1: the
+# code becomes MDS, matching Reed-Solomon's optimum. What stays local is the
+# DECODER, and that is what the sweep measures.
+#
+#   omega  rho   mu  lambda   n0 = rho+lambda*omega   local matrix   d_min
+#    1024 1024    4       4                    5120    1024x1024      4097
+#     512  512    8       8                    4608     512x512       4097
+#     256  256   16      16                    4352     256x256       4097
+BC_VARIANTS = [(1024, 1024, 4), (512, 512, 8), (256, 256, 16)]
 
-RATES = [0.05, 0.08, 0.10, 0.12, 0.15, 0.25, 0.35,
-         0.45, 0.48, 0.50, 0.52, 0.55, 0.58, 0.60]
+# Compute budget for the decoder's pairwise phase, applied identically to
+# every variant.
+#
+# Phase 2 stacks two blocks' parity checks. That system is NOT Vandermonde,
+# so unlike Phase 1 it cannot use the O(e^2) solver and needs full Gaussian
+# elimination, whose cost grows as the CUBE of the unknown count e. Measured
+# in this field's arithmetic, on the 512-equation systems omega=256 produces:
+# e=276 takes 21.7s, e=369 takes 39.5s, e=461 takes 61.7s -- per pair, with mu
+# pairs scanned per iteration, so 6 to 16 minutes per decoding round. At
+# omega=1024 a full pair is 2048 equations in 2048 unknowns, about 80 minutes.
+#
+# The consequence is worth stating plainly rather than burying. Phase 2 only
+# gets a turn when Phase 1 has stalled, and with lambda = mu Phase 1 stalls
+# only once a support carries more than rho erasures. Every variant here has
+# rho >= 256, so every pair that could possibly help carries more than 256
+# unknowns. At this cap none of them qualify, and all three variants are
+# therefore measured as SINGLE-PHASE decoders. Raising the cap enough to
+# change that costs tens of minutes per decode attempt and days per sweep;
+# what the pairwise phase would buy is measured separately, at one rate, and
+# reported in docs/benchmark_1D_2D_BC_report.md rather than swept here.
+#
+# Pairs skipped by this cap are counted and their positions stay honestly
+# flagged as erased. Nothing is guessed at.
+BC_PAIR_UNKNOWN_CAP = 256
+
+RATES = [0.02, 0.05, 0.08, 0.10, 0.12, 0.15, 0.20, 0.25, 0.30,
+         0.35, 0.38, 0.40, 0.45, 0.48, 0.50, 0.52, 0.55]
 RNG_SEED = 20260827  # fixed seed -> reproducible sweep across runs
 
 # Each scheme's OWN empirical transition point -- these are NOT all 0.50.
 #
-#   1D-RS: n-k = k, and RS is MDS, so it succeeds iff the drawn erasure
-#          count is <= n-k. Transition sits exactly at rate 0.50, and the
-#          sweep confirms it (success <=> erased <= 4096, 0 exceptions).
-#   BC:    same n and k as 1D-RS, so the same 0.50 *formal* limit, but its
-#          radius-2 local/pairwise decoder gives out far below that, around
-#          0.10-0.15. Its guaranteed-correct radius is only d-1 = 4 erasures
-#          globally; everything above that depends on the erasures staying
-#          spread thinly enough across the mu=2048 local blocks.
-#   2D-RS: 4x overhead, so k/n = 0.25 and its information-theoretic limit
-#          is 1 - 0.25 = 0.75, NOT 0.50. Its iterative decoder gives out
-#          earlier than that, between 0.58 and 0.60.
-SCHEME_BOUNDARY = {"1D-RS": 0.50, "2D-RS": 0.59, "BC": 0.12}
+# Each scheme's OWN empirical transition point -- these are NOT all the same.
+#
+#   1D-RS   : n-k = k and RS is MDS, so it succeeds iff the drawn erasure
+#             count is <= n-k. The transition sits exactly at 0.50.
+#   2D-RS   : now 88x88 (see 2D_RS_Galois.py) for rate 0.529 rather than the
+#             previous 128x128 at rate 0.25, so that its storage cost is
+#             comparable to the others. Its per-line budget is n-k = 24 of
+#             88, and the cross-axis cascade lifts the grid as a whole to a
+#             transition between 0.35 and 0.40.
+#   BC-*    : with lambda = mu every local support contains the WHOLE message
+#             plus that block's own parity, so a single block that comes in
+#             under budget recovers every message symbol at once and the rest
+#             follow trivially. The single-block phase therefore succeeds
+#             while  4096*x + rho*x <= rho,  i.e. x <= rho/(rho+4096) = rho/n0:
+#             0.200 for BC-1024, 0.111 for BC-512, 0.059 for BC-256. The
+#             pairwise phase roughly doubles that budget where the compute cap
+#             lets it run at all, which is only BC-256.
+SCHEME_BOUNDARY = {
+    "1D-RS": 0.50,
+    "2D-RS": 0.375,
+    "BC-1024": 0.20,
+    "BC-512": 0.11,
+    "BC-256": 0.11,
+}
 BOUNDARY_RATE = SCHEME_BOUNDARY["1D-RS"]  # kept for the shared-mask sizing below
 
 
 def trials_for(scheme_name, rate):
-    """Trial count as a function of (scheme, rate) -- see the module
-    docstring's "WHY TRIAL COUNTS ARE A FUNCTION OF (SCHEME, RATE)"
-    section for the reasoning. More trials near THAT SCHEME'S OWN
-    transition (where binomial variance in the erased count can flip the
-    outcome); fewer far from it, where the result is not in doubt and
-    extra trials only cost runtime -- 1D-RS's decode is the expensive
-    one, and its worst-case cost lands almost exactly on its boundary,
-    so it stays the most conservative even there."""
+    """Trial count as a function of (scheme, rate) -- more trials near THAT
+    SCHEME'S OWN transition, where binomial variance in the drawn erasure
+    count can flip the outcome; fewer far from it, where the result is not in
+    doubt and extra trials only cost runtime. 1D-RS stays the most
+    conservative because its decode is the expensive one and its worst-case
+    cost lands almost exactly on its own boundary."""
     dist = abs(rate - SCHEME_BOUNDARY.get(scheme_name, 0.50))
     if scheme_name == "1D-RS":
         if dist <= 0.03:
             return 3
-        if rate <= 0.35:
-            return 1
-        return 2
+        return 1 if rate <= 0.35 else 2
     if scheme_name == "2D-RS":
-        if dist <= 0.05:
-            return 5
-        if rate <= 0.35:
-            return 3
-        return 5
-    if scheme_name == "BC":
-        # BC's failures are not a boundary effect at all -- its decoder is
-        # wrong at every rate above ~0.05 -- so a flat, comparatively high
-        # count everywhere is what characterises it.
-        return 10
+        return 5 if dist <= 0.05 else 3
+    if scheme_name.startswith("BC"):
+        # BC's recoverability is a per-trial probability rather than a
+        # certainty, because whether any single block comes in under budget
+        # depends on how the mask happens to fall. Counts are lower than they
+        # would ideally be because the pairwise phase, where it runs at all,
+        # costs tens of seconds per pair -- see BC_PAIR_UNKNOWN_CAP.
+        return 8 if dist <= 0.06 else 4
     return 1
 
 
@@ -233,7 +292,7 @@ class OneDAdapter:
 class TwoDAdapter:
     name = "2D-RS"
     k = K
-    n = rs2d.EXT_ROWS * rs2d.EXT_COLS  # 16384, reported for overhead only
+    n = rs2d.EXT_ROWS * rs2d.EXT_COLS  # 7744 at the 88x88 setting
 
     def __init__(self):
         self.alpha_rows = rs2d.root_of_unity(rs2d.EXT_ROWS, P)
@@ -278,18 +337,37 @@ class TwoDAdapter:
 
 
 class BCAdapter:
-    name = "BC"
-    k = K
-    n = bc.n  # 8192
+    """One block-circulant parameterisation. Unlike the other two adapters
+    this one is instantiated several times, once per (omega, rho, lambda)
+    row being compared, so its shape lives on the instance rather than the
+    class."""
 
-    def __init__(self):
-        t0 = time.time()
-        self.H_BC = bc.build_block_circulant_h(GF, BC_MU, BC_LAMBDA, BC_OMEGA, BC_RHO)
-        self.h_build_time = time.time() - t0
+    def __init__(self, omega, rho, lambda_, pair_unknown_cap=None):
+        self.omega, self.rho, self.lambda_ = omega, rho, lambda_
+        self.mu = K // omega
+        assert self.mu * omega == K, \
+            "BC parameters must span exactly one blob's worth of message symbols"
+        assert lambda_ <= self.mu, "lambda > mu would repeat blocks in a support"
+        self.k = K
+        self.n = self.mu * (rho + omega)
+        self.n0 = rho + lambda_ * omega
+        self.d_min = lambda_ * rho + 1
+        self.pair_unknown_cap = pair_unknown_cap
+        self.name = f"BC-{omega}"
+        # No global parity-check matrix is built: the decoder regenerates the
+        # local GRS rows it needs, so the (mu*rho) x n matrix -- 33.5 million
+        # field elements -- is never materialised.
+        self.h_build_time = 0.0
+
+    def params(self):
+        return {"omega": self.omega, "rho": self.rho, "lambda": self.lambda_,
+                "mu": self.mu, "n0": self.n0, "d_min": self.d_min,
+                "pair_unknown_cap": self.pair_unknown_cap}
 
     def encode(self, blob):
         m = GF(blob)
-        return bc.encode_bc_structured(GF, m, BC_MU, BC_LAMBDA, BC_OMEGA, BC_RHO)
+        return bc.encode_bc_structured(GF, m, self.mu, self.lambda_,
+                                       self.omega, self.rho)
 
     def random_mask(self, rate, rng):
         return rng.random(self.n) < rate
@@ -301,8 +379,9 @@ class BCAdapter:
 
     def decode(self, corrupted, mask):
         t0 = time.time()
-        recovered, remaining = bc.dec_cbc_2(self.H_BC, corrupted, mask,
-                                             BC_MU, BC_LAMBDA, BC_OMEGA, BC_RHO)
+        recovered, remaining = bc.dec_cbc_2(
+            None, corrupted, mask, self.mu, self.lambda_, self.omega, self.rho,
+            pair_unknown_cap=self.pair_unknown_cap)
         ok = not np.any(remaining)
         return recovered, ok, time.time() - t0
 
@@ -420,6 +499,7 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
         "scheme": adapter.name, "k": adapter.k, "n": adapter.n,
         "overhead": adapter.n / adapter.k, "encode_time_s": round(t_encode, 4),
         "setup_time_s": round(extra_setup, 4) if extra_setup is not None else 0.0,
+        "params": adapter.params() if hasattr(adapter, "params") else {},
         "trials": results,
     }
 
@@ -439,18 +519,23 @@ if __name__ == "__main__":
 
     rng = np.random.default_rng(RNG_SEED)
 
-    adapters = [OneDAdapter(), TwoDAdapter(), BCAdapter()]
+    adapters = [OneDAdapter(), TwoDAdapter()] + [
+        BCAdapter(w, rho, lam, pair_unknown_cap=BC_PAIR_UNKNOWN_CAP)
+        for (w, rho, lam) in BC_VARIANTS
+    ]
     all_results = []
 
-    # 1D-RS and BC share n=8192: corrupt them at the literal SAME positions
-    # per trial, not just the same rate, for the strictest comparison two
-    # differently-structured but equal-length codes can share. 2D-RS has a
-    # different n (16384) so it draws its own masks at the same RATE.
+    # 1D-RS and every BC variant share n=8192: corrupt them at the literal
+    # SAME positions per trial, not just the same rate, for the strictest
+    # comparison differently-structured but equal-length codes can share.
+    # 2D-RS has a different n (88*88 = 7744) so it draws its own masks at the
+    # same RATE.
     shared_n = OneDAdapter.n
-    assert BCAdapter.n == shared_n, "1D-RS and BC were expected to share n"
+    shared_names = [a.name for a in adapters if a.n == shared_n]
+    assert len(shared_names) > 1, "expected 1D-RS and the BC variants to share n"
     shared_masks = {
         rate: [(rng.random(shared_n) < rate)
-               for _ in range(max(trials_for("1D-RS", rate), trials_for("BC", rate)))]
+               for _ in range(max(trials_for(nm, rate) for nm in shared_names))]
         for rate in RATES
     }
 
@@ -463,14 +548,14 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print(" SUMMARY")
     print("=" * 70)
-    header = f"{'scheme':<8} {'k':>6} {'n':>7} {'overhead':>9} {'encode(s)':>10} {'setup(s)':>9}"
+    header = f"{'scheme':<9} {'k':>6} {'n':>7} {'overhead':>9} {'encode(s)':>10} {'setup(s)':>9}"
     print(header)
     for r in all_results:
-        print(f"{r['scheme']:<8} {r['k']:>6} {r['n']:>7} {r['overhead']:>8.1f}x "
+        print(f"{r['scheme']:<9} {r['k']:>6} {r['n']:>7} {r['overhead']:>8.2f}x "
               f"{r['encode_time_s']:>10.3f} {r['setup_time_s']:>9.1f}")
 
     print(f"\nMean decode time per rate:")
-    print(f"{'scheme':<8} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
+    print(f"{'scheme':<9} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
     for r in all_results:
         row = [r["scheme"].ljust(8)]
         for t in r["trials"]:
@@ -478,7 +563,7 @@ if __name__ == "__main__":
         print(" ".join(row))
 
     print(f"\nSuccess rate per rate (successes/trials, 95% Wilson CI):")
-    print(f"{'scheme':<8} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
+    print(f"{'scheme':<9} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
     for r in all_results:
         row = [r["scheme"].ljust(8)]
         for t in r["trials"]:
@@ -490,6 +575,8 @@ if __name__ == "__main__":
     out_path = os.path.join(HERE, "benchmark_results.json")
     with open(out_path, "w") as f:
         json.dump({"rates": RATES, "seed": RNG_SEED,
-                    "boundary_rate": BOUNDARY_RATE, "results": all_results},
+                    "boundary_rate": BOUNDARY_RATE,
+                    "bc_pair_unknown_cap": BC_PAIR_UNKNOWN_CAP,
+                    "results": all_results},
                    f, indent=2)
     print(f"\nFull results written to {out_path}")

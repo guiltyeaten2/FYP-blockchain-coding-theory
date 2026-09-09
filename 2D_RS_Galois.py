@@ -115,11 +115,33 @@ GF = galois.GF(P)
 # ---------------------------------------------------------------------------
 FIELD_ELEMENTS_PER_BLOB = bg.FIELD_ELEMENTS_PER_BLOB   # 4096
 BLOB_ROWS, BLOB_COLS = 64, 64          # 64 * 64 = 4096
-AXIS_EXPANSION = 2                     # each axis doubled independently
-EXT_ROWS = BLOB_ROWS * AXIS_EXPANSION  # 128
-EXT_COLS = BLOB_COLS * AXIS_EXPANSION  # 128
-# NOTE: doubling BOTH axes gives 4x total overhead (128*128 / 64*64),
-# not PeerDAS's 2x total -- see docstring above.
+# ---------------------------------------------------------------------------
+# COMPONENT CODE RATE
+# ---------------------------------------------------------------------------
+# A product code's overall rate is the PRODUCT of its two component rates,
+# so the extension factor per axis is what sets total overhead.
+#
+# Doubling both axes (the previous 64->128 setting) gives component rate 1/2
+# on each axis and therefore overall rate 1/4, i.e. 4x storage overhead --
+# twice what 1D-RS and BC spend, which made the erasure-rate comparison
+# unfair in 2D-RS's favour.
+#
+# WHY EXACTLY RATE 0.5 IS NOT REACHABLE HERE:
+# overall rate = k / (EXT_ROWS * EXT_COLS) = 4096 / (EXT_ROWS * EXT_COLS),
+# so rate 0.5 requires EXT_ROWS * EXT_COLS = 8192 = 2^13. A product equal to
+# a power of two forces BOTH factors to be powers of two; each axis must at
+# least double for that axis to carry any parity at all, so the product is at
+# least 4 * 4096 = 16384 > 8192. No genuine 2D product code on a 4096-element
+# blob can have rate 0.5. This is a property of product codes, not of this
+# implementation.
+#
+# The nearest reachable point uses 88 = 8 * 11 per axis. 11 divides p-1 for
+# the BLS12-381 scalar field, so a length-88 NTT exists:
+#     component rate  64/88 = 8/11 = 0.727 on each axis
+#     overall rate    4096/7744      = 0.529
+#     overhead        7744/4096      = 1.89x   (vs 2.00x for 1D-RS and BC)
+EXT_ROWS = 88
+EXT_COLS = 88
 
 for n in (BLOB_ROWS, BLOB_COLS, EXT_ROWS, EXT_COLS):
     assert (P - 1) % n == 0, f"P-1 must be divisible by {n} for an NTT of that size"
@@ -136,7 +158,15 @@ def bit_reversal_permutation(n):
     both cell-order->natural-order and natural-order->cell-order with
     the same code."""
     bits = n.bit_length() - 1
-    assert (1 << bits) == n
+    if (1 << bits) != n:
+        # Bit-reversal is only defined for power-of-two lengths. It is a
+        # domain ORDERING convention (consensus-specs' cell order), not a
+        # mathematical requirement of the transform, so for the non-power-of-
+        # two axis lengths used above we fall back to natural NTT order:
+        # grid slot i corresponds to domain point alpha^i directly. Every
+        # caller treats this array purely as an index map, so the identity
+        # permutation is a valid -- and still self-inverse -- choice.
+        return list(range(n))
     return [int(format(i, f"0{bits}b")[::-1], 2) for i in range(n)]
 
 def bitreverse_permute(values, brp):
@@ -388,7 +418,7 @@ if __name__ == "__main__":
     encoded_grid = col_ext
     preview(encoded_grid, "STEP 3: full encoded grid (128x128, the codeword)")
     print(f"\n  total encode time: {t_row + t_col:.3f}s, "
-          f"overhead: {EXT_ROWS * EXT_COLS / (BLOB_ROWS * BLOB_COLS):.0f}x "
+          f"overhead: {EXT_ROWS * EXT_COLS / (BLOB_ROWS * BLOB_COLS):.2f}x "
           f"({BLOB_ROWS*BLOB_COLS} -> {EXT_ROWS*EXT_COLS} field elements)")
 
     alpha_cols = root_of_unity(EXT_COLS, P)

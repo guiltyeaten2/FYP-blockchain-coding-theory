@@ -1,10 +1,10 @@
-Five figures: the shared experimental pipeline, how each of the three
-schemes builds its codeword, and the block-circulant decoder whose
-radius sets BC's erasure tolerance. Everything here is either a pipeline
-the report has to describe anyway, or the structure behind a measured
-result. Earlier drafts also carried worked numeric examples and
-algorithm flowcharts; those were teaching aids rather than results and
-have been dropped.
+Five figures: the shared experimental pipeline, how each scheme builds its
+codeword, and the two block-circulant figures that explain why an optimal
+code can still decode poorly. Everything here is either a pipeline the
+report has to describe anyway, or the structure behind a measured result.
+Earlier drafts also carried worked numeric examples and algorithm
+flowcharts; those were teaching aids rather than results and have been
+dropped.
 
 Figures are drawn from this project's own code (`1D_RS_Galois.py`,
 `2D_RS_Galois.py`, `BCcodeEthereum.py`). The BC figures follow the
@@ -18,8 +18,7 @@ implementation is meant to realise.
 Every number in the benchmark report comes from running this loop once per
 trial. The blob is fixed and the erasure rate is swept; at each rate the
 codeword is corrupted at randomly chosen positions and handed to the
-decoder. A trial counts as a success only if the bytes that come out the
-far end are identical to the ones that went in.
+scheme's own decoder.
 
 <figure>
 <svg viewBox="0 0 300 252" role="img" aria-label="The investigation pipeline used for every scheme, laid out as a three-row serpentine: real application bytes are packed into a blob, encoded and extended, a fraction is withheld to simulate erasure, the decoder attempts recovery, and the result is extracted and unpacked for a byte-for-byte comparison against the original."><defs><marker id="apS" markerWidth="7" markerHeight="7" refX="5.4" refY="2.6" orient="auto"><path d="M0,0 L5.4,2.6 L0,5.2 Z" fill="currentColor"/></marker><marker id="apV" markerWidth="7" markerHeight="7" refX="5.4" refY="2.6" orient="auto"><path d="M0,0 L5.4,2.6 L0,5.2 Z" fill="#15803d"/></marker></defs>
@@ -63,10 +62,16 @@ far end are identical to the ones that went in.
 <text x="114" y="200" font-size="5.9" fill="#15803d">blob_matches() &#8212; not the</text>
 <text x="114" y="209" font-size="5.9" fill="#15803d">decoder&#8217;s own success flag</text>
 <text x="12" y="246" font-size="5.9" fill="#4a5561">1D-RS: one interpolate+NTT pass &#8226; 2D-RS: row-then-column, iterated &#8226; BC: local + pairwise solves</text></svg>
-<figcaption>The measurement pipeline. Real application bytes are packed into one EIP-4844 blob (4096 field elements, 31 usable bytes each), the scheme under test expands that blob into a longer codeword, a fraction of the codeword is withheld to stand in for samples peers failed to serve, the decoder tries to rebuild it, and the result is unpacked back to bytes. Only the two shaded-in-meaning stages &#8212; <em>encode/extend</em> and <em>decode</em> &#8212; differ between the three schemes; the input, the erasure model and the test of success are byte-identical for all of them, which is what makes a difference in the results attributable to the code rather than to the setup. The dashed return path is the success test itself: the recovered bytes must equal the original bytes exactly. It deliberately does not ask the decoder whether it succeeded &#8212; one of the three decoders was found reporting success on data it had silently corrupted, and only this comparison caught it.</figcaption>
+<figcaption>The measurement pipeline. Real application bytes are packed into one EIP-4844 blob (4096 field elements, 31 usable bytes each), the scheme under test expands that blob into a longer codeword, a fraction of the codeword is withheld to stand in for samples peers failed to serve, the decoder tries to rebuild it, and the result is unpacked back to bytes. Only <em>encode/extend</em> and <em>decode</em> differ between schemes; the input, the erasure model and the test of success are byte-identical for all of them, which is what makes a difference in the results attributable to the code rather than to the setup. The dashed return path is the success test itself: the recovered bytes must equal the original bytes exactly. It deliberately does not ask the decoder whether it succeeded &#8212; one decoder was found reporting success on data it had silently corrupted, and only this comparison caught it.</figcaption>
 </figure>
 
+
 ## How each scheme builds its codeword
+
+The two Reed-Solomon variants share one idea applied at different
+dimensions. Both figures lead with that idea rather than with the
+transform steps, because the mechanism is easier to follow once the
+purpose is clear.
 
 <figure>
 <svg viewBox="0 0 300 300" role="img" aria-label="1D-RS encoding: the k data symbols are the values of a single polynomial sampled at k points; encoding samples that same curve at n equals 2k points, and any k of those samples determine the curve and therefore all the original data."><text x="34" y="26" font-size="9.4" font-weight="700">The blob IS a polynomial, sampled</text>
@@ -114,187 +119,243 @@ far end are identical to the ones that went in.
 <text x="93" y="271" font-size="6.8" fill="#c62828">new</text>
 <text x="34" y="286" font-size="7.6" font-weight="700">Any k of the n samples pin down the curve &#8212;</text>
 <text x="34" y="296" font-size="7.6" font-weight="700">so any k recover every original symbol.</text></svg>
-<figcaption>1D-RS. The blob&#8217;s k field elements are not raw bytes to be copied; they are the <em>values of a single polynomial</em> sampled at k points. Encoding finds that polynomial and samples it at n = 2k points instead. Because a degree-&lt;k polynomial is pinned down by any k of its values, any k surviving symbols reconstruct the curve and hence every original symbol. 2&#215; overhead.</figcaption>
+<figcaption>1D-RS. The blob&#8217;s k field elements are not raw bytes to be copied; they are the <em>values of a single polynomial</em> sampled at k points. Encoding finds that polynomial and samples it at n = 2k points instead. Because a degree-&lt;k polynomial is pinned down by any k of its values, any k surviving symbols reconstruct the curve and hence every original symbol. 2&#215; overhead, and the reason 1D-RS reaches its theoretical limit exactly.</figcaption>
 </figure>
 
+
 <figure>
-<svg viewBox="0 0 300 300" role="img" aria-label="2D-RS encoding: the blob is reshaped into a k by k grid, each row is extended to twice its length and then each column is extended likewise, giving an n by n grid at four times overhead in which every row and every column is independently a 1D-RS codeword."><defs><pattern id="hR" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" stroke-width="0.8" opacity="0.5"/></pattern></defs>
+<svg viewBox="0 0 300 300" role="img" aria-label="2D-RS encoding: the blob is reshaped into a 64 by 64 grid, each row is extended from 64 to 88 cells and then each column is extended likewise, giving an 88 by 88 grid at 1.89 times overhead in which every row and every column is independently a 1D-RS codeword."><defs><pattern id="hR" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" stroke-width="0.8" opacity="0.5"/></pattern></defs>
 <text x="26" y="26" font-size="9.4" font-weight="700">The same trick, twice</text>
-<text x="26" y="38" font-size="7.4" fill="#4a5561">once along every row, then once down every column</text>
-<rect x="60" y="62" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="62" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="62" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="62" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="62" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="62" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="62" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="62" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="79" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="79" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="79" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="79" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="79" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="79" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="79" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="79" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="96" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="96" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="96" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="96" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="96" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="96" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="96" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="96" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="113" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="113" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="113" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="113" width="17" height="17" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="113" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="113" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="113" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="113" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="130" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="147" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="164" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="60" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="77" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="94" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="111" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="128" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="145" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="162" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<rect x="179" y="181" width="17" height="17" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<line x1="128" y1="62" x2="128" y2="198" stroke="currentColor" stroke-width="1.3"/>
-<line x1="60" y1="130" x2="196" y2="130" stroke="currentColor" stroke-width="1.3"/>
+<text x="26" y="38" font-size="7.4" fill="#4a5561">each 64-cell line extended to 88: component rate 8/11</text>
+<rect x="62" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="62" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="62" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="62" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="74" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="74" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="74" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="74" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="86" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="86" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="86" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="86" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="98" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="98" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="98" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="98" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="110" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="110" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="110" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="110" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="122" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="122" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="122" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="122" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="134" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="134" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="134" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="134" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="146" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="146" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="146" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="146" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="158" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="170" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="62" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="74" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="86" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="98" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="110" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="122" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="134" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="146" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="158" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="170" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<rect x="182" y="182" width="12" height="12" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<line x1="158" y1="62" x2="158" y2="194" stroke="currentColor" stroke-width="1.3"/>
+<line x1="62" y1="158" x2="194" y2="158" stroke="currentColor" stroke-width="1.3"/>
 <defs><marker id="cwB" markerWidth="7" markerHeight="7" refX="5.4" refY="2.6" orient="auto"><path d="M0,0 L5.4,2.6 L0,5.2 Z" fill="#1546a0"/></marker></defs>
-<line x1="125" y1="96.0" x2="193" y2="96.0" stroke="#1546a0" stroke-width="1.2" marker-end="url(#cwB)"/>
-<text x="202" y="98.5" font-size="7.2" fill="#1546a0">extend</text>
-<text x="202" y="107.0" font-size="7.2" fill="#1546a0">each row</text>
-<line x1="94.0" y1="127" x2="94.0" y2="195" stroke="#1546a0" stroke-width="1.2" marker-end="url(#cwB)"/>
-<text x="90.0" y="211" text-anchor="middle" font-size="7.2" fill="#1546a0">extend each column</text>
-<text x="60" y="56" font-size="7.0" fill="#1546a0" font-weight="700">k&#215;k data</text>
-<rect x="26" y="223" width="10" height="9" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
-<text x="40" y="230" font-size="7.0">original blob</text>
-<rect x="120" y="223" width="10" height="9" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<text x="134" y="230" font-size="7.0">parity (4&#215; overhead)</text>
-<text x="26" y="274" font-size="7.6" font-weight="700">Every row and every column is now its own</text>
-<text x="26" y="284" font-size="7.6" font-weight="700">1D-RS codeword, so a lost cell can be repaired</text>
-<text x="26" y="294" font-size="7.6" font-weight="700">from its row or its column &#8212; whichever survives.</text></svg>
-<figcaption>2D-RS. The blob is reshaped into a k&#215;k grid and the 1D-RS step is applied twice: once to extend every row, then once to extend every column of the result. The outcome is an n&#215;n grid at 4&#215; overhead in which every row and every column is independently a 1D-RS codeword &#8212; so a lost cell can be repaired from whichever of its two lines has enough survivors, which is what lets the iterative decoder cascade.</figcaption>
+<line x1="155" y1="110.0" x2="191" y2="110.0" stroke="#1546a0" stroke-width="1.2" marker-end="url(#cwB)"/>
+<text x="200" y="112.5" font-size="7.2" fill="#1546a0">extend</text>
+<text x="200" y="121.0" font-size="7.2" fill="#1546a0">each row</text>
+<line x1="110.0" y1="155" x2="110.0" y2="191" stroke="#1546a0" stroke-width="1.2" marker-end="url(#cwB)"/>
+<text x="106.0" y="207" text-anchor="middle" font-size="7.2" fill="#1546a0">extend each column</text>
+<text x="62" y="56" font-size="7.0" fill="#1546a0" font-weight="700">64&#215;64 data</text>
+<rect x="26" y="213" width="10" height="9" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
+<text x="40" y="220" font-size="7.0">original blob</text>
+<rect x="120" y="213" width="10" height="9" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
+<text x="134" y="220" font-size="7.0">parity (1.89&#215; overhead)</text>
+<text x="26" y="238" font-size="7.6" font-weight="700">Every row and every column is now its own</text>
+<text x="26" y="248" font-size="7.6" font-weight="700">1D-RS codeword, so a lost cell can be repaired</text>
+<text x="26" y="258" font-size="7.6" font-weight="700">from its row or its column &#8212; whichever survives.</text></svg>
+<figcaption>2D-RS. The blob is reshaped into a 64&#215;64 grid and the 1D-RS step is applied twice: once to extend every row, then once to extend every column of the result. Every row and every column of the outcome is independently a 1D-RS codeword, so a lost cell can be repaired from whichever of its two lines has enough survivors, which is what lets the iterative decoder cascade. The extension is 64&#8594;88 per axis rather than the 64&#8594;128 of earlier drafts: a product code&#8217;s rate is the <em>product</em> of its component rates, so doubling both axes costs 4&#215; storage and made the comparison against two 2&#215;-overhead schemes unfair. Component rate 8/11 per axis gives 1.89&#215; overall.</figcaption>
 </figure>
+
 
 ## Block-circulant structure
 
-<figure>
-<svg viewBox="0 0 620 620" role="img" aria-label="Block-circulant topology for mu=4, omega=2, rho=2, lambda=2: eight information symbols and eight parity symbols alternate around a ring; each local code spans three consecutive groups, so adjacent local codes overlap by one information group">
-<defs><marker id="arrRing" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/></marker></defs>
-<circle cx="310.0" cy="300.0" r="195" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.25" stroke-dasharray="3,4"/>
-<path d="M 211.7 62.6 A 257 257 0 0 1 547.4 398.3" fill="none" stroke="#1d4ed8" stroke-width="2.4"/>
-<text x="426.7" y="18.2" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700">local code 1</text>
-<text x="426.7" y="34.2" text-anchor="middle" font-size="9.3" fill="#1d4ed8">[n&#8320;=6, k&#8320;=4, d&#8320;=3]</text>
-<rect x="262.0" y="82.0" width="96" height="46" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.3"/>
-<text x="310.0" y="101.0" text-anchor="middle" font-size="13">d&#8321;</text>
-<text x="310.0" y="121.0" text-anchor="middle" font-size="13">d&#8322;</text>
-<rect x="399.9" y="139.1" width="96" height="46" rx="5" fill="#fed7aa" stroke="#c2410c" stroke-width="1.3"/>
-<text x="447.9" y="158.1" text-anchor="middle" font-size="13">p&#8321;&#8321;</text>
-<text x="447.9" y="178.1" text-anchor="middle" font-size="13">p&#8321;&#8322;</text>
-<rect x="457.0" y="277.0" width="96" height="46" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.3"/>
-<text x="505.0" y="296.0" text-anchor="middle" font-size="13">d&#8323;</text>
-<text x="505.0" y="316.0" text-anchor="middle" font-size="13">d&#8324;</text>
-<rect x="399.9" y="414.9" width="96" height="46" rx="5" fill="#fed7aa" stroke="#c2410c" stroke-width="1.3"/>
-<text x="447.9" y="433.9" text-anchor="middle" font-size="13">p&#8322;&#8321;</text>
-<text x="447.9" y="453.9" text-anchor="middle" font-size="13">p&#8322;&#8322;</text>
-<rect x="262.0" y="472.0" width="96" height="46" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.3"/>
-<text x="310.0" y="491.0" text-anchor="middle" font-size="13">d&#8325;</text>
-<text x="310.0" y="511.0" text-anchor="middle" font-size="13">d&#8326;</text>
-<rect x="124.1" y="414.9" width="96" height="46" rx="5" fill="#fed7aa" stroke="#c2410c" stroke-width="1.3"/>
-<text x="172.1" y="433.9" text-anchor="middle" font-size="13">p&#8323;&#8321;</text>
-<text x="172.1" y="453.9" text-anchor="middle" font-size="13">p&#8323;&#8322;</text>
-<rect x="67.0" y="277.0" width="96" height="46" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.3"/>
-<text x="115.0" y="296.0" text-anchor="middle" font-size="13">d&#8327;</text>
-<text x="115.0" y="316.0" text-anchor="middle" font-size="13">d&#8328;</text>
-<rect x="124.1" y="139.1" width="96" height="46" rx="5" fill="#fed7aa" stroke="#c2410c" stroke-width="1.3"/>
-<text x="172.1" y="158.1" text-anchor="middle" font-size="13">p&#8324;&#8321;</text>
-<text x="172.1" y="178.1" text-anchor="middle" font-size="13">p&#8324;&#8322;</text>
-<rect x="30" y="560" width="16" height="16" rx="3" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.2"/>
-<text x="52" y="573" font-size="10.5">information symbols (&omega;=2 per group, &mu;&omega;=8 total = k)</text>
-<rect x="30" y="582" width="16" height="16" rx="3" fill="#fed7aa" stroke="#c2410c" stroke-width="1.2"/>
-<text x="52" y="595" font-size="10.5">parity symbols (&rho;=2 per group, &mu;&rho;=8 total = n-k)</text>
-</svg>
-<figcaption>Block-circulant layout (drawn at &#956;=4 for legibility; the benchmark runs &#956;=2048). Information blocks alternate with parity blocks around a ring, and each local code covers its own parity plus the information of &#955; consecutive blocks. 2&#215; overhead, the same as 1D-RS, but the parity is local rather than global.</figcaption>
-</figure>
+Block-circulant codes replace one global polynomial with many small local
+ones. How much they overlap is the parameter that decides whether the
+resulting code is any good.
 
 <figure>
-<svg viewBox="0 0 300 300" role="img" aria-label="Block-circulant decoding is local: a block holding at most rho erasures is solved by its own parity equations, a block holding more is stuck, and an adjacent pair holding at most two rho between them can sometimes be solved jointly. The guaranteed correction is only d minus 1, four erasures across the entire codeword; beyond that recovery depends on erasures remaining thinly spread across the local blocks."><text x="30" y="24" font-size="9.4" font-weight="700">BC repairs locally, so spread matters</text>
-<text x="30" y="36" font-size="7.4" fill="#4a5561">each local code covers &#961;=2 parity + &#955;&#969;=4 information symbols</text>
-<rect x="30" y="58" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="51" y="58" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="72" y="58" width="21" height="17" fill="#1b7a34" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="82.5" y="69.5" text-anchor="middle" font-size="7.6" fill="#1b7a34" font-weight="700">?</text>
-<rect x="93" y="58" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="114" y="58" width="21" height="17" fill="#1b7a34" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="124.5" y="69.5" text-anchor="middle" font-size="7.6" fill="#1b7a34" font-weight="700">?</text>
-<rect x="135" y="58" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<text x="164" y="69.5" font-size="7.2" fill="#1b7a34" font-weight="700">&#8804; &#961;: solved</text>
-<text x="30" y="86" font-size="6.8" fill="#4a5561">Phase 1 &#8212; two unknowns, two parity equations.</text>
-<rect x="30" y="106" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="51" y="106" width="21" height="17" fill="#c62828" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="61.5" y="117.5" text-anchor="middle" font-size="7.6" fill="#c62828" font-weight="700">?</text>
-<rect x="72" y="106" width="21" height="17" fill="#c62828" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="82.5" y="117.5" text-anchor="middle" font-size="7.6" fill="#c62828" font-weight="700">?</text>
-<rect x="93" y="106" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="114" y="106" width="21" height="17" fill="#c62828" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="124.5" y="117.5" text-anchor="middle" font-size="7.6" fill="#c62828" font-weight="700">?</text>
-<rect x="135" y="106" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<text x="164" y="117.5" font-size="7.2" fill="#c62828" font-weight="700">&gt; &#961;: stuck</text>
-<text x="30" y="134" font-size="6.8" fill="#4a5561">Three unknowns, still only two equations.</text>
-<rect x="30" y="154" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="51" y="154" width="21" height="17" fill="#1546a0" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="61.5" y="165.5" text-anchor="middle" font-size="7.6" fill="#1546a0" font-weight="700">?</text>
-<rect x="72" y="154" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="93" y="154" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="114" y="154" width="21" height="17" fill="#1546a0" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="124.5" y="165.5" text-anchor="middle" font-size="7.6" fill="#1546a0" font-weight="700">?</text>
-<rect x="135" y="154" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<text x="164" y="165.5" font-size="7.2" fill="#1546a0" font-weight="700"></text>
-<text x="164" y="173" font-size="7.2" fill="#1546a0" font-weight="700">pair: &#8804; 2&#961;</text>
-<rect x="30" y="174" width="21" height="17" fill="#1546a0" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="40.5" y="185.5" text-anchor="middle" font-size="7.6" fill="#1546a0" font-weight="700">?</text>
-<rect x="51" y="174" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="72" y="174" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="93" y="174" width="21" height="17" fill="#1546a0" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="103.5" y="185.5" text-anchor="middle" font-size="7.6" fill="#1546a0" font-weight="700">?</text>
-<rect x="114" y="174" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<rect x="135" y="174" width="21" height="17" fill="none" stroke="currentColor" stroke-width="0.6"/>
-<text x="164" y="185.5" font-size="7.2" fill="#1546a0" font-weight="700"></text>
-<path d="M 23 152 v 41" stroke="#1546a0" stroke-width="1.1"/>
-<text x="30" y="206" font-size="6.8" fill="#4a5561">Phase 2 &#8212; two adjacent blocks solved together,</text>
-<text x="30" y="215" font-size="6.8" fill="#4a5561">when their stacked equations determine them.</text>
-<rect x="24" y="232" width="178" height="54" fill="none" stroke="#1546a0" stroke-width="0.9"/>
-<text x="30" y="246" font-size="7.4" font-weight="700" fill="#1546a0">Guaranteed: only d&#8722;1 = 4 erasures</text>
-<text x="30" y="257" font-size="7.0" fill="#1b1f24">across the whole 8192-symbol codeword.</text>
-<text x="30" y="269" font-size="7.0" fill="#1b1f24">Beyond that it works only while erasures stay</text>
-<text x="30" y="278" font-size="7.0" fill="#1b1f24">thinly spread across the &#956;=2048 blocks.</text></svg>
-<figcaption>Why BC&#8217;s tolerance is limited. Repair is local: a block holding at most &#961; erasures is solved by its own two parity equations; one holding more is stuck; an adjacent pair holding at most 2&#961; between them can sometimes be solved jointly. The guaranteed correction is only d&#8722;1 = 4 erasures across the entire 8192-symbol codeword, so beyond that BC depends on erasures staying thinly spread across the &#956;=2048 local blocks &#8212; which random erasure stops providing well below the rates the Reed-Solomon variants reach.</figcaption>
+<svg viewBox="0 0 300 300" role="img" aria-label="Block-circulant overlap. With lambda equal to two, a parity block is computed from only two information blocks and the minimum distance is five. With lambda equal to mu, every parity block is computed from every information block and the minimum distance rises to 4097, which equals n minus k plus one, the Singleton bound, making the code MDS."><defs><marker id="bcar" markerWidth="6" markerHeight="6" refX="4.6" refY="2.2" orient="auto"><path d="M0,0 L4.6,2.2 L0,4.4 Z" fill="context-stroke"/></marker></defs>
+<text x="30" y="24" font-size="9.4" font-weight="700">Full overlap makes the code optimal</text>
+<text x="30" y="36" font-size="7.4" fill="#4a5561">how many information blocks each parity block sees</text>
+<text x="30" y="60" font-size="7.8" font-weight="700" fill="#c62828">&#955; = 2  (previously benchmarked)</text>
+<rect x="30" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="53.0" y="80" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">0</tspan></text>
+<rect x="86" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="109.0" y="80" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">1</tspan></text>
+<rect x="142" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="165.0" y="80" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">2</tspan></text>
+<rect x="198" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="221.0" y="80" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">3</tspan></text>
+<rect x="114.0" y="122" width="46" height="18" fill="#c62828" opacity="0.20" stroke="#c62828" stroke-width="0.9"/>
+<text x="137.0" y="134" text-anchor="middle" font-size="7.0" font-weight="700" fill="#c62828">p<tspan font-size="5.4" dy="1.5">0</tspan></text>
+<path d="M 53.0 87 L 137.0 121" stroke="#c62828" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<path d="M 109.0 87 L 137.0 121" stroke="#c62828" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<text x="30" y="154" font-size="6.8" fill="#4a5561">Parity block 0 is computed from 2 of the &#956; blocks.</text>
+<text x="30" y="172" font-size="7.8" font-weight="700" fill="#1b7a34">&#955; = &#956;  (swept here)</text>
+<rect x="30" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="53.0" y="192" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">0</tspan></text>
+<rect x="86" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="109.0" y="192" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">1</tspan></text>
+<rect x="142" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="165.0" y="192" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">2</tspan></text>
+<rect x="198" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
+<text x="221.0" y="192" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">3</tspan></text>
+<rect x="114.0" y="234" width="46" height="18" fill="#1b7a34" opacity="0.20" stroke="#1b7a34" stroke-width="0.9"/>
+<text x="137.0" y="246" text-anchor="middle" font-size="7.0" font-weight="700" fill="#1b7a34">p<tspan font-size="5.4" dy="1.5">0</tspan></text>
+<path d="M 53.0 199 L 137.0 233" stroke="#1b7a34" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<path d="M 109.0 199 L 137.0 233" stroke="#1b7a34" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<path d="M 165.0 199 L 137.0 233" stroke="#1b7a34" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<path d="M 221.0 199 L 137.0 233" stroke="#1b7a34" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
+<text x="30" y="266" font-size="6.8" fill="#4a5561">Parity block 0 is computed from every block.</text>
+<rect x="24" y="270" width="252" height="22" fill="none" stroke="#1546a0" stroke-width="0.9"/>
+<text x="30" y="284" font-size="7.2" fill="#1b1f24"><tspan font-weight="700">d = &#955;&#961; + 1</tspan>: 5 &#8594; 4097 = n &#8722; k + 1, the Singleton bound.</text></svg>
+<figcaption>Overlap decides everything. Minimum distance is <em>d</em> = &#955;&#961; + 1, so the &#955;=2 parameterisation benchmarked earlier is <em>guaranteed</em> to correct only four erasures in an 8192-symbol codeword; anything beyond that depended on how the erasures happened to fall. Setting &#955; = &#956; makes every parity block depend on every information block and lifts <em>d</em> to 4097 = <em>n</em> &#8722; <em>k</em> + 1, the Singleton bound. As codes, the parameterisations swept in the report are therefore MDS &#8212; exactly as good as Reed-Solomon.</figcaption>
 </figure>
+
+
+## Why block-circulant tolerance is limited
+
+The parameterisations swept in the report are MDS codes: any 4096
+surviving symbols determine the blob, exactly as for 1D-RS. They
+nevertheless stop recovering far earlier, and the reason is entirely in
+the decoder, which never looks beyond a single local block.
+
+<figure>
+<svg viewBox="0 0 300 300" role="img" aria-label="Why block-circulant tolerance is limited by its decoder. Because lambda equals mu, one local block\u2019s support covers the entire message plus that block\u2019s own parity, so a single block that comes in under its budget of rho erasures recovers the whole blob. That happens while 4096x plus rho x is at most rho, so the decoder gives out at rho over n-zero: 0.200, 0.111 and 0.059 for the three parameterisations, far below the 0.50 these MDS codes would allow."><text x="26" y="24" font-size="9.4" font-weight="700">The code is optimal; the decoder is local</text>
+<text x="26" y="36" font-size="7.4" fill="#4a5561">what one local block can see, and what it can fix</text>
+<rect x="26" y="54" width="198.4" height="20" fill="#1546a0" opacity="0.18" stroke="currentColor" stroke-width="0.6"/>
+<rect x="224.4" y="54" width="49.6" height="20" fill="#1b7a34" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
+<text x="125.2" y="67" text-anchor="middle" font-size="7.0">all 4096 message symbols</text>
+<text x="249.2" y="67" text-anchor="middle" font-size="6.4" fill="#1b7a34" font-weight="700">&#961;</text>
+<text x="26" y="48" font-size="7.2" font-weight="700">one local block&#8217;s support (&#955; = &#956;)</text>
+<text x="26" y="85" font-size="6.8" fill="#4a5561">n&#8320; = &#961; + &#955;&#969; = &#961; + 4096</text>
+<text x="26" y="108" font-size="7.4" fill="#1b1f24">It solves when its support holds at most &#961; erasures.</text>
+<text x="26" y="120" font-size="7.4" fill="#1b1f24">That support is the whole message, so <tspan font-weight="700">one block</tspan> finishes the job.</text>
+<rect x="26" y="132" width="248" height="30" fill="none" stroke="#1546a0" stroke-width="0.9"/>
+<text x="34" y="146" font-size="7.4" fill="#1546a0" font-weight="700">4096x + &#961;x &#8804; &#961;</text>
+<text x="34" y="156" font-size="7.2" fill="#1b1f24">so the decoder gives out at x = &#961;/n&#8320; &#8212; not at 0.50.</text>
+<text x="26" y="186" font-size="7.2" font-weight="700">&#969; = &#961;</text>
+<text x="96" y="186" font-size="7.2" font-weight="700">n&#8320;</text>
+<text x="152" y="186" font-size="7.2" font-weight="700">&#961;/n&#8320;</text>
+<text x="212" y="186" font-size="7.2" font-weight="700">solve cost</text>
+<line x1="26" y1="190" x2="274" y2="190" stroke="currentColor" stroke-width="0.6"/>
+<text x="26" y="202" font-size="7.0">1024</text>
+<text x="96" y="202" font-size="7.0">5120</text>
+<text x="152" y="202" font-size="7.0" font-weight="700" fill="#1b7a34">0.200</text>
+<text x="212" y="202" font-size="7.0">1024&#215;1024</text>
+<text x="26" y="215" font-size="7.0">512</text>
+<text x="96" y="215" font-size="7.0">4608</text>
+<text x="152" y="215" font-size="7.0" font-weight="700" fill="#1b7a34">0.111</text>
+<text x="212" y="215" font-size="7.0">512&#215;512</text>
+<text x="26" y="228" font-size="7.0">256</text>
+<text x="96" y="228" font-size="7.0">4352</text>
+<text x="152" y="228" font-size="7.0" font-weight="700" fill="#1b7a34">0.059</text>
+<text x="212" y="228" font-size="7.0">256&#215;256</text>
+<rect x="26" y="242" width="248" height="46" fill="none" stroke="#c62828" stroke-width="0.9"/>
+<text x="34" y="256" font-size="7.2" font-weight="700" fill="#c62828">The gap is the decoder, not the code.</text>
+<text x="34" y="267" font-size="7.0" fill="#1b1f24">All three are MDS: any 4096 surviving symbols suffice.</text>
+<text x="34" y="278" font-size="7.0" fill="#1b1f24">Bigger blocks close more of it; the solve stays O(&#961;&#178;).</text></svg>
+<figcaption>Why the measured tolerance is far below 0.50 anyway. <code>DecCBC[2]</code> solves one block at a time, and a block succeeds only when its own support holds at most &#961; erasures. Because &#955; = &#956;, that support is the entire message plus the block&#8217;s own parity, which cuts both ways: one successful block recovers the whole blob at once, but the erasure budget &#961; has to cover erasures spread across all 4096 message symbols as well. Solving 4096<em>x</em> + &#961;<em>x</em> &#8804; &#961; gives <em>x</em> &#8804; &#961;/n&#8320;, which is what the measurements land on. Larger local blocks raise the limit, and because that local system is a Vandermonde matrix in distinct evaluation points it can be solved in &#961;&#178; rather than &#961;&#179; time &#8212; which is what makes &#969;=1024 measurable at all.</figcaption>
+</figure>
+
