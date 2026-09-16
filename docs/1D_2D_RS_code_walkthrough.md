@@ -1,14 +1,20 @@
 # Code walkthrough: `1D_RS_Galois.py` and `2D_RS_Galois.py`
 
-> **Superseded in part — 2D-RS geometry changed on 2026-09-09.**
-> The worked examples below use the old 64→128 per-axis extension (128×128
-> codeword, 4× overhead). `2D_RS_Galois.py` now extends 64→88 (88×88
-> codeword, 1.89× overhead, component rate 8/11 per axis), so every
-> numeric example involving 128, 16384, or 4× overhead is out of date. The
-> transform mechanics are unchanged apart from one detail: bit-reversal
+> **Superseded in part — 2D-RS geometry changed twice, most recently on
+> 2026-09-16.** The worked examples below use the original 64→128 per-axis
+> extension (128×128 codeword, 4× overhead). `2D_RS_Galois.py` went from
+> there to 88×88, and now extends 64→96 along rows and 64→88 down columns
+> (**88×96 codeword, 2.06× overhead, component codes [96, 64] and
+> [88, 64], overall rate 0.485**), so every numeric example below involving
+> 128, 16384, or 4× overhead is out of date. A 90×90 grid would be the
+> even split closest to rate 0.5, but it cannot be built in this field: a
+> length-*n* NTT needs *n* | *p*−1, and 90 = 2·3²·5 requires a 3² where
+> only 3¹ is available and a 5 that is absent.
+>
+> The transform mechanics are unchanged apart from one detail: bit-reversal
 > permutation is only defined for power-of-two lengths, so for the length-88
-> axis the code falls back to natural NTT order. That is a domain *ordering*
-> convention, not a change to the mathematics.
+> and length-96 axes the code falls back to natural NTT order. That is a
+> domain *ordering* convention, not a change to the mathematics.
 
 
 This document explains what the two Reed-Solomon simulation scripts actually

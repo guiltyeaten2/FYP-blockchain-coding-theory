@@ -9,6 +9,7 @@
     0.2,
     0.25,
     0.3,
+    0.33,
     0.35,
     0.38,
     0.4,
@@ -26,10 +27,19 @@
       "scheme": "1D-RS",
       "k": 4096,
       "n": 8192,
+      "rate": 0.5,
       "overhead": 2.0,
-      "encode_time_s": 0.4603,
+      "encode_time_s": 0.4578,
       "setup_time_s": 0.0,
-      "params": {},
+      "params": {
+        "d_min": 4097,
+        "worst_case_tolerance": 0.5
+      },
+      "component": {
+        "n0": 8192,
+        "k0": 4096,
+        "desc": "[8192, 4096] (no component structure)"
+      },
       "trials": [
         {
           "scheme": "1D-RS",
@@ -49,10 +59,10 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 5.2361,
-          "mean_decode_time_success_only_s": 5.2361,
+          "mean_decode_time_s": 5.1761,
+          "mean_decode_time_success_only_s": 5.1761,
           "decode_times_s": [
-            5.2361
+            5.1761
           ]
         },
         {
@@ -73,18 +83,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 11.2389,
-          "mean_decode_time_success_only_s": 11.2389,
+          "mean_decode_time_s": 11.0995,
+          "mean_decode_time_success_only_s": 11.0995,
           "decode_times_s": [
-            11.2389
+            11.0995
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.08,
-          "n_erased_mean": 645.0,
+          "n_erased_mean": 702.0,
           "n_erased_per_trial": [
-            645
+            702
           ],
           "n": 8192,
           "k": 4096,
@@ -97,18 +107,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 17.1748,
-          "mean_decode_time_success_only_s": 17.1748,
+          "mean_decode_time_s": 18.2872,
+          "mean_decode_time_success_only_s": 18.2872,
           "decode_times_s": [
-            17.1748
+            18.2872
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.1,
-          "n_erased_mean": 840.0,
+          "n_erased_mean": 800.0,
           "n_erased_per_trial": [
-            840
+            800
           ],
           "n": 8192,
           "k": 4096,
@@ -121,18 +131,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 22.017,
-          "mean_decode_time_success_only_s": 22.017,
+          "mean_decode_time_s": 20.5478,
+          "mean_decode_time_success_only_s": 20.5478,
           "decode_times_s": [
-            22.017
+            20.5478
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.12,
-          "n_erased_mean": 972.0,
+          "n_erased_mean": 941.0,
           "n_erased_per_trial": [
-            972
+            941
           ],
           "n": 8192,
           "k": 4096,
@@ -145,10 +155,10 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 24.7473,
-          "mean_decode_time_success_only_s": 24.7473,
+          "mean_decode_time_s": 23.9856,
+          "mean_decode_time_success_only_s": 23.9856,
           "decode_times_s": [
-            24.7473
+            23.9856
           ]
         },
         {
@@ -169,18 +179,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 30.5616,
-          "mean_decode_time_success_only_s": 30.5616,
+          "mean_decode_time_s": 30.063,
+          "mean_decode_time_success_only_s": 30.063,
           "decode_times_s": [
-            30.5616
+            30.063
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.2,
-          "n_erased_mean": 1650.0,
+          "n_erased_mean": 1682.0,
           "n_erased_per_trial": [
-            1650
+            1682
           ],
           "n": 8192,
           "k": 4096,
@@ -193,18 +203,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 40.1755,
-          "mean_decode_time_success_only_s": 40.1755,
+          "mean_decode_time_s": 40.3553,
+          "mean_decode_time_success_only_s": 40.3553,
           "decode_times_s": [
-            40.1755
+            40.3553
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.25,
-          "n_erased_mean": 2047.0,
+          "n_erased_mean": 2017.0,
           "n_erased_per_trial": [
-            2047
+            2017
           ],
           "n": 8192,
           "k": 4096,
@@ -217,18 +227,18 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 48.8427,
-          "mean_decode_time_success_only_s": 48.8427,
+          "mean_decode_time_s": 47.7118,
+          "mean_decode_time_success_only_s": 47.7118,
           "decode_times_s": [
-            48.8427
+            47.7118
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.3,
-          "n_erased_mean": 2433.0,
+          "n_erased_mean": 2525.0,
           "n_erased_per_trial": [
-            2433
+            2525
           ],
           "n": 8192,
           "k": 4096,
@@ -241,18 +251,42 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 56.6887,
-          "mean_decode_time_success_only_s": 56.6887,
+          "mean_decode_time_s": 56.9412,
+          "mean_decode_time_success_only_s": 56.9412,
           "decode_times_s": [
-            56.6887
+            56.9412
+          ]
+        },
+        {
+          "scheme": "1D-RS",
+          "rate": 0.33,
+          "n_erased_mean": 2678.0,
+          "n_erased_per_trial": [
+            2678
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.2065,
+            1.0
+          ],
+          "claimed_ok": 1,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 60.0003,
+          "mean_decode_time_success_only_s": 60.0003,
+          "decode_times_s": [
+            60.0003
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.35,
-          "n_erased_mean": 2935.0,
+          "n_erased_mean": 2857.0,
           "n_erased_per_trial": [
-            2935
+            2857
           ],
           "n": 8192,
           "k": 4096,
@@ -265,10 +299,10 @@
           ],
           "claimed_ok": 1,
           "silent_corruption": 0,
-          "mean_decode_time_s": 65.753,
-          "mean_decode_time_success_only_s": 65.753,
+          "mean_decode_time_s": 63.2548,
+          "mean_decode_time_success_only_s": 63.2548,
           "decode_times_s": [
-            65.753
+            63.2548
           ]
         },
         {
@@ -290,20 +324,20 @@
           ],
           "claimed_ok": 2,
           "silent_corruption": 0,
-          "mean_decode_time_s": 69.2999,
-          "mean_decode_time_success_only_s": 69.2999,
+          "mean_decode_time_s": 66.8187,
+          "mean_decode_time_success_only_s": 66.8187,
           "decode_times_s": [
-            69.6386,
-            68.9612
+            67.4641,
+            66.1734
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.4,
-          "n_erased_mean": 3288.0,
+          "n_erased_mean": 3242.0,
           "n_erased_per_trial": [
-            3335,
-            3241
+            3229,
+            3255
           ],
           "n": 8192,
           "k": 4096,
@@ -316,20 +350,20 @@
           ],
           "claimed_ok": 2,
           "silent_corruption": 0,
-          "mean_decode_time_s": 72.2687,
-          "mean_decode_time_success_only_s": 72.2687,
+          "mean_decode_time_s": 69.8243,
+          "mean_decode_time_success_only_s": 69.8243,
           "decode_times_s": [
-            73.1545,
-            71.3828
+            69.256,
+            70.3925
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.45,
-          "n_erased_mean": 3663.0,
+          "n_erased_mean": 3772.0,
           "n_erased_per_trial": [
-            3650,
-            3676
+            3797,
+            3747
           ],
           "n": 8192,
           "k": 4096,
@@ -342,21 +376,21 @@
           ],
           "claimed_ok": 2,
           "silent_corruption": 0,
-          "mean_decode_time_s": 78.1259,
-          "mean_decode_time_success_only_s": 78.1259,
+          "mean_decode_time_s": 79.344,
+          "mean_decode_time_success_only_s": 79.344,
           "decode_times_s": [
-            78.0005,
-            78.2513
+            79.8925,
+            78.7956
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.48,
-          "n_erased_mean": 3966.6666666666665,
+          "n_erased_mean": 3950.6666666666665,
           "n_erased_per_trial": [
-            4050,
-            3989,
-            3861
+            3921,
+            4002,
+            3929
           ],
           "n": 8192,
           "k": 4096,
@@ -369,49 +403,49 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 83.9387,
-          "mean_decode_time_success_only_s": 83.9387,
+          "mean_decode_time_s": 81.7716,
+          "mean_decode_time_success_only_s": 81.7716,
           "decode_times_s": [
-            85.5771,
-            83.8641,
-            82.375
+            81.6698,
+            83.0072,
+            80.6379
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.5,
-          "n_erased_mean": 4126.333333333333,
+          "n_erased_mean": 4091.6666666666665,
           "n_erased_per_trial": [
-            4099,
-            4172,
-            4108
+            4058,
+            4130,
+            4087
           ],
           "n": 8192,
           "k": 4096,
           "trials": 3,
-          "successes": 0,
-          "success_rate": 0.0,
+          "successes": 2,
+          "success_rate": 0.6666666666666666,
           "success_rate_ci95": [
-            0.0,
-            0.5615
+            0.2077,
+            0.9385
           ],
-          "claimed_ok": 0,
+          "claimed_ok": 2,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0004,
-          "mean_decode_time_success_only_s": null,
+          "mean_decode_time_s": 55.551,
+          "mean_decode_time_success_only_s": 83.3262,
           "decode_times_s": [
+            82.8675,
             0.0005,
-            0.0004,
-            0.0004
+            83.7849
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.52,
-          "n_erased_mean": 4255.666666666667,
+          "n_erased_mean": 4276.333333333333,
           "n_erased_per_trial": [
-            4218,
-            4299,
+            4307,
+            4272,
             4250
           ],
           "n": 8192,
@@ -425,21 +459,21 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0004,
+          "mean_decode_time_s": 0.0005,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
             0.0005,
-            0.0004,
-            0.0004
+            0.0005,
+            0.0005
           ]
         },
         {
           "scheme": "1D-RS",
           "rate": 0.55,
-          "n_erased_mean": 4510.5,
+          "n_erased_mean": 4526.0,
           "n_erased_per_trial": [
-            4513,
-            4508
+            4580,
+            4472
           ],
           "n": 8192,
           "k": 4096,
@@ -464,22 +498,40 @@
     {
       "scheme": "2D-RS",
       "k": 4096,
-      "n": 7744,
-      "overhead": 1.890625,
-      "encode_time_s": 2.6278,
+      "n": 8448,
+      "rate": 0.48484848484848486,
+      "overhead": 2.0625,
+      "encode_time_s": 2.649,
       "setup_time_s": 0.0,
-      "params": {},
+      "params": {
+        "ext_rows": 88,
+        "ext_cols": 96,
+        "blob_rows": 64,
+        "blob_cols": 64,
+        "d_row": 33,
+        "d_col": 25,
+        "d_min": 825,
+        "worst_case_tolerance": 0.09753787878787878,
+        "singleton_d_max": 4353
+      },
+      "component": {
+        "n0": 96,
+        "k0": 64,
+        "n0_col": 88,
+        "k0_col": 64,
+        "desc": "[96, 64] row x [88, 64] col"
+      },
       "trials": [
         {
           "scheme": "2D-RS",
           "rate": 0.02,
-          "n_erased_mean": 151.0,
+          "n_erased_mean": 160.66666666666666,
           "n_erased_per_trial": [
-            170,
-            158,
-            125
+            163,
+            153,
+            166
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -490,24 +542,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 2.3421,
-          "mean_decode_time_success_only_s": 2.3421,
+          "mean_decode_time_s": 2.4444,
+          "mean_decode_time_success_only_s": 2.4444,
           "decode_times_s": [
-            2.5023,
-            2.409,
-            2.115
+            2.4888,
+            2.4499,
+            2.3944
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.05,
-          "n_erased_mean": 379.3333333333333,
+          "n_erased_mean": 415.6666666666667,
           "n_erased_per_trial": [
-            397,
-            366,
-            375
+            416,
+            422,
+            409
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -518,24 +570,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 2.8612,
-          "mean_decode_time_success_only_s": 2.8612,
+          "mean_decode_time_s": 3.1096,
+          "mean_decode_time_success_only_s": 3.1096,
           "decode_times_s": [
-            2.8805,
-            2.8015,
-            2.9017
+            3.0586,
+            3.1394,
+            3.1307
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.08,
-          "n_erased_mean": 627.0,
+          "n_erased_mean": 658.6666666666666,
           "n_erased_per_trial": [
-            606,
-            641,
-            634
+            652,
+            663,
+            661
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -546,24 +598,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 3.0225,
-          "mean_decode_time_success_only_s": 3.0225,
+          "mean_decode_time_s": 3.2595,
+          "mean_decode_time_success_only_s": 3.2595,
           "decode_times_s": [
-            3.0121,
-            3.0204,
-            3.0351
+            3.254,
+            3.2616,
+            3.2629
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.1,
-          "n_erased_mean": 754.6666666666666,
+          "n_erased_mean": 846.3333333333334,
           "n_erased_per_trial": [
-            733,
-            760,
-            771
+            850,
+            863,
+            826
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -574,24 +626,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 3.0876,
-          "mean_decode_time_success_only_s": 3.0876,
+          "mean_decode_time_s": 3.3471,
+          "mean_decode_time_success_only_s": 3.3471,
           "decode_times_s": [
-            3.0774,
-            3.0984,
-            3.087
+            3.3631,
+            3.3608,
+            3.3174
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.12,
-          "n_erased_mean": 903.3333333333334,
+          "n_erased_mean": 1034.3333333333333,
           "n_erased_per_trial": [
-            872,
-            901,
-            937
+            1032,
+            1045,
+            1026
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -602,24 +654,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 3.1682,
-          "mean_decode_time_success_only_s": 3.1682,
+          "mean_decode_time_s": 3.423,
+          "mean_decode_time_success_only_s": 3.423,
           "decode_times_s": [
-            3.1513,
-            3.1627,
-            3.1906
+            3.4239,
+            3.4444,
+            3.4007
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.15,
-          "n_erased_mean": 1177.3333333333333,
+          "n_erased_mean": 1262.3333333333333,
           "n_erased_per_trial": [
-            1187,
-            1153,
-            1192
+            1280,
+            1268,
+            1239
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -630,24 +682,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 3.3358,
-          "mean_decode_time_success_only_s": 3.3358,
+          "mean_decode_time_s": 3.541,
+          "mean_decode_time_success_only_s": 3.541,
           "decode_times_s": [
-            3.3646,
-            3.2982,
-            3.3446
+            3.5417,
+            3.5429,
+            3.5383
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.2,
-          "n_erased_mean": 1561.3333333333333,
+          "n_erased_mean": 1731.6666666666667,
           "n_erased_per_trial": [
-            1599,
-            1490,
-            1595
+            1760,
+            1707,
+            1728
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -658,24 +710,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 5.2644,
-          "mean_decode_time_success_only_s": 5.2644,
+          "mean_decode_time_s": 5.079,
+          "mean_decode_time_success_only_s": 5.079,
           "decode_times_s": [
-            5.2282,
-            5.161,
-            5.4041
+            4.807,
+            5.3126,
+            5.1175
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.25,
-          "n_erased_mean": 1932.0,
+          "n_erased_mean": 2104.6666666666665,
           "n_erased_per_trial": [
-            1927,
-            1949,
-            1920
+            2144,
+            2118,
+            2052
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -686,24 +738,24 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 5.7965,
-          "mean_decode_time_success_only_s": 5.7965,
+          "mean_decode_time_s": 5.5444,
+          "mean_decode_time_success_only_s": 5.5444,
           "decode_times_s": [
-            5.7647,
-            5.7827,
-            5.8419
+            5.5431,
+            5.5418,
+            5.5483
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.3,
-          "n_erased_mean": 2394.0,
+          "n_erased_mean": 2548.6666666666665,
           "n_erased_per_trial": [
-            2394,
-            2385,
-            2403
+            2544,
+            2534,
+            2568
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 3,
@@ -714,26 +766,82 @@
           ],
           "claimed_ok": 3,
           "silent_corruption": 0,
-          "mean_decode_time_s": 6.2271,
-          "mean_decode_time_success_only_s": 6.2271,
+          "mean_decode_time_s": 4.5013,
+          "mean_decode_time_success_only_s": 4.5013,
           "decode_times_s": [
-            6.0889,
-            6.2546,
-            6.3378
+            4.5099,
+            4.4812,
+            4.5128
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.33,
+          "n_erased_mean": 2751.6666666666665,
+          "n_erased_per_trial": [
+            2727,
+            2741,
+            2787
+          ],
+          "n": 8448,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.4385,
+            1.0
+          ],
+          "claimed_ok": 3,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 6.1839,
+          "mean_decode_time_success_only_s": 6.1839,
+          "decode_times_s": [
+            6.0461,
+            6.2305,
+            6.2752
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.35,
-          "n_erased_mean": 2694.4,
+          "n_erased_mean": 2948.6666666666665,
           "n_erased_per_trial": [
-            2738,
-            2696,
-            2683,
-            2616,
-            2739
+            2966,
+            2953,
+            2927
           ],
-          "n": 7744,
+          "n": 8448,
+          "k": 4096,
+          "trials": 3,
+          "successes": 3,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.4385,
+            1.0
+          ],
+          "claimed_ok": 3,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 5.8491,
+          "mean_decode_time_success_only_s": 5.8491,
+          "decode_times_s": [
+            5.7429,
+            5.8982,
+            5.9063
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.38,
+          "n_erased_mean": 3214.8,
+          "n_erased_per_trial": [
+            3240,
+            3205,
+            3260,
+            3112,
+            3257
+          ],
+          "n": 8448,
           "k": 4096,
           "trials": 5,
           "successes": 5,
@@ -744,60 +852,60 @@
           ],
           "claimed_ok": 5,
           "silent_corruption": 0,
-          "mean_decode_time_s": 6.0315,
-          "mean_decode_time_success_only_s": 6.0315,
+          "mean_decode_time_s": 6.0087,
+          "mean_decode_time_success_only_s": 6.0087,
           "decode_times_s": [
-            6.5851,
-            5.714,
-            6.2591,
-            5.9512,
-            5.648
-          ]
-        },
-        {
-          "scheme": "2D-RS",
-          "rate": 0.38,
-          "n_erased_mean": 2932.4,
-          "n_erased_per_trial": [
-            2971,
-            2972,
-            2897,
-            2900,
-            2922
-          ],
-          "n": 7744,
-          "k": 4096,
-          "trials": 5,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4345
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.2871,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.2529,
-            0.3395,
-            0.3382,
-            0.42,
-            0.0848
+            5.8847,
+            5.9906,
+            6.2272,
+            6.143,
+            5.7982
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.4,
-          "n_erased_mean": 3097.8,
+          "n_erased_mean": 3391.8,
           "n_erased_per_trial": [
-            3147,
-            3096,
-            3041,
-            3083,
-            3122
+            3424,
+            3426,
+            3342,
+            3422,
+            3345
           ],
-          "n": 7744,
+          "n": 8448,
+          "k": 4096,
+          "trials": 5,
+          "successes": 2,
+          "success_rate": 0.4,
+          "success_rate_ci95": [
+            0.1176,
+            0.7693
+          ],
+          "claimed_ok": 2,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.78,
+          "mean_decode_time_success_only_s": 6.1854,
+          "decode_times_s": [
+            0.5811,
+            0.5392,
+            5.8141,
+            0.409,
+            6.5568
+          ]
+        },
+        {
+          "scheme": "2D-RS",
+          "rate": 0.45,
+          "n_erased_mean": 3766.2,
+          "n_erased_per_trial": [
+            3768,
+            3785,
+            3766,
+            3746,
+            3766
+          ],
+          "n": 8448,
           "k": 4096,
           "trials": 5,
           "successes": 0,
@@ -808,54 +916,26 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0606,
+          "mean_decode_time_s": 0.0683,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0014,
-            0.0013,
-            0.1703,
-            0.1289,
-            0.0013
-          ]
-        },
-        {
-          "scheme": "2D-RS",
-          "rate": 0.45,
-          "n_erased_mean": 3483.0,
-          "n_erased_per_trial": [
-            3561,
-            3408,
-            3480
-          ],
-          "n": 7744,
-          "k": 4096,
-          "trials": 3,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.5615
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0014,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0014,
-            0.0013,
-            0.0014
+            0.0016,
+            0.0858,
+            0.0842,
+            0.0429,
+            0.127
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.48,
-          "n_erased_mean": 3759.0,
+          "n_erased_mean": 4048.3333333333335,
           "n_erased_per_trial": [
-            3757,
-            3790,
-            3730
+            4035,
+            4033,
+            4077
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 0,
@@ -866,24 +946,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0014,
+          "mean_decode_time_s": 0.0016,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0014,
-            0.0014,
-            0.0014
+            0.0016,
+            0.0015,
+            0.0016
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.5,
-          "n_erased_mean": 3893.0,
+          "n_erased_mean": 4268.666666666667,
           "n_erased_per_trial": [
-            3864,
-            3864,
-            3951
+            4268,
+            4198,
+            4340
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 0,
@@ -894,24 +974,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0015,
+          "mean_decode_time_s": 0.0016,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0015,
-            0.0015,
-            0.0015
+            0.0016,
+            0.0016,
+            0.0016
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.52,
-          "n_erased_mean": 3999.3333333333335,
+          "n_erased_mean": 4339.333333333333,
           "n_erased_per_trial": [
-            3988,
-            3964,
-            4046
+            4361,
+            4324,
+            4333
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 0,
@@ -922,24 +1002,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0015,
+          "mean_decode_time_s": 0.0016,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0015,
-            0.0015,
-            0.0015
+            0.0016,
+            0.0016,
+            0.0016
           ]
         },
         {
           "scheme": "2D-RS",
           "rate": 0.55,
-          "n_erased_mean": 4222.333333333333,
+          "n_erased_mean": 4630.666666666667,
           "n_erased_per_trial": [
-            4195,
-            4267,
-            4205
+            4672,
+            4578,
+            4642
           ],
-          "n": 7744,
+          "n": 8448,
           "k": 4096,
           "trials": 3,
           "successes": 0,
@@ -950,35 +1030,44 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0015,
+          "mean_decode_time_s": 0.0017,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0015,
-            0.0015,
-            0.0015
+            0.0017,
+            0.0017,
+            0.0017
           ]
         }
       ]
     },
     {
-      "scheme": "BC-1024",
+      "scheme": "BC-2048-L2",
       "k": 4096,
       "n": 8192,
+      "rate": 0.5,
       "overhead": 2.0,
-      "encode_time_s": 8.9481,
+      "encode_time_s": 14.1586,
       "setup_time_s": 0.0,
       "params": {
-        "omega": 1024,
-        "rho": 1024,
-        "lambda": 4,
-        "mu": 4,
-        "n0": 5120,
+        "omega": 2048,
+        "rho": 2048,
+        "lambda": 2,
+        "mu": 2,
+        "n0": 6144,
+        "k0": 4096,
         "d_min": 4097,
+        "worst_case_tolerance": 0.5,
+        "predicted_local_reach": 0.3333333333333333,
         "pair_unknown_cap": 256
+      },
+      "component": {
+        "n0": 6144,
+        "k0": 4096,
+        "desc": "[6144, 4096] local, x2 blocks"
       },
       "trials": [
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.02,
           "n_erased_mean": 172.25,
           "n_erased_per_trial": [
@@ -998,17 +1087,17 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.3753,
-          "mean_decode_time_success_only_s": 0.3753,
+          "mean_decode_time_s": 0.4136,
+          "mean_decode_time_success_only_s": 0.4136,
           "decode_times_s": [
-            0.3614,
-            0.3827,
-            0.3463,
-            0.4109
+            0.3927,
+            0.4265,
+            0.377,
+            0.4584
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.05,
           "n_erased_mean": 416.75,
           "n_erased_per_trial": [
@@ -1028,24 +1117,24 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.8379,
-          "mean_decode_time_success_only_s": 0.8379,
+          "mean_decode_time_s": 0.9789,
+          "mean_decode_time_success_only_s": 0.9789,
           "decode_times_s": [
-            0.8171,
-            0.8907,
-            0.8277,
-            0.8159
+            0.9461,
+            1.0386,
+            0.9753,
+            0.9555
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.08,
-          "n_erased_mean": 670.0,
+          "n_erased_mean": 679.25,
           "n_erased_per_trial": [
-            645,
-            684,
-            668,
-            683
+            702,
+            648,
+            669,
+            698
           ],
           "n": 8192,
           "k": 4096,
@@ -1058,24 +1147,24 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 1.3328,
-          "mean_decode_time_success_only_s": 1.3328,
+          "mean_decode_time_s": 1.6369,
+          "mean_decode_time_success_only_s": 1.6369,
           "decode_times_s": [
-            1.2804,
-            1.3572,
-            1.3365,
-            1.3571
+            1.6905,
+            1.5624,
+            1.6112,
+            1.6837
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.1,
-          "n_erased_mean": 835.5,
+          "n_erased_mean": 827.5,
           "n_erased_per_trial": [
-            840,
-            823,
-            808,
-            871
+            800,
+            843,
+            825,
+            842
           ],
           "n": 8192,
           "k": 4096,
@@ -1088,24 +1177,24 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 1.7315,
-          "mean_decode_time_success_only_s": 1.7315,
+          "mean_decode_time_s": 2.0108,
+          "mean_decode_time_success_only_s": 2.0108,
           "decode_times_s": [
-            1.7735,
-            1.7243,
-            1.6506,
-            1.7774
+            1.9238,
+            2.0415,
+            2.0243,
+            2.0536
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.12,
-          "n_erased_mean": 981.25,
+          "n_erased_mean": 973.25,
           "n_erased_per_trial": [
-            972,
-            980,
-            976,
-            997
+            941,
+            974,
+            951,
+            1027
           ],
           "n": 8192,
           "k": 4096,
@@ -1118,66 +1207,118 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 2.025,
-          "mean_decode_time_success_only_s": 2.025,
+          "mean_decode_time_s": 2.4011,
+          "mean_decode_time_success_only_s": 2.4011,
           "decode_times_s": [
-            2.0085,
-            2.0296,
-            2.0019,
-            2.06
+            2.3043,
+            2.4061,
+            2.3424,
+            2.5517
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.15,
-          "n_erased_mean": 1223.125,
+          "n_erased_mean": 1237.5,
           "n_erased_per_trial": [
             1222,
-            1198,
-            1215,
-            1232,
-            1239,
-            1222,
-            1226,
-            1231
+            1221,
+            1212,
+            1295
           ],
           "n": 8192,
           "k": 4096,
-          "trials": 8,
-          "successes": 8,
+          "trials": 4,
+          "successes": 4,
           "success_rate": 1.0,
           "success_rate_ci95": [
-            0.6756,
+            0.5101,
             1.0
           ],
-          "claimed_ok": 8,
+          "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 2.611,
-          "mean_decode_time_success_only_s": 2.611,
+          "mean_decode_time_s": 3.1868,
+          "mean_decode_time_success_only_s": 3.1868,
           "decode_times_s": [
-            2.6166,
-            2.5864,
-            2.5891,
-            2.6704,
-            2.6252,
-            2.6001,
-            2.5825,
-            2.618
+            3.1801,
+            3.1299,
+            3.1138,
+            3.3236
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-2048-L2",
           "rate": 0.2,
-          "n_erased_mean": 1632.375,
+          "n_erased_mean": 1657.5,
           "n_erased_per_trial": [
-            1650,
-            1644,
-            1622,
-            1641,
-            1675,
-            1640,
-            1569,
-            1618
+            1682,
+            1612,
+            1678,
+            1658
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 4.4259,
+          "mean_decode_time_success_only_s": 4.4259,
+          "decode_times_s": [
+            4.4795,
+            4.303,
+            4.5213,
+            4.3998
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.25,
+          "n_erased_mean": 2026.25,
+          "n_erased_per_trial": [
+            2017,
+            1999,
+            2002,
+            2087
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 5.5971,
+          "mean_decode_time_success_only_s": 5.5971,
+          "decode_times_s": [
+            5.5509,
+            5.5709,
+            5.4941,
+            5.7724
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.3,
+          "n_erased_mean": 2459.125,
+          "n_erased_per_trial": [
+            2525,
+            2474,
+            2467,
+            2435,
+            2466,
+            2456,
+            2404,
+            2446
           ],
           "n": 8192,
           "k": 4096,
@@ -1190,32 +1331,70 @@
           ],
           "claimed_ok": 8,
           "silent_corruption": 0,
-          "mean_decode_time_s": 3.5867,
-          "mean_decode_time_success_only_s": 3.5867,
+          "mean_decode_time_s": 7.1516,
+          "mean_decode_time_success_only_s": 7.1516,
           "decode_times_s": [
-            3.6314,
-            3.6134,
-            3.5797,
-            3.6233,
-            3.6915,
-            3.584,
-            3.4111,
-            3.559
+            7.4125,
+            7.2058,
+            7.0943,
+            6.9848,
+            7.1969,
+            7.1895,
+            6.984,
+            7.1447
           ]
         },
         {
-          "scheme": "BC-1024",
-          "rate": 0.25,
-          "n_erased_mean": 2029.875,
+          "scheme": "BC-2048-L2",
+          "rate": 0.33,
+          "n_erased_mean": 2684.75,
           "n_erased_per_trial": [
-            2047,
-            1977,
-            2012,
-            2090,
-            2040,
-            2029,
-            2004,
-            2040
+            2678,
+            2624,
+            2662,
+            2749,
+            2692,
+            2744,
+            2640,
+            2689
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 7.9551,
+          "mean_decode_time_success_only_s": 7.9551,
+          "decode_times_s": [
+            7.8895,
+            7.7118,
+            7.8127,
+            8.1857,
+            8.0364,
+            8.1163,
+            7.828,
+            8.0607
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.35,
+          "n_erased_mean": 2844.375,
+          "n_erased_per_trial": [
+            2857,
+            2768,
+            2774,
+            2846,
+            2935,
+            2908,
+            2823,
+            2844
           ],
           "n": 8192,
           "k": 4096,
@@ -1228,28 +1407,66 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0083,
+          "mean_decode_time_s": 0.0048,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0086,
-            0.0083,
-            0.0084,
-            0.0083,
-            0.0084,
-            0.0082,
-            0.0082,
-            0.0082
+            0.0052,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048
           ]
         },
         {
-          "scheme": "BC-1024",
-          "rate": 0.3,
-          "n_erased_mean": 2409.75,
+          "scheme": "BC-2048-L2",
+          "rate": 0.38,
+          "n_erased_mean": 3108.25,
           "n_erased_per_trial": [
-            2433,
-            2374,
-            2378,
-            2454
+            3155,
+            3061,
+            3128,
+            3125,
+            3178,
+            3070,
+            3068,
+            3081
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.3244
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0048,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0047,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0047,
+            0.0047,
+            0.0047
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.4,
+          "n_erased_mean": 3281.0,
+          "n_erased_per_trial": [
+            3229,
+            3255,
+            3314,
+            3326
           ],
           "n": 8192,
           "k": 4096,
@@ -1262,20 +1479,518 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0083,
+          "mean_decode_time_s": 0.0048,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0084,
-            0.0083,
-            0.0084,
-            0.0083
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048
           ]
         },
         {
-          "scheme": "BC-1024",
-          "rate": 0.35,
-          "n_erased_mean": 2877.5,
+          "scheme": "BC-2048-L2",
+          "rate": 0.45,
+          "n_erased_mean": 3720.0,
           "n_erased_per_trial": [
+            3797,
+            3747,
+            3637,
+            3699
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0047,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0047,
+            0.0047,
+            0.0047,
+            0.0048
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.48,
+          "n_erased_mean": 3952.25,
+          "n_erased_per_trial": [
+            3921,
+            4002,
+            3929,
+            3957
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0048,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.5,
+          "n_erased_mean": 4093.75,
+          "n_erased_per_trial": [
+            4058,
+            4130,
+            4087,
+            4100
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0048,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0047,
+            0.0048,
+            0.0048,
+            0.0048
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.52,
+          "n_erased_mean": 4282.0,
+          "n_erased_per_trial": [
+            4307,
+            4272,
+            4250,
+            4299
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0048,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0048,
+            0.0048,
+            0.0048,
+            0.0048
+          ]
+        },
+        {
+          "scheme": "BC-2048-L2",
+          "rate": 0.55,
+          "n_erased_mean": 4527.25,
+          "n_erased_per_trial": [
+            4580,
+            4472,
+            4534,
+            4523
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0047,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0047,
+            0.0047,
+            0.0047,
+            0.0047
+          ]
+        }
+      ]
+    },
+    {
+      "scheme": "BC-1024-L2",
+      "k": 4096,
+      "n": 8192,
+      "rate": 0.5,
+      "overhead": 2.0,
+      "encode_time_s": 6.649,
+      "setup_time_s": 0.0,
+      "params": {
+        "omega": 1024,
+        "rho": 1024,
+        "lambda": 2,
+        "mu": 4,
+        "n0": 3072,
+        "k0": 2048,
+        "d_min": 2049,
+        "worst_case_tolerance": 0.25,
+        "predicted_local_reach": 0.3333333333333333,
+        "pair_unknown_cap": 256
+      },
+      "component": {
+        "n0": 3072,
+        "k0": 2048,
+        "desc": "[3072, 2048] local, x4 blocks"
+      },
+      "trials": [
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.02,
+          "n_erased_mean": 172.25,
+          "n_erased_per_trial": [
+            163,
+            177,
+            157,
+            192
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.2353,
+          "mean_decode_time_success_only_s": 0.2353,
+          "decode_times_s": [
+            0.2256,
+            0.2407,
+            0.2161,
+            0.2589
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.05,
+          "n_erased_mean": 416.75,
+          "n_erased_per_trial": [
+            404,
+            443,
+            412,
+            408
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.5375,
+          "mean_decode_time_success_only_s": 0.5375,
+          "decode_times_s": [
+            0.5216,
+            0.5701,
+            0.5309,
+            0.5272
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.08,
+          "n_erased_mean": 679.25,
+          "n_erased_per_trial": [
+            702,
+            648,
+            669,
+            698
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.8837,
+          "mean_decode_time_success_only_s": 0.8837,
+          "decode_times_s": [
+            0.917,
+            0.8346,
+            0.8727,
+            0.9106
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.1,
+          "n_erased_mean": 827.5,
+          "n_erased_per_trial": [
+            800,
+            843,
+            825,
+            842
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.0857,
+          "mean_decode_time_success_only_s": 1.0857,
+          "decode_times_s": [
+            1.0475,
+            1.1053,
+            1.08,
+            1.1102
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.12,
+          "n_erased_mean": 973.25,
+          "n_erased_per_trial": [
+            941,
+            974,
+            951,
+            1027
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.2909,
+          "mean_decode_time_success_only_s": 1.2909,
+          "decode_times_s": [
+            1.2448,
+            1.2892,
+            1.2591,
+            1.3706
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.15,
+          "n_erased_mean": 1237.5,
+          "n_erased_per_trial": [
+            1222,
+            1221,
+            1212,
+            1295
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.6773,
+          "mean_decode_time_success_only_s": 1.6773,
+          "decode_times_s": [
+            1.6527,
+            1.6601,
+            1.6418,
+            1.7547
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.2,
+          "n_erased_mean": 1657.5,
+          "n_erased_per_trial": [
+            1682,
+            1612,
+            1678,
+            1658
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.3291,
+          "mean_decode_time_success_only_s": 2.3291,
+          "decode_times_s": [
+            2.3542,
+            2.2456,
+            2.3788,
+            2.3379
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.25,
+          "n_erased_mean": 2026.25,
+          "n_erased_per_trial": [
+            2017,
+            1999,
+            2002,
+            2087
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.9466,
+          "mean_decode_time_success_only_s": 2.9466,
+          "decode_times_s": [
+            2.9382,
+            2.8948,
+            2.9105,
+            3.0428
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.3,
+          "n_erased_mean": 2459.125,
+          "n_erased_per_trial": [
+            2525,
+            2474,
+            2467,
+            2435,
+            2466,
+            2456,
+            2404,
+            2446
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 3.7094,
+          "mean_decode_time_success_only_s": 3.7094,
+          "decode_times_s": [
+            3.8245,
+            3.7324,
+            3.7122,
+            3.6675,
+            3.7378,
+            3.7302,
+            3.5988,
+            3.6715
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.33,
+          "n_erased_mean": 2684.75,
+          "n_erased_per_trial": [
+            2678,
+            2624,
+            2662,
+            2749,
+            2692,
+            2744,
+            2640,
+            2689
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 4.1351,
+          "mean_decode_time_success_only_s": 4.1351,
+          "decode_times_s": [
+            4.0987,
+            3.9887,
+            4.1024,
+            4.2498,
+            4.1775,
+            4.2494,
+            4.0324,
+            4.1824
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.35,
+          "n_erased_mean": 2844.375,
+          "n_erased_per_trial": [
+            2857,
+            2768,
+            2774,
+            2846,
             2935,
             2908,
             2823,
@@ -1283,6 +1998,78 @@
           ],
           "n": 8192,
           "k": 4096,
+          "trials": 8,
+          "successes": 1,
+          "success_rate": 0.125,
+          "success_rate_ci95": [
+            0.0224,
+            0.4709
+          ],
+          "claimed_ok": 1,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.5425,
+          "mean_decode_time_success_only_s": 4.3041,
+          "decode_times_s": [
+            0.0053,
+            4.3041,
+            0.0053,
+            0.0051,
+            0.0051,
+            0.0051,
+            0.005,
+            0.0051
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.38,
+          "n_erased_mean": 3108.25,
+          "n_erased_per_trial": [
+            3155,
+            3061,
+            3128,
+            3125,
+            3178,
+            3070,
+            3068,
+            3081
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.3244
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.005,
+            0.0051,
+            0.005,
+            0.005,
+            0.005,
+            0.005,
+            0.005,
+            0.0051
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.4,
+          "n_erased_mean": 3281.0,
+          "n_erased_per_trial": [
+            3229,
+            3255,
+            3314,
+            3326
+          ],
+          "n": 8192,
+          "k": 4096,
           "trials": 4,
           "successes": 0,
           "success_rate": 0.0,
@@ -1292,17 +2079,549 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0082,
+          "mean_decode_time_s": 0.005,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0082,
-            0.0082,
-            0.0082,
-            0.0082
+            0.0051,
+            0.005,
+            0.005,
+            0.005
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L2",
+          "rate": 0.45,
+          "n_erased_mean": 3720.0,
+          "n_erased_per_trial": [
+            3797,
+            3747,
+            3637,
+            3699
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.005,
+            0.005,
+            0.005,
+            0.005
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.48,
+          "n_erased_mean": 3952.25,
+          "n_erased_per_trial": [
+            3921,
+            4002,
+            3929,
+            3957
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.005,
+            0.005,
+            0.005,
+            0.005
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.5,
+          "n_erased_mean": 4093.75,
+          "n_erased_per_trial": [
+            4058,
+            4130,
+            4087,
+            4100
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.005,
+            0.005,
+            0.005,
+            0.005
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.52,
+          "n_erased_mean": 4282.0,
+          "n_erased_per_trial": [
+            4307,
+            4272,
+            4250,
+            4299
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.005,
+            0.005,
+            0.005,
+            0.005
+          ]
+        },
+        {
+          "scheme": "BC-1024-L2",
+          "rate": 0.55,
+          "n_erased_mean": 4527.25,
+          "n_erased_per_trial": [
+            4580,
+            4472,
+            4534,
+            4523
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.005,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0051,
+            0.0051,
+            0.005,
+            0.005
+          ]
+        }
+      ]
+    },
+    {
+      "scheme": "BC-1024-L3",
+      "k": 4096,
+      "n": 8192,
+      "rate": 0.5,
+      "overhead": 2.0,
+      "encode_time_s": 7.856,
+      "setup_time_s": 0.0,
+      "params": {
+        "omega": 1024,
+        "rho": 1024,
+        "lambda": 3,
+        "mu": 4,
+        "n0": 4096,
+        "k0": 3072,
+        "d_min": 3073,
+        "worst_case_tolerance": 0.375,
+        "predicted_local_reach": 0.25,
+        "pair_unknown_cap": 256
+      },
+      "component": {
+        "n0": 4096,
+        "k0": 3072,
+        "desc": "[4096, 3072] local, x4 blocks"
+      },
+      "trials": [
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.02,
+          "n_erased_mean": 172.25,
+          "n_erased_per_trial": [
+            163,
+            177,
+            157,
+            192
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.3045,
+          "mean_decode_time_success_only_s": 0.3045,
+          "decode_times_s": [
+            0.2933,
+            0.3108,
+            0.2787,
+            0.335
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.05,
+          "n_erased_mean": 416.75,
+          "n_erased_per_trial": [
+            404,
+            443,
+            412,
+            408
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.6932,
+          "mean_decode_time_success_only_s": 0.6932,
+          "decode_times_s": [
+            0.6705,
+            0.7346,
+            0.6887,
+            0.6788
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.08,
+          "n_erased_mean": 679.25,
+          "n_erased_per_trial": [
+            702,
+            648,
+            669,
+            698
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.1316,
+          "mean_decode_time_success_only_s": 1.1316,
+          "decode_times_s": [
+            1.1683,
+            1.0796,
+            1.1131,
+            1.1654
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.1,
+          "n_erased_mean": 827.5,
+          "n_erased_per_trial": [
+            800,
+            843,
+            825,
+            842
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.3886,
+          "mean_decode_time_success_only_s": 1.3886,
+          "decode_times_s": [
+            1.3339,
+            1.4179,
+            1.3925,
+            1.4101
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.12,
+          "n_erased_mean": 973.25,
+          "n_erased_per_trial": [
+            941,
+            974,
+            951,
+            1027
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.6546,
+          "mean_decode_time_success_only_s": 1.6546,
+          "decode_times_s": [
+            1.5935,
+            1.6489,
+            1.6178,
+            1.7582
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.15,
+          "n_erased_mean": 1237.5,
+          "n_erased_per_trial": [
+            1222,
+            1221,
+            1212,
+            1295
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.1493,
+          "mean_decode_time_success_only_s": 2.1493,
+          "decode_times_s": [
+            2.1215,
+            2.1143,
+            2.1007,
+            2.2605
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.2,
+          "n_erased_mean": 1652.25,
+          "n_erased_per_trial": [
+            1682,
+            1612,
+            1678,
+            1658,
+            1685,
+            1591,
+            1634,
+            1678
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.9616,
+          "mean_decode_time_success_only_s": 2.9616,
+          "decode_times_s": [
+            3.0025,
+            2.8789,
+            3.0163,
+            2.9671,
+            3.0339,
+            2.846,
+            2.9355,
+            3.0129
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.25,
+          "n_erased_mean": 2037.875,
+          "n_erased_per_trial": [
+            2017,
+            1999,
+            2002,
+            2087,
+            2085,
+            2038,
+            1997,
+            2078
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 3.7707,
+          "mean_decode_time_success_only_s": 3.7707,
+          "decode_times_s": [
+            3.7258,
+            3.7064,
+            3.679,
+            3.857,
+            3.8542,
+            3.8096,
+            3.6969,
+            3.8366
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.3,
+          "n_erased_mean": 2459.125,
+          "n_erased_per_trial": [
+            2525,
+            2474,
+            2467,
+            2435,
+            2466,
+            2456,
+            2404,
+            2446
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.3244
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0064,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0065,
+            0.0065,
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0063,
+            0.0063,
+            0.0063
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.33,
+          "n_erased_mean": 2678.25,
+          "n_erased_per_trial": [
+            2678,
+            2624,
+            2662,
+            2749
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0064,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0064,
+            0.0065,
+            0.0064,
+            0.0064
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
+          "rate": 0.35,
+          "n_erased_mean": 2811.25,
+          "n_erased_per_trial": [
+            2857,
+            2768,
+            2774,
+            2846
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0064,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
+          ]
+        },
+        {
+          "scheme": "BC-1024-L3",
           "rate": 0.38,
           "n_erased_mean": 3117.25,
           "n_erased_per_trial": [
@@ -1322,24 +2641,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0082,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0083,
-            0.0083,
-            0.0082,
-            0.0082
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.4,
-          "n_erased_mean": 3263.0,
+          "n_erased_mean": 3281.0,
           "n_erased_per_trial": [
-            3335,
-            3241,
-            3234,
-            3242
+            3229,
+            3255,
+            3314,
+            3326
           ],
           "n": 8192,
           "k": 4096,
@@ -1352,24 +2671,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0083,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0084,
-            0.0082,
-            0.0083,
-            0.0083
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.45,
-          "n_erased_mean": 3683.75,
+          "n_erased_mean": 3720.0,
           "n_erased_per_trial": [
-            3650,
-            3676,
-            3681,
-            3728
+            3797,
+            3747,
+            3637,
+            3699
           ],
           "n": 8192,
           "k": 4096,
@@ -1382,24 +2701,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0082,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0082,
-            0.0082,
-            0.0082,
-            0.0082
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.48,
-          "n_erased_mean": 3957.5,
+          "n_erased_mean": 3952.25,
           "n_erased_per_trial": [
-            4050,
-            3989,
-            3861,
-            3930
+            3921,
+            4002,
+            3929,
+            3957
           ],
           "n": 8192,
           "k": 4096,
@@ -1412,24 +2731,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0083,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0082,
-            0.0082,
-            0.0087,
-            0.0083
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.5,
-          "n_erased_mean": 4131.0,
+          "n_erased_mean": 4093.75,
           "n_erased_per_trial": [
-            4099,
-            4172,
-            4108,
-            4145
+            4058,
+            4130,
+            4087,
+            4100
           ],
           "n": 8192,
           "k": 4096,
@@ -1442,24 +2761,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0083,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0082,
-            0.0082,
-            0.0085,
-            0.0083
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.52,
-          "n_erased_mean": 4257.75,
+          "n_erased_mean": 4282.0,
           "n_erased_per_trial": [
-            4218,
-            4299,
+            4307,
+            4272,
             4250,
-            4264
+            4299
           ],
           "n": 8192,
           "k": 4096,
@@ -1472,24 +2791,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0084,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0085,
-            0.0083,
-            0.0085,
-            0.0082
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         },
         {
-          "scheme": "BC-1024",
+          "scheme": "BC-1024-L3",
           "rate": 0.55,
-          "n_erased_mean": 4506.75,
+          "n_erased_mean": 4527.25,
           "n_erased_per_trial": [
-            4513,
-            4508,
+            4580,
             4472,
-            4534
+            4534,
+            4523
           ],
           "n": 8192,
           "k": 4096,
@@ -1502,36 +2821,637 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0082,
+          "mean_decode_time_s": 0.0064,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0082,
-            0.0082,
-            0.0083,
-            0.0083
+            0.0064,
+            0.0064,
+            0.0064,
+            0.0064
           ]
         }
       ]
     },
     {
-      "scheme": "BC-512",
+      "scheme": "BC-1024-L4",
       "k": 4096,
       "n": 8192,
+      "rate": 0.5,
       "overhead": 2.0,
-      "encode_time_s": 6.6287,
+      "encode_time_s": 8.9958,
+      "setup_time_s": 0.0,
+      "params": {
+        "omega": 1024,
+        "rho": 1024,
+        "lambda": 4,
+        "mu": 4,
+        "n0": 5120,
+        "k0": 4096,
+        "d_min": 4097,
+        "worst_case_tolerance": 0.5,
+        "predicted_local_reach": 0.2,
+        "pair_unknown_cap": 256
+      },
+      "component": {
+        "n0": 5120,
+        "k0": 4096,
+        "desc": "[5120, 4096] local, x4 blocks"
+      },
+      "trials": [
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.02,
+          "n_erased_mean": 172.25,
+          "n_erased_per_trial": [
+            163,
+            177,
+            157,
+            192
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.3759,
+          "mean_decode_time_success_only_s": 0.3759,
+          "decode_times_s": [
+            0.3591,
+            0.384,
+            0.3497,
+            0.4109
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.05,
+          "n_erased_mean": 416.75,
+          "n_erased_per_trial": [
+            404,
+            443,
+            412,
+            408
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.8492,
+          "mean_decode_time_success_only_s": 0.8492,
+          "decode_times_s": [
+            0.822,
+            0.901,
+            0.8443,
+            0.8296
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.08,
+          "n_erased_mean": 679.25,
+          "n_erased_per_trial": [
+            702,
+            648,
+            669,
+            698
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.3933,
+          "mean_decode_time_success_only_s": 1.3933,
+          "decode_times_s": [
+            1.4397,
+            1.3246,
+            1.3793,
+            1.4298
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.1,
+          "n_erased_mean": 827.5,
+          "n_erased_per_trial": [
+            800,
+            843,
+            825,
+            842
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.7019,
+          "mean_decode_time_success_only_s": 1.7019,
+          "decode_times_s": [
+            1.6327,
+            1.7307,
+            1.7098,
+            1.7343
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.12,
+          "n_erased_mean": 973.25,
+          "n_erased_per_trial": [
+            941,
+            974,
+            951,
+            1027
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.0276,
+          "mean_decode_time_success_only_s": 2.0276,
+          "decode_times_s": [
+            1.9481,
+            2.0342,
+            1.977,
+            2.1513
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.15,
+          "n_erased_mean": 1230.125,
+          "n_erased_per_trial": [
+            1222,
+            1221,
+            1212,
+            1295,
+            1210,
+            1241,
+            1227,
+            1213
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 8,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.6756,
+            1.0
+          ],
+          "claimed_ok": 8,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.632,
+          "mean_decode_time_success_only_s": 2.632,
+          "decode_times_s": [
+            2.6024,
+            2.615,
+            2.5986,
+            2.7737,
+            2.573,
+            2.6502,
+            2.6581,
+            2.5854
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.2,
+          "n_erased_mean": 1652.25,
+          "n_erased_per_trial": [
+            1682,
+            1612,
+            1678,
+            1658,
+            1685,
+            1591,
+            1634,
+            1678
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 5,
+          "success_rate": 0.625,
+          "success_rate_ci95": [
+            0.3057,
+            0.8632
+          ],
+          "claimed_ok": 5,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 2.2573,
+          "mean_decode_time_success_only_s": 3.6068,
+          "decode_times_s": [
+            0.0084,
+            3.5244,
+            0.0081,
+            3.6536,
+            3.7265,
+            3.533,
+            3.5966,
+            0.0082
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.25,
+          "n_erased_mean": 2037.875,
+          "n_erased_per_trial": [
+            2017,
+            1999,
+            2002,
+            2087,
+            2085,
+            2038,
+            1997,
+            2078
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 8,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.3244
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0078,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.008,
+            0.0079,
+            0.0082,
+            0.0079,
+            0.0076,
+            0.0076,
+            0.0076,
+            0.0077
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.3,
+          "n_erased_mean": 2475.25,
+          "n_erased_per_trial": [
+            2525,
+            2474,
+            2467,
+            2435
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0076,
+            0.0076,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.33,
+          "n_erased_mean": 2678.25,
+          "n_erased_per_trial": [
+            2678,
+            2624,
+            2662,
+            2749
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0075,
+            0.0076,
+            0.0076,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.35,
+          "n_erased_mean": 2811.25,
+          "n_erased_per_trial": [
+            2857,
+            2768,
+            2774,
+            2846
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0075,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0075,
+            0.0075,
+            0.0075,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.38,
+          "n_erased_mean": 3117.25,
+          "n_erased_per_trial": [
+            3155,
+            3061,
+            3128,
+            3125
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0075,
+            0.0075,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.4,
+          "n_erased_mean": 3281.0,
+          "n_erased_per_trial": [
+            3229,
+            3255,
+            3314,
+            3326
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0076,
+            0.0076,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.45,
+          "n_erased_mean": 3720.0,
+          "n_erased_per_trial": [
+            3797,
+            3747,
+            3637,
+            3699
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0076,
+            0.0075,
+            0.0076
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.48,
+          "n_erased_mean": 3952.25,
+          "n_erased_per_trial": [
+            3921,
+            4002,
+            3929,
+            3957
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0075,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0075,
+            0.0075,
+            0.0075
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.5,
+          "n_erased_mean": 4093.75,
+          "n_erased_per_trial": [
+            4058,
+            4130,
+            4087,
+            4100
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0075,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0075,
+            0.0075,
+            0.0075,
+            0.0075
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.52,
+          "n_erased_mean": 4282.0,
+          "n_erased_per_trial": [
+            4307,
+            4272,
+            4250,
+            4299
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0075,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0075,
+            0.0075,
+            0.0075,
+            0.0075
+          ]
+        },
+        {
+          "scheme": "BC-1024-L4",
+          "rate": 0.55,
+          "n_erased_mean": 4527.25,
+          "n_erased_per_trial": [
+            4580,
+            4472,
+            4534,
+            4523
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 0,
+          "success_rate": 0.0,
+          "success_rate_ci95": [
+            0.0,
+            0.4899
+          ],
+          "claimed_ok": 0,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.0076,
+          "mean_decode_time_success_only_s": null,
+          "decode_times_s": [
+            0.0076,
+            0.0075,
+            0.0076,
+            0.0076
+          ]
+        }
+      ]
+    },
+    {
+      "scheme": "BC-512-L2",
+      "k": 4096,
+      "n": 8192,
+      "rate": 0.5,
+      "overhead": 2.0,
+      "encode_time_s": 3.5633,
       "setup_time_s": 0.0,
       "params": {
         "omega": 512,
         "rho": 512,
-        "lambda": 8,
+        "lambda": 2,
         "mu": 8,
-        "n0": 4608,
-        "d_min": 4097,
+        "n0": 1536,
+        "k0": 1024,
+        "d_min": 1025,
+        "worst_case_tolerance": 0.125,
+        "predicted_local_reach": 0.3333333333333333,
         "pair_unknown_cap": 256
+      },
+      "component": {
+        "n0": 1536,
+        "k0": 1024,
+        "desc": "[1536, 1024] local, x8 blocks"
       },
       "trials": [
         {
-          "scheme": "BC-512",
+          "scheme": "BC-512-L2",
           "rate": 0.02,
           "n_erased_mean": 172.25,
           "n_erased_per_trial": [
@@ -1551,563 +3471,24 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.418,
-          "mean_decode_time_success_only_s": 0.418,
+          "mean_decode_time_s": 0.1493,
+          "mean_decode_time_success_only_s": 0.1493,
           "decode_times_s": [
-            0.4056,
-            0.4198,
-            0.3975,
-            0.4491
+            0.1454,
+            0.1507,
+            0.1398,
+            0.1614
           ]
         },
         {
-          "scheme": "BC-512",
+          "scheme": "BC-512-L2",
           "rate": 0.05,
-          "n_erased_mean": 428.625,
+          "n_erased_mean": 416.75,
           "n_erased_per_trial": [
             404,
             443,
             412,
-            408,
-            452,
-            418,
-            453,
-            439
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 8,
-          "success_rate": 1.0,
-          "success_rate_ci95": [
-            0.6756,
-            1.0
-          ],
-          "claimed_ok": 8,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.8411,
-          "mean_decode_time_success_only_s": 0.8411,
-          "decode_times_s": [
-            0.7959,
-            0.8642,
-            0.8139,
-            0.8014,
-            0.8862,
-            0.8204,
-            0.8875,
-            0.8593
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.08,
-          "n_erased_mean": 659.0,
-          "n_erased_per_trial": [
-            645,
-            684,
-            668,
-            683,
-            600,
-            665,
-            631,
-            696
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 8,
-          "success_rate": 1.0,
-          "success_rate_ci95": [
-            0.6756,
-            1.0
-          ],
-          "claimed_ok": 8,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 1.2614,
-          "mean_decode_time_success_only_s": 1.2614,
-          "decode_times_s": [
-            1.2281,
-            1.2961,
-            1.2883,
-            1.3158,
-            1.143,
-            1.2774,
-            1.2123,
-            1.33
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.1,
-          "n_erased_mean": 825.75,
-          "n_erased_per_trial": [
-            840,
-            823,
-            808,
-            871,
-            840,
-            824,
-            802,
-            798
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 8,
-          "success_rate": 1.0,
-          "success_rate_ci95": [
-            0.6756,
-            1.0
-          ],
-          "claimed_ok": 8,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 1.5859,
-          "mean_decode_time_success_only_s": 1.5859,
-          "decode_times_s": [
-            1.6045,
-            1.597,
-            1.546,
-            1.6689,
-            1.6222,
-            1.5752,
-            1.5425,
-            1.5314
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.12,
-          "n_erased_mean": 989.125,
-          "n_erased_per_trial": [
-            972,
-            980,
-            976,
-            997,
-            1010,
-            1004,
-            949,
-            1025
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.3244
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0138,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0143,
-            0.0141,
-            0.0139,
-            0.0135,
-            0.0136,
-            0.0139,
-            0.0136,
-            0.0137
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.15,
-          "n_erased_mean": 1223.125,
-          "n_erased_per_trial": [
-            1222,
-            1198,
-            1215,
-            1232,
-            1239,
-            1222,
-            1226,
-            1231
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.3244
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0137,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0137,
-            0.0138,
-            0.0137,
-            0.0137,
-            0.0137,
-            0.0137,
-            0.0138,
-            0.0137
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.2,
-          "n_erased_mean": 1639.25,
-          "n_erased_per_trial": [
-            1650,
-            1644,
-            1622,
-            1641
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0139,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0138,
-            0.0137,
-            0.0139,
-            0.0143
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.25,
-          "n_erased_mean": 2031.5,
-          "n_erased_per_trial": [
-            2047,
-            1977,
-            2012,
-            2090
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0137,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.014,
-            0.0137,
-            0.0137,
-            0.0137
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.3,
-          "n_erased_mean": 2409.75,
-          "n_erased_per_trial": [
-            2433,
-            2374,
-            2378,
-            2454
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0138,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0137,
-            0.0136,
-            0.014,
-            0.0139
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.35,
-          "n_erased_mean": 2877.5,
-          "n_erased_per_trial": [
-            2935,
-            2908,
-            2823,
-            2844
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0136,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0135,
-            0.0136,
-            0.0136,
-            0.0137
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.38,
-          "n_erased_mean": 3117.25,
-          "n_erased_per_trial": [
-            3155,
-            3061,
-            3128,
-            3125
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0137,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0136,
-            0.0136,
-            0.0136,
-            0.0141
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.4,
-          "n_erased_mean": 3263.0,
-          "n_erased_per_trial": [
-            3335,
-            3241,
-            3234,
-            3242
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0136,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0138,
-            0.0137,
-            0.0134,
-            0.0134
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.45,
-          "n_erased_mean": 3683.75,
-          "n_erased_per_trial": [
-            3650,
-            3676,
-            3681,
-            3728
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0137,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0135,
-            0.0138,
-            0.0135,
-            0.0141
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.48,
-          "n_erased_mean": 3957.5,
-          "n_erased_per_trial": [
-            4050,
-            3989,
-            3861,
-            3930
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0137,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0139,
-            0.0137,
-            0.0136,
-            0.0138
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.5,
-          "n_erased_mean": 4131.0,
-          "n_erased_per_trial": [
-            4099,
-            4172,
-            4108,
-            4145
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0136,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0135,
-            0.0138,
-            0.0136,
-            0.0137
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.52,
-          "n_erased_mean": 4257.75,
-          "n_erased_per_trial": [
-            4218,
-            4299,
-            4250,
-            4264
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0139,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.014,
-            0.0136,
-            0.0139,
-            0.014
-          ]
-        },
-        {
-          "scheme": "BC-512",
-          "rate": 0.55,
-          "n_erased_mean": 4506.75,
-          "n_erased_per_trial": [
-            4513,
-            4508,
-            4472,
-            4534
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0138,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0138,
-            0.0138,
-            0.0139,
-            0.0138
-          ]
-        }
-      ]
-    },
-    {
-      "scheme": "BC-256",
-      "k": 4096,
-      "n": 8192,
-      "overhead": 2.0,
-      "encode_time_s": 5.4245,
-      "setup_time_s": 0.0,
-      "params": {
-        "omega": 256,
-        "rho": 256,
-        "lambda": 16,
-        "mu": 16,
-        "n0": 4352,
-        "d_min": 4097,
-        "pair_unknown_cap": 256
-      },
-      "trials": [
-        {
-          "scheme": "BC-256",
-          "rate": 0.02,
-          "n_erased_mean": 172.25,
-          "n_erased_per_trial": [
-            163,
-            177,
-            157,
-            192
+            408
           ],
           "n": 8192,
           "k": 4096,
@@ -2120,28 +3501,208 @@
           ],
           "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.5857,
-          "mean_decode_time_success_only_s": 0.5857,
+          "mean_decode_time_s": 0.318,
+          "mean_decode_time_success_only_s": 0.318,
           "decode_times_s": [
-            0.5711,
-            0.5879,
-            0.5669,
-            0.6171
+            0.3068,
+            0.3395,
+            0.3143,
+            0.3115
           ]
         },
         {
-          "scheme": "BC-256",
-          "rate": 0.05,
-          "n_erased_mean": 428.625,
+          "scheme": "BC-512-L2",
+          "rate": 0.08,
+          "n_erased_mean": 679.25,
           "n_erased_per_trial": [
-            404,
-            443,
-            412,
-            408,
-            452,
-            418,
-            453,
-            439
+            702,
+            648,
+            669,
+            698
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.5126,
+          "mean_decode_time_success_only_s": 0.5126,
+          "decode_times_s": [
+            0.5305,
+            0.4884,
+            0.5045,
+            0.527
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.1,
+          "n_erased_mean": 827.5,
+          "n_erased_per_trial": [
+            800,
+            843,
+            825,
+            842
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.6262,
+          "mean_decode_time_success_only_s": 0.6262,
+          "decode_times_s": [
+            0.6069,
+            0.6371,
+            0.623,
+            0.6377
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.12,
+          "n_erased_mean": 973.25,
+          "n_erased_per_trial": [
+            941,
+            974,
+            951,
+            1027
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.7406,
+          "mean_decode_time_success_only_s": 0.7406,
+          "decode_times_s": [
+            0.7149,
+            0.7428,
+            0.722,
+            0.7826
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.15,
+          "n_erased_mean": 1237.5,
+          "n_erased_per_trial": [
+            1222,
+            1221,
+            1212,
+            1295
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 0.9578,
+          "mean_decode_time_success_only_s": 0.9578,
+          "decode_times_s": [
+            0.9431,
+            0.9416,
+            0.9363,
+            1.0102
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.2,
+          "n_erased_mean": 1657.5,
+          "n_erased_per_trial": [
+            1682,
+            1612,
+            1678,
+            1658
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.3196,
+          "mean_decode_time_success_only_s": 1.3196,
+          "decode_times_s": [
+            1.3355,
+            1.284,
+            1.3371,
+            1.3219
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.25,
+          "n_erased_mean": 2026.25,
+          "n_erased_per_trial": [
+            2017,
+            1999,
+            2002,
+            2087
+          ],
+          "n": 8192,
+          "k": 4096,
+          "trials": 4,
+          "successes": 4,
+          "success_rate": 1.0,
+          "success_rate_ci95": [
+            0.5101,
+            1.0
+          ],
+          "claimed_ok": 4,
+          "silent_corruption": 0,
+          "mean_decode_time_s": 1.6619,
+          "mean_decode_time_success_only_s": 1.6619,
+          "decode_times_s": [
+            1.6519,
+            1.6424,
+            1.6365,
+            1.7167
+          ]
+        },
+        {
+          "scheme": "BC-512-L2",
+          "rate": 0.3,
+          "n_erased_mean": 2459.125,
+          "n_erased_per_trial": [
+            2525,
+            2474,
+            2467,
+            2435,
+            2466,
+            2456,
+            2404,
+            2446
           ],
           "n": 8192,
           "k": 4096,
@@ -2154,266 +3715,66 @@
           ],
           "claimed_ok": 8,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.94,
-          "mean_decode_time_success_only_s": 0.94,
+          "mean_decode_time_s": 2.0826,
+          "mean_decode_time_success_only_s": 2.0826,
           "decode_times_s": [
-            0.8968,
-            0.9567,
-            0.9148,
-            0.9082,
-            0.9839,
-            0.929,
-            0.9782,
-            0.9527
+            2.1509,
+            2.0825,
+            2.0841,
+            2.06,
+            2.0819,
+            2.0706,
+            2.0156,
+            2.115
           ]
         },
         {
-          "scheme": "BC-256",
-          "rate": 0.08,
-          "n_erased_mean": 659.0,
+          "scheme": "BC-512-L2",
+          "rate": 0.33,
+          "n_erased_mean": 2684.75,
           "n_erased_per_trial": [
-            645,
-            684,
-            668,
-            683,
-            600,
-            665,
-            631,
-            696
+            2678,
+            2624,
+            2662,
+            2749,
+            2692,
+            2744,
+            2640,
+            2689
           ],
           "n": 8192,
           "k": 4096,
           "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
+          "successes": 8,
+          "success_rate": 1.0,
           "success_rate_ci95": [
-            0.0,
-            0.3244
+            0.6756,
+            1.0
           ],
-          "claimed_ok": 0,
+          "claimed_ok": 8,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0253,
-          "mean_decode_time_success_only_s": null,
+          "mean_decode_time_s": 2.3001,
+          "mean_decode_time_success_only_s": 2.3001,
           "decode_times_s": [
-            0.0258,
-            0.0252,
-            0.0251,
-            0.0251,
-            0.0248,
-            0.0252,
-            0.0255,
-            0.0255
+            2.3028,
+            2.245,
+            2.2754,
+            2.3592,
+            2.3019,
+            2.3657,
+            2.2519,
+            2.2989
           ]
         },
         {
-          "scheme": "BC-256",
-          "rate": 0.1,
-          "n_erased_mean": 825.75,
-          "n_erased_per_trial": [
-            840,
-            823,
-            808,
-            871,
-            840,
-            824,
-            802,
-            798
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.3244
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0251,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0249,
-            0.0252,
-            0.0248,
-            0.0253,
-            0.0252,
-            0.0251,
-            0.0255,
-            0.0251
-          ]
-        },
-        {
-          "scheme": "BC-256",
-          "rate": 0.12,
-          "n_erased_mean": 989.125,
-          "n_erased_per_trial": [
-            972,
-            980,
-            976,
-            997,
-            1010,
-            1004,
-            949,
-            1025
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.3244
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0251,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0253,
-            0.0249,
-            0.025,
-            0.0251,
-            0.026,
-            0.0247,
-            0.0246,
-            0.0251
-          ]
-        },
-        {
-          "scheme": "BC-256",
-          "rate": 0.15,
-          "n_erased_mean": 1223.125,
-          "n_erased_per_trial": [
-            1222,
-            1198,
-            1215,
-            1232,
-            1239,
-            1222,
-            1226,
-            1231
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 8,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.3244
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0251,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0251,
-            0.0257,
-            0.0251,
-            0.0245,
-            0.0251,
-            0.0247,
-            0.0256,
-            0.0248
-          ]
-        },
-        {
-          "scheme": "BC-256",
-          "rate": 0.2,
-          "n_erased_mean": 1639.25,
-          "n_erased_per_trial": [
-            1650,
-            1644,
-            1622,
-            1641
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0249,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0248,
-            0.0246,
-            0.0248,
-            0.0254
-          ]
-        },
-        {
-          "scheme": "BC-256",
-          "rate": 0.25,
-          "n_erased_mean": 2031.5,
-          "n_erased_per_trial": [
-            2047,
-            1977,
-            2012,
-            2090
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0249,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0248,
-            0.0248,
-            0.0249,
-            0.0249
-          ]
-        },
-        {
-          "scheme": "BC-256",
-          "rate": 0.3,
-          "n_erased_mean": 2409.75,
-          "n_erased_per_trial": [
-            2433,
-            2374,
-            2378,
-            2454
-          ],
-          "n": 8192,
-          "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
-          "success_rate_ci95": [
-            0.0,
-            0.4899
-          ],
-          "claimed_ok": 0,
-          "silent_corruption": 0,
-          "mean_decode_time_s": 0.0249,
-          "mean_decode_time_success_only_s": null,
-          "decode_times_s": [
-            0.0248,
-            0.0247,
-            0.0251,
-            0.0252
-          ]
-        },
-        {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.35,
-          "n_erased_mean": 2877.5,
+          "n_erased_mean": 2844.375,
           "n_erased_per_trial": [
+            2857,
+            2768,
+            2774,
+            2846,
             2935,
             2908,
             2823,
@@ -2421,63 +3782,75 @@
           ],
           "n": 8192,
           "k": 4096,
-          "trials": 4,
-          "successes": 0,
-          "success_rate": 0.0,
+          "trials": 8,
+          "successes": 4,
+          "success_rate": 0.5,
           "success_rate_ci95": [
-            0.0,
-            0.4899
+            0.2152,
+            0.7848
           ],
-          "claimed_ok": 0,
+          "claimed_ok": 4,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0251,
-          "mean_decode_time_success_only_s": null,
+          "mean_decode_time_s": 1.2159,
+          "mean_decode_time_success_only_s": 2.4266,
           "decode_times_s": [
-            0.0256,
-            0.0252,
-            0.0248,
-            0.0247
+            2.4774,
+            2.3816,
+            2.3894,
+            0.0054,
+            0.0052,
+            0.0053,
+            0.0052,
+            2.458
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.38,
-          "n_erased_mean": 3117.25,
+          "n_erased_mean": 3108.25,
           "n_erased_per_trial": [
             3155,
             3061,
             3128,
-            3125
+            3125,
+            3178,
+            3070,
+            3068,
+            3081
           ],
           "n": 8192,
           "k": 4096,
-          "trials": 4,
+          "trials": 8,
           "successes": 0,
           "success_rate": 0.0,
           "success_rate_ci95": [
             0.0,
-            0.4899
+            0.3244
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0252,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0247,
-            0.0258,
-            0.0253,
-            0.0248
+            0.0054,
+            0.0053,
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.4,
-          "n_erased_mean": 3263.0,
+          "n_erased_mean": 3281.0,
           "n_erased_per_trial": [
-            3335,
-            3241,
-            3234,
-            3242
+            3229,
+            3255,
+            3314,
+            3326
           ],
           "n": 8192,
           "k": 4096,
@@ -2490,24 +3863,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.025,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0249,
-            0.0249,
-            0.0253,
-            0.0251
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.45,
-          "n_erased_mean": 3683.75,
+          "n_erased_mean": 3720.0,
           "n_erased_per_trial": [
-            3650,
-            3676,
-            3681,
-            3728
+            3797,
+            3747,
+            3637,
+            3699
           ],
           "n": 8192,
           "k": 4096,
@@ -2520,24 +3893,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.025,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0248,
-            0.0247,
-            0.0259,
-            0.0248
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.48,
-          "n_erased_mean": 3957.5,
+          "n_erased_mean": 3952.25,
           "n_erased_per_trial": [
-            4050,
-            3989,
-            3861,
-            3930
+            3921,
+            4002,
+            3929,
+            3957
           ],
           "n": 8192,
           "k": 4096,
@@ -2550,24 +3923,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0251,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.025,
-            0.0251,
-            0.0251,
-            0.025
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.5,
-          "n_erased_mean": 4131.0,
+          "n_erased_mean": 4093.75,
           "n_erased_per_trial": [
-            4099,
-            4172,
-            4108,
-            4145
+            4058,
+            4130,
+            4087,
+            4100
           ],
           "n": 8192,
           "k": 4096,
@@ -2580,24 +3953,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0246,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0248,
-            0.0245,
-            0.0249,
-            0.0243
+            0.0052,
+            0.0051,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.52,
-          "n_erased_mean": 4257.75,
+          "n_erased_mean": 4282.0,
           "n_erased_per_trial": [
-            4218,
-            4299,
+            4307,
+            4272,
             4250,
-            4264
+            4299
           ],
           "n": 8192,
           "k": 4096,
@@ -2610,24 +3983,24 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.0249,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.025,
-            0.0247,
-            0.0247,
-            0.025
+            0.0052,
+            0.0051,
+            0.0052,
+            0.0052
           ]
         },
         {
-          "scheme": "BC-256",
+          "scheme": "BC-512-L2",
           "rate": 0.55,
-          "n_erased_mean": 4506.75,
+          "n_erased_mean": 4527.25,
           "n_erased_per_trial": [
-            4513,
-            4508,
+            4580,
             4472,
-            4534
+            4534,
+            4523
           ],
           "n": 8192,
           "k": 4096,
@@ -2640,13 +4013,13 @@
           ],
           "claimed_ok": 0,
           "silent_corruption": 0,
-          "mean_decode_time_s": 0.025,
+          "mean_decode_time_s": 0.0052,
           "mean_decode_time_success_only_s": null,
           "decode_times_s": [
-            0.0249,
-            0.0255,
-            0.0249,
-            0.0248
+            0.0052,
+            0.0052,
+            0.0052,
+            0.0052
           ]
         }
       ]

@@ -68,11 +68,12 @@ wrong relative to the real standard, and one thing it under-tested:
 
 WHAT'S STILL A SIMPLIFICATION (this stays a coding-scheme simulation,
 not a full protocol implementation):
-  - Doubling BOTH axes gives 4x total overhead (128x128 / 64x64), not
-    PeerDAS's 2x total. Matching PeerDAS's 2x total exactly needs
-    non-power-of-two per-axis sizes, which complicates clean NTT use.
-    Explicit design choice -- worth reporting as its own datapoint
-    against 1D-RS's 2x in the comparison, not an oversight.
+  - The grid is 88 x 96 rather than a square, because no square
+    reachable in this field gets as close to rate 0.5 -- see the
+    COMPONENT CODE RATE section below for the full argument, including
+    why the natural-looking 90 x 90 cannot be built here at all.
+    Overhead is 2.06x against 1D-RS's and BC's 2.00x; the residual
+    difference is reported rather than controlled away.
   - Recovering a line's coefficients from the locator-multiplied
     product (dividing out Z(x)) is done via ordinary polynomial long
     division, not a Newton-iteration power-series inversion. Encode is
@@ -95,7 +96,7 @@ import time
 import blob_generator as bg
 
 def preview(matrix, label, size=6):
-    """Full matrices are too large to print at this scale (128x128 = 16384
+    """Full matrices are too large to print at this scale (88x96 = 8448
     cells) -- show a small corner instead, truncated to 16 bits for
     readability (each real value is a ~255-bit field element)."""
     print(f"\n--- {label} (full shape: {matrix.shape[0]}x{matrix.shape[1]}, "
@@ -135,13 +136,33 @@ BLOB_ROWS, BLOB_COLS = 64, 64          # 64 * 64 = 4096
 # blob can have rate 0.5. This is a property of product codes, not of this
 # implementation.
 #
-# The nearest reachable point uses 88 = 8 * 11 per axis. 11 divides p-1 for
-# the BLS12-381 scalar field, so a length-88 NTT exists:
-#     component rate  64/88 = 8/11 = 0.727 on each axis
-#     overall rate    4096/7744      = 0.529
-#     overhead        7744/4096      = 1.89x   (vs 2.00x for 1D-RS and BC)
+# HOW CLOSE CAN WE GET, AND WHY NOT 90x90:
+# The right target follows from the product structure: to land the OVERALL
+# rate on 0.5, each component rate should be sqrt(0.5) = 0.7071, i.e. each
+# axis should extend 64 -> 64/0.7071 = 90.5. That is the reasoning behind the
+# "64 * sqrt(2) ~ 90, so use 90x90" suggestion, and the reasoning is right.
+#
+# The problem is that 90 is not an available transform length in this field.
+# An order-n NTT needs a primitive n-th root of unity, which exists only when
+# n divides p-1. For the BLS12-381 scalar field,
+#     p - 1 = 2^32 * 3 * 11 * 19 * 10177 * 125527 * 859267 * 906349^2
+#             * 2508409 * 2529403 * ...
+# and 90 = 2 * 3^2 * 5 needs BOTH 3^2 (p-1 supplies only 3^1) and 5 (absent
+# entirely). So no length-90 NTT exists here, and 90x90 cannot be built.
+# The available lengths above 64 are 66, 76, 88, 96, 114, 128, 132, ...
+#
+# 88 and 96 are the two that bracket the 90.5 target (88 = 8*11, 96 = 32*3),
+# and their geometric mean sqrt(88*96) = 91.9 sits close to it. Using one on
+# each axis is a legitimate product code -- the two component codes need not
+# be the same length -- and gets nearest to rate 0.5 of any reachable pair:
+#     component codes [88, 64] and [96, 64], rates 0.727 and 0.667
+#     overall rate    4096/8448 = 0.485    (closest reachable to 0.500)
+#     overhead        8448/4096 = 2.06x    (vs 2.00x for 1D-RS and BC)
+# The previous 88x88 setting gave rate 0.529 / overhead 1.89x, which is
+# further from 0.5 on both measures and spent less storage than the codes it
+# was being compared against.
 EXT_ROWS = 88
-EXT_COLS = 88
+EXT_COLS = 96
 
 for n in (BLOB_ROWS, BLOB_COLS, EXT_ROWS, EXT_COLS):
     assert (P - 1) % n == 0, f"P-1 must be divisible by {n} for an NTT of that size"

@@ -1,21 +1,36 @@
 # 1D-RS vs 2D-RS: how they work, and how they compare
 
-> **Superseded in part — 2D-RS geometry changed on 2026-09-09.**
-> This document was written when `2D_RS_Galois.py` extended each axis
-> 64→128, giving a 128×128 codeword at **4× overhead and rate 0.25**. The
-> file now extends each axis 64→88, giving an 88×88 codeword at **1.89×
-> overhead and rate 0.529**, so that its storage cost is comparable to
-> 1D-RS's and BC's 2× and the erasure-rate comparison is fair. Component
-> rate is 8/11 per axis; exactly rate 0.5 is unreachable for any genuine 2D
-> product code on a 4096-element blob, and `2D_RS_Galois.py` explains why.
+> **Superseded in part — 2D-RS geometry changed twice, most recently on
+> 2026-09-16.** This document was written when `2D_RS_Galois.py` extended
+> each axis 64→128, giving a 128×128 codeword at **4× overhead and rate
+> 0.25**. It then moved to 88×88 (1.89×, rate 0.529), and now extends
+> 64→88 on one axis and 64→96 on the other, giving an **88×96 codeword at
+> 2.06× overhead and rate 0.485** — the closest any grid reachable in this
+> field gets to rate 0.5, so that its storage cost is comparable to 1D-RS's
+> and BC's 2×. The component codes are [96, 64] and [88, 64]. The
+> natural-looking 90×90 cannot be built: a length-*n* NTT needs *n* to
+> divide *p*−1, and 90 = 2·3²·5 needs a 3² where this field has only 3¹,
+> plus a 5 it does not have at all. Exactly rate 0.5 is unreachable for any
+> genuine 2D product code on a 4096-element blob; `2D_RS_Galois.py`
+> explains why.
 >
 > Everything below about *mechanism* — bivariate polynomials, why every row
 > and column is independently a codeword, how the cross-axis cascade works —
 > still holds. Everything about *numbers* does not. Specifically superseded:
 > every "4× overhead", every "16384", every "128×128", the per-line erasure
-> budget (now 24 of 88 rather than 64 of 128), and the measured tolerance
-> (2D-RS now recovers to 35% and fails from 38%, against a theoretical limit
-> of 0.471). For current measurements see
+> budget (now 32 of 96 along a row and 24 of 88 down a column), and the
+> measured tolerance (2D-RS now recovers to 35% and fails from 45%, with
+> the transition straddling 38–40%).
+>
+> One further correction to the framing below. This document, and the first
+> revision of the benchmark report, judged 2D-RS against the rate bound
+> 1−*R*. That is the bound for an *MDS* code, and a product code is never
+> MDS: its minimum distance is the product of its component distances,
+> 33 × 25 = 825, so its actual guarantee is (*d*−1)/*n* = 0.098. The
+> measured 0.42 is more than four times that — the cross-axis cascade
+> genuinely outperforms the worst-case guarantee on random erasure
+> patterns, which is the interesting result and is not visible if the only
+> reference point is 1−*R*. For current measurements see
 > [benchmark_1D_2D_BC_report.md](benchmark_1D_2D_BC_report.md).
 
 

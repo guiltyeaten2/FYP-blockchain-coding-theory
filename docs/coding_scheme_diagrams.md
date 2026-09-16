@@ -124,9 +124,9 @@ purpose is clear.
 
 
 <figure>
-<svg viewBox="0 0 300 300" role="img" aria-label="2D-RS encoding: the blob is reshaped into a 64 by 64 grid, each row is extended from 64 to 88 cells and then each column is extended likewise, giving an 88 by 88 grid at 1.89 times overhead in which every row and every column is independently a 1D-RS codeword."><defs><pattern id="hR" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" stroke-width="0.8" opacity="0.5"/></pattern></defs>
+<svg viewBox="0 0 300 300" role="img" aria-label="2D-RS encoding: the blob is reshaped into a 64 by 64 grid, each row is extended from 64 to 96 cells and then each column is extended from 64 to 88, giving an 88 by 96 grid at 2.06 times overhead in which every row and every column is independently a 1D-RS codeword."><defs><pattern id="hR" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" stroke-width="0.8" opacity="0.5"/></pattern></defs>
 <text x="26" y="26" font-size="9.4" font-weight="700">The same trick, twice</text>
-<text x="26" y="38" font-size="7.4" fill="#4a5561">each 64-cell line extended to 88: component rate 8/11</text>
+<text x="26" y="38" font-size="7.4" fill="#4a5561">rows 64→96, columns 64→88: overall rate 0.485</text>
 <rect x="62" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
 <rect x="74" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
 <rect x="86" y="62" width="12" height="12" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
@@ -260,11 +260,11 @@ purpose is clear.
 <rect x="26" y="213" width="10" height="9" fill="#1546a0" opacity="0.72" stroke="currentColor" stroke-width="0.55"/>
 <text x="40" y="220" font-size="7.0">original blob</text>
 <rect x="120" y="213" width="10" height="9" fill="url(#hR)" stroke="currentColor" stroke-width="0.55"/>
-<text x="134" y="220" font-size="7.0">parity (1.89&#215; overhead)</text>
+<text x="134" y="220" font-size="7.0">parity (2.06&#215; overhead)</text>
 <text x="26" y="238" font-size="7.6" font-weight="700">Every row and every column is now its own</text>
 <text x="26" y="248" font-size="7.6" font-weight="700">1D-RS codeword, so a lost cell can be repaired</text>
 <text x="26" y="258" font-size="7.6" font-weight="700">from its row or its column &#8212; whichever survives.</text></svg>
-<figcaption>2D-RS. The blob is reshaped into a 64&#215;64 grid and the 1D-RS step is applied twice: once to extend every row, then once to extend every column of the result. Every row and every column of the outcome is independently a 1D-RS codeword, so a lost cell can be repaired from whichever of its two lines has enough survivors, which is what lets the iterative decoder cascade. The extension is 64&#8594;88 per axis rather than the 64&#8594;128 of earlier drafts: a product code&#8217;s rate is the <em>product</em> of its component rates, so doubling both axes costs 4&#215; storage and made the comparison against two 2&#215;-overhead schemes unfair. Component rate 8/11 per axis gives 1.89&#215; overall.</figcaption>
+<figcaption>2D-RS. The blob is reshaped into a 64&#215;64 grid and the 1D-RS step is applied twice: once to extend every row, then once to extend every column of the result. Every row and every column of the outcome is independently a 1D-RS codeword, so a lost cell can be repaired from whichever of its two lines has enough survivors, which is what lets the iterative decoder cascade. The grid drawn here is schematic. The real extension is 64&#8594;96 along rows and 64&#8594;88 down columns, rather than the 64&#8594;128 of earlier drafts: a product code&#8217;s rate is the <em>product</em> of its component rates, so doubling both axes costs 4&#215; storage and made the comparison against 2&#215;-overhead schemes unfair. Component rates 64/96 and 64/88 give 0.485 overall at 2.06&#215; storage &#8212; the closest to rate 0.5 reachable in this field, since the length-90 NTT an even 90&#215;90 split would need does not exist here.</figcaption>
 </figure>
 
 
