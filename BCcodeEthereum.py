@@ -441,142 +441,146 @@ def _vander_rows(nodes, rows, p):
     return M
 
 
-def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
-              pair_unknown_cap=None, verbose=True):
+def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
+                      pair_unknown_cap=None, verbose=True):
     """
-    Decoder for Block Circulant codes with parameter t=2 (i.e., can correct
-    up to 2*rho erasures across a pair of adjacent local blocks).
+    Pairwise BC decoder using the paper's auxiliary GRS construction,
+    with NTT-based erasure decoding on the auxiliary code.
 
-    It iteratively performs:
-        1) Single-local-block decoding: if a local block has <= rho erasures,
-           recover them using its local parity equations.
-        2) Pairwise joint decoding: if two neighbouring local blocks together
-           have <= 2*rho erasures, recover them simultaneously.
-
-    H_BC is accepted for API compatibility but is no longer read. The local
-    parity-check matrix is the same GRS matrix for every block, so the rows
-    this decoder needs are regenerated on demand from (rho, n0). Materialising
-    the global (mu*rho) x n matrix costs 33.5 million field elements of memory
-    and buys nothing.
-
-    pair_unknown_cap: skip any pairwise system with more than this many
-        unknowns. Phase 2 is a general (non-Vandermonde) solve, so its cost
-        grows as the cube of the unknown count; at rho=1024 an uncapped pair
-        can reach 2048 unknowns, which is roughly 8.6e9 field operations --
-        over an hour for a single pair. The cap is a stated compute budget,
-        not a property of the code: pairs skipped because of it are counted
-        and reported, and the positions involved stay honestly flagged as
-        erased rather than being guessed at.
+    For each adjacent pair (i, i+1):
+      1. Build the auxiliary GRS code over U = S_i ∪ S_{i+1}, with length
+         n_aux = |U| and dimension k_aux = n_aux - 2*rho.
+      2. If n_aux | (p-1), apply NTT erasure decoding.
+      3. Verify the decoded result against the actual BC stacked equations.
+      4. If NTT fails or verification fails, fall back to Gaussian elimination
+         on the stacked system.
     """
     p = int(GF_BLS12_381.characteristic)
     r = r_in.copy()
     mask = mask_in.copy()
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
-    # Each block's global support, and the inverse map, computed once rather
-    # than rebuilt on every iteration of the while loop below.
     supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
                 for i in range(mu)]
     locmaps = [{int(g): c for c, g in enumerate(sup)} for sup in supports]
 
     progress = True
     iterations = 0
-    pairs_skipped_cost = 0
+    stats = {"phase1_ntt": 0, "phase2_aux_ntt": 0, "phase2_gauss": 0,
+             "skipped_cap": 0, "aux_verify_fail": 0}
 
     while np.any(mask) and progress:
         progress = False
         iterations += 1
 
-        # ---------- Phase 1: Single Local Decoding ----------
+        # -------- Phase 1: single-block NTT decode --------
         for i in range(mu):
             sup = supports[i]
             local_mask = mask[sup]
-            num_local_erasures = int(np.count_nonzero(local_mask))
+            num_local = int(np.count_nonzero(local_mask))
+            if not (0 < num_local <= rho):
+                continue
+            erased_pos = np.nonzero(local_mask)[0]
+            known_pos = np.nonzero(~local_mask)[0]
+            e = num_local
 
-            if 0 < num_local_erasures <= rho:
-                erased_pos = np.nonzero(local_mask)[0]
-                known_pos = np.nonzero(~local_mask)[0]
-                e = num_local_erasures
+            rows_needed = min(e + 2, rho)
+            S = _partial_syndrome(known_pos + 1,
+                                  [int(v) for v in r[sup[known_pos]]],
+                                  rows_needed, p)
+            syndrome = [(-v) % p for v in S]
 
-                # Only the first e syndrome entries are needed to determine e
-                # unknowns; two more are pulled to check the answer against
-                # equations the solve did not consume.
-                rows_needed = min(e + 2, rho)
-                S = _partial_syndrome(known_pos + 1,
-                                      [int(v) for v in r[sup[known_pos]]],
-                                      rows_needed, p)
-                syndrome = [(-v) % p for v in S]
+            nodes_e = [int(c) + 1 for c in erased_pos]
+            try:
+                x = vandermonde_solve(nodes_e, syndrome[:e], p)
+            except GFSolveError:
+                continue
+            # consistency check
+            consistent = True
+            for rr in range(e, rows_needed):
+                acc = 0
+                for nd_, xv in zip(nodes_e, x):
+                    acc += pow(nd_, rr, p) * xv
+                if acc % p != syndrome[rr]:
+                    consistent = False
+                    break
+            if not consistent:
+                continue
 
-                # Restricted to its first e rows and to the erased columns,
-                # the local GRS matrix is a square Vandermonde in DISTINCT
-                # evaluation points, hence always invertible. So this solve
-                # cannot be underdetermined and cannot fabricate a value --
-                # the failure mode the guard in gf_solve exists to catch
-                # simply does not arise on this path.
-                nodes_e = [int(c) + 1 for c in erased_pos]
-                try:
-                    x = vandermonde_solve(nodes_e, syndrome[:e], p)
-                except GFSolveError:
-                    continue
+            r[sup[erased_pos]] = GF_BLS12_381(np.array(x, dtype=object))
+            mask[sup[erased_pos]] = False
+            progress = True
+            stats["phase1_ntt"] += 1
 
-                consistent = True
-                for rr in range(e, rows_needed):
-                    acc = 0
-                    for nd_, xv in zip(nodes_e, x):
-                        acc += pow(nd_, rr, p) * xv
-                    if acc % p != syndrome[rr]:
-                        consistent = False
-                        break
-                if not consistent:
-                    continue   # leave this block's erasures flagged
-
-                r[sup[erased_pos]] = GF_BLS12_381(np.array(x, dtype=object))
-                mask[sup[erased_pos]] = False
-                progress = True
-
-        # ---------- Phase 2: Pairwise Joint Decoding ----------
-        # Only if no progress from single-block decoding and erasures remain
+        # -------- Phase 2: pairwise with auxiliary GRS + NTT fallback --------
         if not progress and np.any(mask):
             for i in range(mu):
                 next_i = (i + 1) % mu
                 if next_i == i:
                     continue
                 sup_i, sup_j = supports[i], supports[next_i]
-                combined_indices = np.array(
-                    sorted(set(sup_i.tolist()) | set(sup_j.tolist())))
+                combined = np.array(
+                    sorted(set(sup_i.tolist()) | set(sup_j.tolist()))
+                )
+                n_aux = len(combined)
+                pair_mask = mask[combined]
+                num_pair = int(np.count_nonzero(pair_mask))
 
-                pair_mask = mask[combined_indices]
-                num_pair_erasures = int(np.count_nonzero(pair_mask))
-
-                # NOTE: `<= 2*rho` is necessary but NOT sufficient. These rows
-                # are block i's own rho parity checks stacked on block i+1's --
-                # not the auxiliary [2(w+p), 2w, 2p+1] GRS code over the union
-                # of the two supports that the source paper's Algorithm 1
-                # builds. The stacked form is not MDS, so a split that leaves
-                # one block's equations facing more unknowns than it has rows
-                # is not solvable here. gf_solve raises on exactly that case
-                # and the pair is skipped, rather than zero-filling.
-                if not (0 < num_pair_erasures <= 2 * rho):
+                if not (0 < num_pair <= 2 * rho):
                     continue
-                if num_pair_erasures > cap:
-                    pairs_skipped_cost += 1
+                if num_pair > cap:
+                    stats["skipped_cap"] += 1
                     continue
 
-                e = num_pair_erasures
-                erased_g = combined_indices[np.nonzero(pair_mask)[0]]
+                # ------ 2a: try auxiliary GRS + NTT ------
+                aux_success = False
+                if (p - 1) % n_aux == 0:
+                    k_aux = n_aux - 2 * rho
+                    if k_aux > 0:
+                        eval_pts, H_aux = _build_auxiliary_grs(n_aux, k_aux, p)
+                        if H_aux is not None:
+                            received_aux = [int(r[g]) if not mask[g] else 0
+                                            for g in combined]
+                            mask_aux = np.array([bool(mask[g])
+                                                  for g in combined])
+                            rec_aux, ok = _ntt_erasure_decode_aux(
+                                received_aux, mask_aux, n_aux, k_aux,
+                                eval_pts, p
+                            )
+                            if ok:
+                                # Verify against the actual BC stacked system
+                                if _verify_aux_solution(
+                                    rec_aux, combined, r, mask,
+                                    sup_i, sup_j, i, next_i,
+                                    rho, lambda_, omega, mu, p
+                                ):
+                                    # Apply
+                                    for c, g in enumerate(combined):
+                                        if mask[g]:
+                                            r[g] = GF_BLS12_381(rec_aux[c])
+                                            mask[g] = False
+                                    progress = True
+                                    stats["phase2_aux_ntt"] += 1
+                                    aux_success = True
+                                else:
+                                    stats["aux_verify_fail"] += 1
 
-                # Syndrome, one row-group at a time. Each group is its own
-                # block's Vandermonde, so the same power-sum routine applies.
+                if aux_success:
+                    continue
+
+                # ------ 2b: fall back to Gaussian elimination ------
+                e = num_pair
+                erased_g = combined[np.nonzero(pair_mask)[0]]
+
                 syndrome = []
                 for blk in (i, next_i):
                     sup = supports[blk]
                     kn = np.nonzero(~mask[sup])[0]
                     S = _partial_syndrome(kn + 1,
-                                          [int(v) for v in r[sup[kn]]], rho, p)
+                                          [int(v) for v in r[sup[kn]]],
+                                          rho, p)
                     syndrome.extend([(-v) % p for v in S])
 
-                # Columns of the stacked system, generated directly rather
-                # than sliced out of a materialised global matrix.
                 top = np.zeros((rho, e), dtype=object)
                 bot = np.zeros((rho, e), dtype=object)
                 for half, blk in ((top, i), (bot, next_i)):
@@ -589,10 +593,6 @@ def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
                 H_e = GF_BLS12_381(np.vstack([top, bot]))
                 syn_v = GF_BLS12_381(np.array(syndrome, dtype=object))
 
-                # e unknowns need only e independent equations. Trying a
-                # truncated system first turns an O(e^2 * 2rho) elimination
-                # into O(e^3); if those rows happen to be rank-deficient,
-                # gf_solve says so and the full stack is used instead.
                 sol = None
                 tried = []
                 for nrows in (min(2 * rho, e + 8), 2 * rho):
@@ -605,29 +605,213 @@ def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
                         continue
                     if nrows < 2 * rho:
                         chk = H_e[nrows:nrows + 2, :] @ cand
-                        if not np.array_equal(np.asarray(chk),
-                                              np.asarray(syn_v[nrows:nrows + 2])):
+                        if not np.array_equal(
+                            np.asarray(chk),
+                            np.asarray(syn_v[nrows:nrows + 2])
+                        ):
                             continue
                     sol = cand
                     break
                 if sol is None:
-                    continue   # this pair is not jointly determined; leave it
+                    continue
 
                 r[erased_g] = sol
                 mask[erased_g] = False
                 progress = True
-                # Continue scanning the remaining pairs in this same pass.
-                # The previous version broke out to restart Phase 1 after
-                # every single pair fixed, paying a full O(mu) rescan per
-                # recovered pair. Each pair re-reads the live mask, so fixing
-                # several per pass is equivalent and far cheaper.
+                stats["phase2_gauss"] += 1
 
     if verbose:
-        extra = (f", {pairs_skipped_cost} pair(s) skipped over the "
-                 f"{cap}-unknown compute cap" if pairs_skipped_cost else "")
-        print(f"Decoder finished in {iterations} iterations{extra}.")
+        print(f"dec_cbc_2_aux_ntt: {iterations} iterations, stats={stats}")
     return r, mask
 
+
+def _verify_aux_solution(rec_aux, combined, r, mask,
+                          sup_i, sup_j, i, j, rho, lambda_, omega, mu, p):
+    """
+    Verify that the auxiliary-decoded vector satisfies the actual stacked
+    BC parity checks. Returns True iff it does.
+    """
+    # Build H_stack over `combined` columns using the actual BC eval points
+    # (i.e., 1, 2, ..., n0 per block, as used by encode_bc_structured).
+    n0 = rho + lambda_ * omega
+    H_stack = GF_BLS12_381.Zeros((2 * rho, len(combined)))
+    for r_idx in range(rho):
+        # Block i's row r_idx
+        for c_idx, g in enumerate(combined):
+            if int(g) in locmaps_i:
+                H_stack[r_idx, c_idx] = pow(locmaps_i[int(g)], r_idx, p)
+        # Block j's row r_idx
+        for c_idx, g in enumerate(combined):
+            if int(g) in locmaps_j:
+                H_stack[rho + r_idx, c_idx] = pow(locmaps_j[int(g)], r_idx, p)
+    x = GF_BLS12_381([int(v) for v in rec_aux])
+    return np.all(np.asarray(H_stack @ x) == 0)
+
+def dec_cbc_t(r_in, mask_in, mu, lambda_, omega, rho,
+              t_max=3, unknown_cap=None, verbose=True):
+    """
+    Generalised BC decoder: combine up to t_max adjacent blocks per solve.
+
+    For each t in 1..t_max:
+      - Enumerate windows of t consecutive blocks (mod mu).
+      - For each window, build the stacked t*rho parity equations over the
+        union of the t blocks' supports.
+      - If the window has <= t*rho unknowns (and <= unknown_cap), solve
+        via Gaussian elimination with rank check.
+      - On success, apply the recovered values and restart from t=1.
+
+    t=1 uses the existing fast Vandermonde/NTT single-block path.
+    t>=2 uses generic Gaussian elimination; cost grows as O((t*rho)^3).
+
+    Args:
+      t_max:       max block-combining width (1, 2, 3, ...).
+      unknown_cap: max unknowns per t-block solve. Windows exceeding the
+                   cap are skipped and counted. Default = t*rho.
+
+    Returns: (recovered, remaining_mask, iterations, stats)
+    """
+    p = int(GF_BLS12_381.characteristic)
+    r = r_in.copy()
+    mask = mask_in.copy()
+    if unknown_cap is None:
+        unknown_cap = t_max * rho
+    cap = int(unknown_cap)
+
+    supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
+                for i in range(mu)]
+    locmaps = [{int(g): c for c, g in enumerate(sup)} for sup in supports]
+
+    progress = True
+    iterations = 0
+    stats = {"phase1": 0, **{f"phase{t}": 0 for t in range(2, t_max + 1)},
+             "skipped_cap": 0, "failed_rank": 0}
+
+    while np.any(mask) and progress:
+        progress = False
+        iterations += 1
+
+        # -------- Phase 1: single block (fast path) --------
+        for i in range(mu):
+            sup = supports[i]
+            local_mask = mask[sup]
+            num_local = int(np.count_nonzero(local_mask))
+            if not (0 < num_local <= rho):
+                continue
+            erased_pos = np.nonzero(local_mask)[0]
+            known_pos = np.nonzero(~local_mask)[0]
+            e = num_local
+            rows_needed = min(e + 2, rho)
+            S = _partial_syndrome(known_pos + 1,
+                                  [int(v) for v in r[sup[known_pos]]],
+                                  rows_needed, p)
+            syndrome = [(-v) % p for v in S]
+            nodes_e = [int(c) + 1 for c in erased_pos]
+            try:
+                x = vandermonde_solve(nodes_e, syndrome[:e], p)
+            except GFSolveError:
+                continue
+            consistent = True
+            for rr in range(e, rows_needed):
+                acc = sum(pow(nd_, rr, p) * xv
+                          for nd_, xv in zip(nodes_e, x)) % p
+                if acc != syndrome[rr]:
+                    consistent = False
+                    break
+            if not consistent:
+                continue
+            r[sup[erased_pos]] = GF_BLS12_381(np.array(x, dtype=object))
+            mask[sup[erased_pos]] = False
+            progress = True
+            stats["phase1"] += 1
+
+        if progress:
+            continue
+
+        # -------- Phases t = 2..t_max: general Gaussian --------
+        for t in range(2, t_max + 1):
+            phase_progress = False
+            for i in range(mu):
+                # Union of t consecutive blocks' supports
+                combined = set()
+                block_ids = []
+                for j in range(t):
+                    blk = (i + j) % mu
+                    block_ids.append(blk)
+                    combined.update(supports[blk].tolist())
+                combined = np.array(sorted(combined))
+                pair_mask = mask[combined]
+                num_unknowns = int(np.count_nonzero(pair_mask))
+
+                if num_unknowns == 0:
+                    continue
+                if num_unknowns > t * rho:
+                    continue
+                if num_unknowns > cap:
+                    stats["skipped_cap"] += 1
+                    continue
+
+                e = num_unknowns
+                erased_g = combined[np.nonzero(pair_mask)[0]]
+
+                # Syndrome: stack t row-groups, one per block
+                syndrome = []
+                for blk in block_ids:
+                    sup = supports[blk]
+                    kn = np.nonzero(~mask[sup])[0]
+                    S = _partial_syndrome(kn + 1,
+                                          [int(v) for v in r[sup[kn]]],
+                                          rho, p)
+                    syndrome.extend([(-v) % p for v in S])
+
+                # Build stacked H_e: (t*rho) x e
+                H_e = GF_BLS12_381.Zeros((t * rho, e))
+                for g_idx, blk in enumerate(block_ids):
+                    lm = locmaps[blk]
+                    hit = [(c, lm[int(gg)] + 1)
+                           for c, gg in enumerate(erased_g) if int(gg) in lm]
+                    if hit:
+                        cols, nds = zip(*hit)
+                        H_e[g_idx * rho:(g_idx + 1) * rho, list(cols)] = \
+                            _vander_rows(nds, rho, p)
+
+                syn_v = GF_BLS12_381(np.array(syndrome, dtype=object))
+
+                # Solve with rank check
+                sol = None
+                tried = []
+                for nrows in (min(t * rho, e + 8), t * rho):
+                    if nrows in tried:
+                        continue
+                    tried.append(nrows)
+                    try:
+                        cand = gf_solve(H_e[:nrows, :], syn_v[:nrows])
+                    except GFSolveError:
+                        stats["failed_rank"] += 1
+                        continue
+                    if nrows < t * rho:
+                        chk = H_e[nrows:nrows + 2, :] @ cand
+                        if not np.array_equal(
+                            np.asarray(chk),
+                            np.asarray(syn_v[nrows:nrows + 2])
+                        ):
+                            continue
+                    sol = cand
+                    break
+                if sol is None:
+                    continue
+
+                r[erased_g] = sol
+                mask[erased_g] = False
+                phase_progress = True
+                stats[f"phase{t}"] += 1
+
+            if phase_progress:
+                progress = True
+                break   # restart from Phase 1
+
+    if verbose:
+        print(f"dec_cbc_t(t_max={t_max}): {iterations} iterations, stats={stats}")
+    return r, mask, iterations, stats
 
 
 if __name__ == "__main__":
@@ -667,7 +851,7 @@ if __name__ == "__main__":
     print(f"Injected {num_erasures} erasures at indices: {erased_indices}")
     print("\nStarting DecCBC[2] Decoder (Section 4)...")
     start = time.time()
-    recovered_c, remaining_mask = dec_cbc_2(
+    recovered_c, remaining_mask = dec_cbc_2_aux_ntt(
         H_BC, received_vector, erased_mask, mu, lambda_, omega, rho
     )
     print(f"Decoding finished in {time.time()-start:.2f}s")
