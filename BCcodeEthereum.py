@@ -314,9 +314,22 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
     if col_mult is not None:
         if n != len(col_mult):
             return _fail("col_mult length mismatch")
-        # work in plain evaluation form: f(x_j) = c_j / v_j
-        inv_mult = [pow(int(v) % p, p - 2, p) for v in col_mult]
-        received = [(int(received[j]) * inv_mult[j]) % p for j in range(n)]
+        # Work in plain evaluation form: f(x_j) = c_j / v_j. Batch-invert the
+        # multipliers (Montgomery's trick) so this costs one exponentiation
+        # instead of n: build the running products, invert the last one, then
+        # walk back peeling off a factor at a time.
+        mult = [int(v) % p for v in col_mult]
+        if any(v == 0 for v in mult):
+            return _fail("col_mult has a zero entry")
+        prefix = [1] * (n + 1)
+        for j in range(n):
+            prefix[j + 1] = (prefix[j] * mult[j]) % p
+        running = pow(prefix[n], p - 2, p)
+        received = list(received)
+        for j in range(n - 1, -1, -1):
+            inv_j = (running * prefix[j]) % p
+            running = (running * mult[j]) % p
+            received[j] = (int(received[j]) * inv_j) % p
 
     e = int(sum(bool(x) for x in erasure_mask))
     if e == 0:
