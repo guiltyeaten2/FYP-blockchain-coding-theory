@@ -456,7 +456,8 @@ def _verify_aux_solution(rec_aux, combined, sup_i, sup_j,
 # PAIRWISE DECODER -- FFT first, Gaussian fallback
 # ==============================================================================
 def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
-                      pair_unknown_cap=None, verbose=True):
+                      pair_unknown_cap=None, verbose=True,
+                      use_fft_phase1=True, use_fft_phase2=True):
     """
     Two-phase BC decoder.
 
@@ -466,6 +467,16 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     Phase 2: for each adjacent pair with <= 2*rho erasures, try FFT-based
              decode of the union. Fall back to Gaussian elimination.
 
+    use_fft_phase1 / use_fft_phase2 exist so the two paths can be measured
+    against each other rather than argued about. Phase 1 is the interesting
+    one: it admits at most rho erasures and k_poly = n0 - rho, so the FFT
+    path's schoolbook division costs O(rho*e) while vandermonde_solve costs
+    O(e^2), and e <= rho makes the Vandermonde solve the cheaper of the two
+    before the two NTTs are even counted. Setting use_fft_phase1=False
+    selects that cheaper path. Phase 2 is the opposite case -- its fallback
+    is Gaussian O(e^3) -- so there the FFT should win where it is available
+    at all.
+
     Every fallback prints a reason when verbose=True.
     """
     p = int(GF_BLS12_381.characteristic)
@@ -474,7 +485,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
     n0_local = rho + lambda_ * omega
-    has_fft_phase1 = ((p - 1) % n0_local == 0)
+    has_fft_phase1 = use_fft_phase1 and ((p - 1) % n0_local == 0)
     eval_pts_local = make_eval_pts(n0_local, p) if has_fft_phase1 else None
 
     supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
@@ -601,7 +612,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                 fixed = False
 
                 # ---- Phase 2a: try FFT on flat union ----
-                if (p - 1) % n_aux == 0:
+                if use_fft_phase2 and (p - 1) % n_aux == 0:
                     eval_pts_aux = make_eval_pts(n_aux, p)
                     k_aux = n_aux - 2 * rho
                     if k_aux > 0:
@@ -716,11 +727,12 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 # BENCHMARK WRAPPER
 # ==============================================================================
 def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
-              pair_unknown_cap=None):
+              pair_unknown_cap=None, use_fft_phase1=True, use_fft_phase2=True):
     """Signature-compatible wrapper for the benchmark."""
     return dec_cbc_2_aux_ntt(
         r_in, mask_in, mu, lambda_, omega, rho,
-        pair_unknown_cap=pair_unknown_cap, verbose=False)
+        pair_unknown_cap=pair_unknown_cap, verbose=False,
+        use_fft_phase1=use_fft_phase1, use_fft_phase2=use_fft_phase2)
 
 
 # ==============================================================================
