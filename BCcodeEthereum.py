@@ -485,8 +485,13 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
     n0_local = rho + lambda_ * omega
-    has_fft_phase1 = use_fft_phase1 and ((p - 1) % n0_local == 0)
-    eval_pts_local = make_eval_pts(n0_local, p) if has_fft_phase1 else None
+    # These are two different things and conflating them is a trap: the
+    # evaluation points DEFINE the code (the encoder uses the same ones), so
+    # the Vandermonde path needs them just as much as the FFT path does.
+    # Gating eval_pts_local on the FFT switch silently breaks the fallback.
+    fft_available = ((p - 1) % n0_local == 0)
+    eval_pts_local = make_eval_pts(n0_local, p) if fft_available else None
+    has_fft_phase1 = use_fft_phase1 and fft_available
 
     supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
                 for i in range(mu)]
@@ -553,14 +558,19 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                         _note_fallback("phase1", "FFT candidate failed verification")
                 else:
                     _note_fallback("phase1", f"FFT unavailable/failed ({reason})")
-            else:
+            elif not fft_available:
                 _note_fallback("phase1", f"n0={n0_local} does not divide p-1")
+            else:
+                _note_fallback("phase1", "FFT disabled by use_fft_phase1=False")
 
             if fixed:
                 continue
 
             # ---- Phase 1b: fallback to vandermonde_solve ----
-            nodes_all = eval_pts_local if has_fft_phase1 else list(range(1, n0_local + 1))
+            # Must track the ENCODER's choice of evaluation points, which
+            # depends on the field (fft_available), never on whether the FFT
+            # decode path happens to be switched on.
+            nodes_all = eval_pts_local if fft_available else list(range(1, n0_local + 1))
             S = _partial_syndrome(
                 [nodes_all[int(c)] for c in known_pos],
                 [int(v) for v in r[sup[known_pos]]],
