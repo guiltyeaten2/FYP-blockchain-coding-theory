@@ -1,5 +1,4 @@
-import time
-import numpy as np
+
 
 # ==============================================================================
 # IMPORT ETHEREUM BLOB GENERATOR (EIP-4844 / consensus-specs)
@@ -8,10 +7,115 @@ import numpy as np
 #   - FIELD_ELEMENTS_PER_BLOB = 4096  (number of field elements in a blob)
 #   - GF: a Galois field class (here BLS12‑381 prime field)
 #   - random_blob(): returns a Python list of 4096 integers in GF(p)
+"""
+Block-Circulant erasure code for Ethereum blob scale.
+
+Two decoders are provided:
+
+    dec_cbc_2_aux_ntt(...)   pairwise decoder with an auxiliary-GRS path
+                             using NTT, falling back to Gaussian elimination
+                             on the actual stacked BC system when the NTT
+                             candidate fails verification.
+
+    dec_cbc_t(..., t_max=T)  generalised t-block decoder, Gaussian only.
+
+IMPORTANT PREREQUISITE FOR THE NTT PATH
+---------------------------------------
+The auxiliary GRS decoder in `_ntt_erasure_decode_aux` treats the union of
+two adjacent blocks as a code with n_aux-th ROOTS OF UNITY as evaluation
+points. The BC encoder in `encode_bc_structured` uses 1, 2, ..., n0 as
+evaluation points. These are different codes: a codeword of the root-of-
+unity code is not, in general, a codeword of the stacked BC system.
+
+The decoder handles this correctly -- it VERIFIES the auxiliary candidate
+against the actual stacked BC parity checks before accepting it -- but the
+verification will fail for the current encoder, so the NTT path is skipped
+and the decoder falls back to Gaussian elimination on every pair. To make
+the NTT path fire, the encoder, `build_local_grs`, and the Phase-1
+`vandermonde_solve` call must all use the same root-of-unity evaluation
+points, and the parameters must satisfy n0 | (p - 1).
+
+This file therefore does NOT currently exploit NTT in the pairwise phase
+at the default parameters. It is correct, but the pairwise phase is
+Gaussian. That is a known, documented limitation, not a bug.
+"""
 from blob_generator import FIELD_ELEMENTS_PER_BLOB, GF, random_blob
 
 # Alias for readability; GF_BLS12_381 is the field we work over.
 GF_BLS12_381 = GF
+import time
+import numpy as np
+import galois
+
+P_FIELD = int(GF_BLS12_381.characteristic)
+
+
+def _build_auxiliary_grs(n_aux, k_aux, p):
+    """
+    Build a Vandermonde parity-check matrix for a [n_aux, k_aux] GRS code
+    over GF(p), using n_aux-th roots of unity as evaluation points.
+
+    Returns:
+        eval_pts: list of n_aux distinct evaluation points (roots of unity)
+        H_aux:    (n_aux - k_aux) x n_aux GF matrix, H_aux[r,c] = eval_pts[c]^r
+        None if n_aux does not divide p-1.
+    """
+    if (p - 1) % n_aux != 0:
+        return None, None
+    g = galois.primitive_root(p)
+    alpha = pow(g, (p - 1) // n_aux, p)
+    eval_pts = [pow(alpha, i, p) for i in range(n_aux)]
+    n_parity = n_aux - k_aux
+    H_aux = GF_BLS12_381.Zeros((n_parity, n_aux))
+    for r in range(n_parity):
+        for c in range(n_aux):
+            H_aux[r, c] = pow(eval_pts[c], r, p)
+    return eval_pts, H_aux
+
+
+def _ntt_erasure_decode_aux(received, mask_local, n_aux, k_aux,
+                             eval_pts, p):
+    """
+    Erasure-decode a codeword of the auxiliary GRS code using NTT.
+
+    received:  length-n_aux list of ints (erased positions set to 0)
+    mask_local: boolean array length n_aux, True where erased
+    eval_pts:  length-n_aux evaluation points (must be roots of unity)
+
+    Returns: (recovered list, success)
+    """
+    erased_pos = [int(i) for i in range(n_aux) if mask_local[i]]
+    if not erased_pos:
+        return list(received), True
+    if len(erased_pos) > n_aux - k_aux:
+        return list(received), False
+
+    # Build erasure locator Z(x) = prod (x - eval_pts[i])
+    Z = galois.Poly([1], field=GF_BLS12_381)
+    for i in erased_pos:
+        Z = Z * galois.Poly([1, (-int(eval_pts[i])) % p], field=GF_BLS12_381)
+
+    Z_desc = [int(c) for c in Z.coeffs]
+    Z_asc = list(reversed(Z_desc))
+    Z_padded = Z_asc + [0] * (n_aux - len(Z_asc))
+    Z_evals = [int(x) for x in galois.ntt(Z_padded, size=n_aux, modulus=p)]
+
+    R = [int(x) for x in received]
+    product_evals = [(R[j] * Z_evals[j]) % p for j in range(n_aux)]
+    product_coeffs = [int(x) for x in
+                      galois.intt(product_evals, size=n_aux, modulus=p)]
+
+    Prod_poly = galois.Poly(list(reversed(product_coeffs)), field=GF_BLS12_381)
+    quotient = Prod_poly // Z
+    q_asc = list(reversed([int(c) for c in quotient.coeffs]))
+    if len(q_asc) < k_aux:
+        q_asc += [0] * (k_aux - len(q_asc))
+    else:
+        q_asc = q_asc[:k_aux]
+
+    padded = q_asc + [0] * (n_aux - k_aux)
+    recovered = galois.ntt(padded, size=n_aux, modulus=p)
+    return [int(x) for x in recovered], True
 
 # ==============================================================================
 # HELPER: GALOIS FIELD LINEAR SYSTEM SOLVER (F_q)
@@ -550,8 +654,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                             if ok:
                                 # Verify against the actual BC stacked system
                                 if _verify_aux_solution(
-                                    rec_aux, combined, r, mask,
-                                    sup_i, sup_j, i, next_i,
+                                    rec_aux, combined, sup_i, sup_j, i, next_i,
                                     rho, lambda_, omega, mu, p
                                 ):
                                     # Apply
@@ -625,27 +728,29 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     return r, mask
 
 
-def _verify_aux_solution(rec_aux, combined, r, mask,
-                          sup_i, sup_j, i, j, rho, lambda_, omega, mu, p):
+def _verify_aux_solution(rec_aux, combined, sup_i, sup_j,
+                          i, j, rho, lambda_, omega, mu, p):
     """
-    Verify that the auxiliary-decoded vector satisfies the actual stacked
-    BC parity checks. Returns True iff it does.
+    Check that rec_aux satisfies the ACTUAL BC stacked parity checks for
+    blocks i and j over the union support `combined`. This is required
+    because the auxiliary GRS code is only algebraically identical to the
+    stacked BC system when the BC encoder used root-of-unity eval points.
     """
-    # Build H_stack over `combined` columns using the actual BC eval points
-    # (i.e., 1, 2, ..., n0 per block, as used by encode_bc_structured).
     n0 = rho + lambda_ * omega
+    lm_i = {int(g): c for c, g in enumerate(sup_i)}
+    lm_j = {int(g): c for c, g in enumerate(sup_j)}
+
     H_stack = GF_BLS12_381.Zeros((2 * rho, len(combined)))
     for r_idx in range(rho):
-        # Block i's row r_idx
         for c_idx, g in enumerate(combined):
-            if int(g) in locmaps_i:
-                H_stack[r_idx, c_idx] = pow(locmaps_i[int(g)], r_idx, p)
-        # Block j's row r_idx
-        for c_idx, g in enumerate(combined):
-            if int(g) in locmaps_j:
-                H_stack[rho + r_idx, c_idx] = pow(locmaps_j[int(g)], r_idx, p)
+            gi = int(g)
+            if gi in lm_i:
+                H_stack[r_idx, c_idx] = pow(lm_i[gi] + 1, r_idx, p)
+            if gi in lm_j:
+                H_stack[rho + r_idx, c_idx] = pow(lm_j[gi] + 1, r_idx, p)
+
     x = GF_BLS12_381([int(v) for v in rec_aux])
-    return np.all(np.asarray(H_stack @ x) == 0)
+    return bool(np.all(np.asarray(H_stack @ x) == 0))
 
 def dec_cbc_t(r_in, mask_in, mu, lambda_, omega, rho,
               t_max=3, unknown_cap=None, verbose=True):
@@ -852,8 +957,7 @@ if __name__ == "__main__":
     print("\nStarting DecCBC[2] Decoder (Section 4)...")
     start = time.time()
     recovered_c, remaining_mask = dec_cbc_2_aux_ntt(
-        H_BC, received_vector, erased_mask, mu, lambda_, omega, rho
-    )
+    received_vector, erased_mask, mu, lambda_, omega, rho)
     print(f"Decoding finished in {time.time()-start:.2f}s")
 
     # ==============================================================================
