@@ -261,7 +261,7 @@ def _vander_rows(nodes, rows, p):
 # FFT-BASED GRS ERASURE DECODER
 # ==============================================================================
 def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
-                            explain=False):
+                            explain=False, col_mult=None):
     """
     FFT-based erasure decoder for a GRS code.
 
@@ -274,6 +274,20 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
                         up to n - k_poly erasures.
         p             : field characteristic.
         explain       : if True, return (result, reason) instead of just result.
+        col_mult      : list[int] length n, the GRS column multipliers v_c, or
+                        None if the codeword really is plain evaluations.
+
+                        THIS MATTERS AND IS EASY TO GET WRONG. A code defined
+                        by the parity check H[r, c] = x_c^r (r < rho) -- which
+                        is how build_local_grs defines the BC local code -- is
+                        GRS_k(x, v), whose codewords are c_j = v_j * f(x_j),
+                        NOT f(x_j). Feeding raw codeword values in as if they
+                        were evaluations makes the tail-coefficient check below
+                        fail and the decoder bail out every single time. For
+                        n-th roots of unity, prod_{j != c}(x_c - x_j) = n / x_c,
+                        so v_c is proportional to x_c and passing eval_pts here
+                        is correct (the constant 1/n scales f uniformly and
+                        does not affect the degree).
 
     Returns:
         recovered list[int] on success, or None on failure.
@@ -297,6 +311,12 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
         return _fail("empty input")
     if n != len(received) or n != len(erasure_mask):
         return _fail("length mismatch")
+    if col_mult is not None:
+        if n != len(col_mult):
+            return _fail("col_mult length mismatch")
+        # work in plain evaluation form: f(x_j) = c_j / v_j
+        inv_mult = [pow(int(v) % p, p - 2, p) for v in col_mult]
+        received = [(int(received[j]) * inv_mult[j]) % p for j in range(n)]
 
     e = int(sum(bool(x) for x in erasure_mask))
     if e == 0:
@@ -394,6 +414,9 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
     recovered = [0] * n
     for j in range(n):
         recovered[perm[j]] = f_evals_nat[j]
+    if col_mult is not None:
+        # back to codeword form: c_j = v_j * f(x_j)
+        recovered = [(recovered[j] * (int(col_mult[j]) % p)) % p for j in range(n)]
     return (recovered, "FFT decode succeeded") if explain else recovered
 
 
@@ -501,6 +524,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                 res = fft_grs_erasure_decode(
                     local_rec, local_mask_list, eval_pts_local,
                     k_poly=n0_local - rho, p=p, explain=True,
+                    col_mult=eval_pts_local,
                 )
                 fft_out, reason = res
                 if fft_out is not None:
