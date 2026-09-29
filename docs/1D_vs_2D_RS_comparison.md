@@ -331,57 +331,8 @@ dataset this pair of scripts is built to produce.
 | Decode cost driver | one polynomial division, degree = erasure count, against the *whole* 8192-length codeword | many small polynomial divisions (≤64 erasures each), one per erased line |
 
 <figure>
-<svg viewBox="0 0 640 390" role="img" aria-label="Measured decode time versus total erasure count: 1D-RS decode time rises steeply with erasure count, 2D-RS stays low even at higher total erasure counts because the cost is spread across many small per-line divisions">
-<line x1="60" y1="42" x2="60" y2="340" stroke="currentColor" stroke-width="1.2"/>
-<line x1="60" y1="340" x2="610" y2="340" stroke="currentColor" stroke-width="1.2"/>
-<line x1="56" y1="340.0" x2="60" y2="340.0" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="340.0" x2="610" y2="340.0" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="343.5" text-anchor="end" font-size="9.5">0</text>
-<line x1="56" y1="293.4375" x2="60" y2="293.4375" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="293.4375" x2="610" y2="293.4375" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="296.9375" text-anchor="end" font-size="9.5">5</text>
-<line x1="56" y1="246.875" x2="60" y2="246.875" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="246.875" x2="610" y2="246.875" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="250.375" text-anchor="end" font-size="9.5">10</text>
-<line x1="56" y1="200.3125" x2="60" y2="200.3125" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="200.3125" x2="610" y2="200.3125" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="203.8125" text-anchor="end" font-size="9.5">15</text>
-<line x1="56" y1="153.75" x2="60" y2="153.75" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="153.75" x2="610" y2="153.75" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="157.25" text-anchor="end" font-size="9.5">20</text>
-<line x1="56" y1="107.1875" x2="60" y2="107.1875" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="107.1875" x2="610" y2="107.1875" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="110.6875" text-anchor="end" font-size="9.5">25</text>
-<line x1="56" y1="60.625" x2="60" y2="60.625" stroke="currentColor" stroke-width="1"/>
-<line x1="60" y1="60.625" x2="610" y2="60.625" stroke="currentColor" stroke-width="0.4" opacity="0.25"/>
-<text x="51" y="64.125" text-anchor="end" font-size="9.5">30</text>
-<line x1="60.0" y1="340" x2="60.0" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="60.0" y="358" text-anchor="middle" font-size="9.5">0</text>
-<line x1="148.70967741935482" y1="340" x2="148.70967741935482" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="148.70967741935482" y="358" text-anchor="middle" font-size="9.5">1000</text>
-<line x1="237.41935483870967" y1="340" x2="237.41935483870967" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="237.41935483870967" y="358" text-anchor="middle" font-size="9.5">2000</text>
-<line x1="326.1290322580645" y1="340" x2="326.1290322580645" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="326.1290322580645" y="358" text-anchor="middle" font-size="9.5">3000</text>
-<line x1="414.83870967741933" y1="340" x2="414.83870967741933" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="414.83870967741933" y="358" text-anchor="middle" font-size="9.5">4000</text>
-<line x1="503.54838709677415" y1="340" x2="503.54838709677415" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="503.54838709677415" y="358" text-anchor="middle" font-size="9.5">5000</text>
-<line x1="592.258064516129" y1="340" x2="592.258064516129" y2="344" stroke="currentColor" stroke-width="1"/>
-<text x="592.258064516129" y="358" text-anchor="middle" font-size="9.5">6000</text>
-<text x="335.0" y="384" text-anchor="middle" font-size="10.5">total erasures in the codeword</text>
-<text x="14" y="191.0" text-anchor="middle" font-size="10.5" transform="rotate(-90 14 191.0)">decode time (s)</text>
-<polyline points="77.7,283.5 94.5,240.3 166.4,67.1" fill="none" stroke="#dc2626" stroke-width="2"/>
-<polyline points="60.0,340.0 285.1,293.1 576.6,280.9" fill="none" stroke="#1d4ed8" stroke-width="2"/>
-<circle cx="77.7" cy="283.5" r="3.4" fill="#dc2626"/>
-<circle cx="94.5" cy="240.3" r="3.4" fill="#dc2626"/>
-<circle cx="166.4" cy="67.1" r="3.4" fill="#dc2626"/>
-<circle cx="285.1" cy="293.1" r="3.4" fill="#1d4ed8"/>
-<circle cx="576.6" cy="280.9" r="3.4" fill="#1d4ed8"/>
-<text x="158.4" y="51.1" text-anchor="end" font-size="10.5" fill="#dc2626" font-weight="700">1D-RS (one big division)</text>
-<text x="568.6" y="270.9" text-anchor="end" font-size="10.5" fill="#1d4ed8" font-weight="700">2D-RS (many small divisions)</text>
-</svg>
-<figcaption>Measured decode time vs. total erasures in the codeword, from actual runs of both scripts (see the walkthrough document's verification section for the source figures). 1D-RS's single polynomial division scales with the total erasure count directly; 2D-RS's many small per-line divisions barely move even at higher total erasure counts.</figcaption>
+<img src="figures/rs_decode_vs_erasure_count.svg" alt="Measured decode time against total erasure count: 1D-RS rises linearly, 2D-RS stays flat.">
+<figcaption>Measured decode time vs. total erasures in the codeword, regenerated by <code>make_figures.py</code> from the sweep in <code>benchmark_results.json</code>. Plotted against erasure <em>count</em> rather than rate because the two codes differ in length (8192 against 8448), so equal rates are not equal repair work. 1D-RS's single polynomial division scales with the total erasure count directly; 2D-RS's many small per-line divisions barely move even at higher total erasure counts.</figcaption>
 </figure>
 
 Two things are worth calling out explicitly, because they're genuine

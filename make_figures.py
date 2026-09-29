@@ -115,21 +115,79 @@ def _threshold(trials):
 
 # --------------------------------------------------------------- benchmark
 def fig_success_curves(bench):
-    """Success rate against erasure rate -- the fault-tolerance result."""
-    fig, ax = plt.subplots(figsize=(6.6, 3.6))
-    for r in bench["results"]:
-        ts = sorted(r["trials"], key=lambda t: t["rate"])
-        ax.plot([t["rate"] for t in ts], [t["success_rate"] for t in ts],
-                marker="o", ms=3.2, lw=1.5, label=r["scheme"],
-                color=COLOURS.get(r["scheme"]))
-    ax.axhline(0.5, color="#888", lw=0.8, ls=":")
+    """Success rate against erasure rate -- the fault-tolerance result.
+
+    Two panels. The left is the whole sweep; the right zooms on the band
+    where everything actually happens. Both are needed because the three
+    lambda=2 rows land on top of each other -- which IS the result, so the
+    figure has to make them separable rather than hide the coincidence.
+    Colour alone cannot do that when curves overlap exactly, so each scheme
+    also gets its own marker and dash pattern, and the markers are open so
+    that one sitting on another still reads as two."""
+    STYLE = {
+        "1D-RS":      ("o", "-",  8),
+        "2D-RS":      ("s", "-",  7),
+        "BC-2048-L2": ("^", "--", 7),
+        "BC-1024-L2": ("v", "-.", 7),
+        "BC-1024-L3": ("D", "-",  5.5),
+        "BC-1024-L4": ("P", "-",  7),
+        "BC-512-L2":  ("X", ":",  7),
+    }
+    fig, (ax, axz) = plt.subplots(
+        1, 2, figsize=(9.2, 3.9),
+        gridspec_kw={"width_ratios": [1.35, 1]})
+
+    def draw(a, schemes):
+        for r in bench["results"]:
+            if r["scheme"] not in schemes:
+                continue
+            m, ls, ms = STYLE[r["scheme"]]
+            ts = sorted(r["trials"], key=lambda t: t["rate"])
+            a.plot([t["rate"] for t in ts], [t["success_rate"] for t in ts],
+                   marker=m, ms=ms, lw=1.4, ls=ls, label=r["scheme"],
+                   color=COLOURS.get(r["scheme"]),
+                   mfc="none", mew=1.2)
+        a.axhline(0.5, color="#888", lw=0.8, ls=":")
+        a.xaxis.set_major_formatter(FuncFormatter(_pct))
+        a.yaxis.set_major_formatter(FuncFormatter(_pct))
+        a.set_ylim(-0.06, 1.08)
+
+    allsch = [r["scheme"] for r in bench["results"]]
+    draw(ax, allsch)
     ax.set_xlabel("erasure rate")
     ax.set_ylabel("fraction of trials recovered")
-    ax.set_title("Fault tolerance: recovery against erasure rate")
-    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.yaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.set_ylim(-0.04, 1.05)
-    ax.legend(ncol=2, loc="lower left")
+    ax.set_title("Fault tolerance across the full sweep")
+    ax.legend(ncol=2, loc="lower left", fontsize=7.5)
+
+    # Zoom on the CLUSTER, not on the whole transition: the thresholds span
+    # 0.21 to 0.51, so a window covering all of them is barely a zoom at all.
+    # The thing a reader cannot resolve in the left panel is the group of
+    # curves that coincide, so the window is the tightest one holding the
+    # most thresholds, and only those schemes are drawn in it.
+    pairs = [(r["scheme"], t) for r in bench["results"]
+             if (t := _threshold(r["trials"])) is not None]
+    width = 0.055
+    centre = max((c for _, c in pairs),
+                 key=lambda c: sum(abs(t - c) <= width for _, t in pairs))
+    lo, hi = centre - width, centre + width
+    inband = {n for n, t in pairs if lo <= t <= hi}
+    draw(axz, inband)
+    axz.set_xlim(lo, hi)
+    axz.set_xlabel("erasure rate")
+    axz.set_title(f"Zoom: the {len(inband)} schemes that land together "
+                  f"({100 * lo:.0f}–{100 * hi:.0f}%)")
+    # Stagger the value labels: several thresholds sit within a thousandth
+    # of each other, so stacking them at one height is unreadable.
+    for k, (n, t) in enumerate(sorted((p_ for p_ in pairs if p_[0] in inband),
+                                      key=lambda p_: p_[1])):
+        axz.plot([t], [0.5], marker="|", ms=13, mew=1.8,
+                 color=COLOURS.get(n))
+        axz.annotate(f"{n}  {t:.3f}", xy=(t, 0.5),
+                     xytext=(6, -16 - 11 * k), textcoords="offset points",
+                     ha="left", fontsize=6.8, color=COLOURS.get(n),
+                     arrowprops=dict(arrowstyle="-", lw=0.5,
+                                     color=COLOURS.get(n), alpha=0.6))
+    axz.legend(loc="upper left", fontsize=7.5)
     return _save(fig, "bench_success_curves.svg")
 
 
@@ -265,6 +323,180 @@ def fig_data_needed(bench):
     ax.set_ylim(0, max(mult) * 1.18)
     ax.legend(loc="upper left")
     return _save(fig, "bench_data_needed.svg")
+
+
+def _common_rate(bench):
+    """Highest swept rate at which every scheme still has a decode time.
+
+    Comparisons at a single rate need a rate every scheme actually reached;
+    picking one by hand risks flattering whichever scheme happens to be
+    cheap there, and silently breaks if the sweep changes."""
+    per = {r["scheme"]: {t["rate"]: t["mean_decode_time_success_only_s"]
+                         for t in r["trials"]} for r in bench["results"]}
+    ok = [rate for rate in bench["rates"]
+          if all(d.get(rate) for d in per.values())]
+    return (max(ok) if ok else None), per
+
+
+def fig_tolerance_vs_cost(bench):
+    """What each scheme costs for the erasure tolerance it delivers.
+
+    The report's central question is a trade-off, and a trade-off is badly
+    served by two separate bar charts. Tolerance on one axis and decode cost
+    on the other puts every scheme in one picture: down and to the right is
+    better, and the schemes on the lower-right frontier are the ones not
+    beaten on both counts at once."""
+    rate, per = _common_rate(bench)
+    if rate is None:
+        print("  SKIP tolerance-vs-cost: no rate common to every scheme")
+        return None
+    pts = []
+    for r in bench["results"]:
+        th = _threshold(r["trials"])
+        c = per[r["scheme"]].get(rate)
+        if th and c:
+            pts.append((r["scheme"], th, c))
+
+    fig, ax = plt.subplots(figsize=(6.6, 4.0))
+    for name, th, c in pts:
+        ax.scatter([th], [c], s=95, color=COLOURS.get(name), zorder=3,
+                   edgecolor="white", linewidth=0.8)
+        ax.annotate(name, xy=(th, c), xytext=(7, 4),
+                    textcoords="offset points", fontsize=7.6)
+
+    # Pareto frontier: nothing tolerates more erasure AND decodes faster.
+    front = sorted((p for p in pts
+                    if not any(q[1] > p[1] and q[2] < p[2] for q in pts)),
+                   key=lambda p: p[1])
+    ax.plot([p[1] for p in front], [p[2] for p in front], ls="--", lw=1.1,
+            color="#444", zorder=2,
+            label=f"frontier — not beaten on both counts ({len(front)} schemes)")
+    ax.set_yscale("log")
+    ax.set_xlabel("measured erasure tolerance")
+    ax.set_ylabel(f"decode time at {100 * rate:.0f}% erasure (s), log scale")
+    ax.set_title("Tolerance against the cost of achieving it\n"
+                 "lower and further right is better", fontsize=10)
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.legend(loc="upper left", fontsize=8)
+    return _save(fig, "bench_tolerance_vs_cost.svg")
+
+
+def fig_encode_decode(bench):
+    """Encode cost against decode cost.
+
+    These are not symmetric in a data-availability system and should not be
+    read as one number. A blob is encoded once, by the proposer; it is
+    decoded by every node that has to reconstruct it. An expensive encode
+    amortises over the network, an expensive decode does not."""
+    rate, per = _common_rate(bench)
+    if rate is None:
+        return None
+    names = [s for s in ORDER if any(r["scheme"] == s
+                                     for r in bench["results"])]
+    enc = {r["scheme"]: r["encode_time_s"] for r in bench["results"]}
+    fig, ax = plt.subplots(figsize=(6.6, 3.6))
+    x = range(len(names))
+    w = 0.38
+    ax.bar([i - w / 2 for i in x], [enc[n] for n in names], w,
+           color="#9dc3e6", label="encode, once per blob")
+    ax.bar([i + w / 2 for i in x], [per[n][rate] for n in names], w,
+           color="#c1442e", label=f"decode at {100 * rate:.0f}%, per node")
+    ax.set_yscale("log")
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(names, rotation=20, ha="right", fontsize=8)
+    ax.set_ylabel("seconds, log scale")
+    ax.set_title("Encode is paid once; decode is paid by everyone")
+    ax.legend(fontsize=8)
+    return _save(fig, "bench_encode_decode.svg")
+
+
+def fig_cost_per_erasure(bench):
+    """Decode time per erased symbol -- cost with the workload divided out.
+
+    Raw decode time rises with erasure rate for every scheme, which tells
+    you mostly that there is more to repair. Dividing by the number of
+    symbols actually erased removes that and leaves the algorithmic
+    difference: a flat line is linear work per erasure, a rising one is
+    superlinear."""
+    fig, ax = plt.subplots(figsize=(6.6, 3.6))
+    for r in bench["results"]:
+        xs, ys = [], []
+        for t in sorted(r["trials"], key=lambda t: t["rate"]):
+            c, e = t["mean_decode_time_success_only_s"], t["n_erased_mean"]
+            if c and e:
+                xs.append(t["rate"])
+                ys.append(1e3 * c / e)          # milliseconds per erasure
+        if xs:
+            ax.plot(xs, ys, marker="o", ms=3.2, lw=1.5, label=r["scheme"],
+                    color=COLOURS.get(r["scheme"]))
+    ax.set_yscale("log")
+    ax.set_xlabel("erasure rate")
+    ax.set_ylabel("decode time per erased symbol (ms), log scale")
+    ax.set_title("Cost per erasure repaired, with the workload divided out")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.legend(ncol=2, loc="upper left", fontsize=8)
+    return _save(fig, "bench_cost_per_erasure.svg")
+
+
+def fig_decode_vs_erasure_count(bench):
+    """Decode time against the absolute number of erasures, 1D-RS vs 2D-RS.
+
+    Plotted against erasure COUNT rather than rate because the two codes
+    have different lengths (8192 against 8448), so the same rate is not the
+    same amount of repair work. This is the figure in the 1D-vs-2D
+    comparison document, regenerated from the current sweep."""
+    fig, ax = plt.subplots(figsize=(6.4, 3.6))
+    for name in ("1D-RS", "2D-RS"):
+        r = next((x for x in bench["results"] if x["scheme"] == name), None)
+        if not r:
+            continue
+        pts = sorted((t["n_erased_mean"], t["mean_decode_time_success_only_s"])
+                     for t in r["trials"]
+                     if t["mean_decode_time_success_only_s"])
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", ms=3.5,
+                lw=1.6, label=f"{name}  (n={r['n']})", color=COLOURS[name])
+    ax.set_xlabel("total erasures in the codeword")
+    ax.set_ylabel("mean decode time, successes only (s)")
+    ax.set_title("One long division against many short ones")
+    ax.legend()
+    return _save(fig, "rs_decode_vs_erasure_count.svg")
+
+
+def fig_decoder_fix(data):
+    """The decoder correctness fix, before and after.
+
+    The only figure here whose data is not produced by a script in this
+    repo: it measures a historical run at a parameterisation the current
+    sweep does not cover, so the counts live in decoder_fix_results.json
+    with their provenance recorded alongside them."""
+    cats = ["correct recovery", "silent corruption", "honest failure"]
+    keys = ["correct", "silent_corruption", "honest_failure"]
+    cols = ["#1a7f37", "#c1442e", "#999999"]
+    fig, ax = plt.subplots(figsize=(6.2, 3.4))
+    x = range(len(cats))
+    w = 0.38
+    for off, phase, shade in ((-w / 2, "before", 0.45), (w / 2, "after", 1.0)):
+        vals = [data[phase][k] for k in keys]
+        ax.bar([i + off for i in x], vals, w,
+               color=[c for c in cols], alpha=shade,
+               edgecolor="#333", linewidth=0.6)
+        for i, v in enumerate(vals):
+            ax.text(i + off, v + 0.6, str(v), ha="center", fontsize=8)
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(cats)
+    ax.set_ylabel(f"trials (of {data['trials']})")
+    ax.set_title("The decoder fix: silent corruption eliminated,\n"
+                 "correct recoveries up", fontsize=10)
+    ax.set_ylim(0, data["trials"] * 1.05)
+    # Neutral proxies: before/after is carried by shade and position, while
+    # colour carries the outcome category. Letting the legend take a bar's
+    # own colour would say the pairing is colour-coded, which it is not.
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(facecolor="#777", alpha=0.45, edgecolor="#333",
+                             label="before the fix"),
+                       Patch(facecolor="#777", alpha=1.0, edgecolor="#333",
+                             label="after the fix")], fontsize=8)
+    return _save(fig, "bench_decoder_fix.svg")
 
 
 # --------------------------------------------------------------------- FFT
@@ -556,7 +788,9 @@ GROUPS = {
     "bench": ("benchmark_results.json",
               [fig_success_curves, fig_tolerance_vs_guarantee,
                fig_bc_threshold_prediction, fig_decode_time,
-               fig_data_needed]),
+               fig_data_needed, fig_tolerance_vs_cost, fig_encode_decode,
+               fig_cost_per_erasure, fig_decode_vs_erasure_count]),
+    "fix":   ("decoder_fix_results.json", [fig_decoder_fix]),
     "fft":   ("fft_results.json",
               [fig_fft_vs_vandermonde, fig_fft_profile, fig_node_width,
                fig_grs_premise]),

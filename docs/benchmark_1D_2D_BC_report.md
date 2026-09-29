@@ -302,7 +302,7 @@ the decoder fix described below, BC's figure was 31 of 40.
 
 <figure>
 <img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme.">
-<figcaption>The table above, drawn. Every scheme holds at 100% and then falls off a cliff rather than degrading gradually &mdash; the transition from &ldquo;always recovers&rdquo; to &ldquo;never recovers&rdquo; spans a few percent of erasure rate, which is what makes a single threshold number a fair summary of each scheme. The three &lambda;=2 block-circulant rows fall together near 0.34 and are hard to separate by eye, which is itself the result: &mu; and &omega; move the curve by nothing. The dotted line at 50% is where the thresholds in the next figure are read off.</figcaption>
+<figcaption>The table above, drawn. Every scheme holds at 100% and then falls off a cliff rather than degrading gradually &mdash; the transition from &ldquo;always recovers&rdquo; to &ldquo;never recovers&rdquo; spans a few percent of erasure rate, which is what makes a single threshold number a fair summary of each scheme. Each scheme carries its own marker and dash pattern as well as its own colour, because several curves coincide exactly and colour alone cannot separate them. <b>Right:</b> a zoom on the tightest band holding the most thresholds, with each crossing marked and labelled. That the three &lambda;=2 rows land within a hundredth of each other &mdash; 0.340, 0.341 and 0.350, across &mu; from 2 to 8 and &omega; from 512 to 2048 &mdash; is not a rendering problem to be worked around but the central result of the parameter sweep, and the zoom is there to let it be read rather than inferred. The dotted line at 50% is where these thresholds are defined.</figcaption>
 </figure>
 
 <figure>
@@ -318,6 +318,21 @@ the decoder fix described below, BC's figure was 31 of 40.
 <figure>
 <img src="figures/bench_decode_time.svg" alt="Mean decode time of successful decodes against erasure rate, log scale.">
 <figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is the most expensive scheme at every rate, by a factor of three to five over the dearest block-circulant row, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at every rate measured. Against 2D-RS the picture is now mixed rather than one-sided: below about 8% erasure every BC row is cheaper, but 2D-RS decode barely grows with erasure rate while BC decode grows roughly linearly, so above that only &omega;512 &lambda;2 and &omega;1024 &lambda;4 stay below it. These are Vandermonde-path timings, with the NTT path switched off &mdash; see the NTT section for what turning it on costs, and for why defining the local code over roots of unity raises the block-circulant numbers here by roughly a factor of two whether or not the transform is ever used.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/bench_cost_per_erasure.svg" alt="Decode time per erased symbol against erasure rate, log scale.">
+<figcaption>The same decode times with the workload divided out &mdash; cost per erasure actually repaired, rather than cost per decode. Raw decode time rises with erasure rate for every scheme, which mostly says there is more to fix; dividing by the erasure count removes that and leaves the algorithmic difference. 1D-RS sits flat near 10&ndash;13&nbsp;ms per erasure: its cost is essentially linear in the number of erasures, one long division's worth of work each. The block-circulant rows are three to ten times cheaper per erasure and rise gently, which is the short local divisions doing their job. 2D-RS is the interesting shape &mdash; it starts around 8&nbsp;ms and falls steeply toward 1&nbsp;ms, because its decode carries a large fixed cost that amortises as more cells need repairing. That is why it looks expensive at 2% erasure and cheap at 30%.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/bench_encode_decode.svg" alt="Encode cost against decode cost for every scheme, log scale.">
+<figcaption>Encode and decode are not symmetric in a data-availability system and should not be collapsed into one cost. A blob is encoded <em>once</em>, by the proposer; it is decoded by every node that has to reconstruct it, so an expensive encode amortises across the network while an expensive decode does not. The two Reed-Solomon schemes and the block-circulant family sit on opposite sides of this: 1D-RS encodes in under a quarter of a second and then costs 20&nbsp;s to decode, while BC &omega;2048 &lambda;2 spends 16&nbsp;s encoding to decode in 5&nbsp;s. For PeerDAS the second shape is the more useful one, which is an argument for the block-circulant family that the tolerance numbers alone do not make.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/bench_tolerance_vs_cost.svg" alt="Measured erasure tolerance against decode cost, one point per scheme, with the Pareto frontier.">
+<figcaption>The trade-off the whole comparison is about, in one picture: how much erasure a scheme survives against what it costs to decode at a rate every scheme reached. Down and to the right is better. The dashed line is the Pareto frontier &mdash; the schemes not beaten on both counts at once &mdash; and only three schemes are on it. BC &omega;512 &lambda;2 is the cheapest thing that still tolerates a third of the codeword; 2D-RS buys about five more points of tolerance for roughly double the decode; 1D-RS buys the theoretical maximum and pays an order of magnitude for it. Everything else is dominated: some other scheme tolerates more erasure <em>and</em> decodes faster. Note especially that BC &omega;1024 &lambda;4 is dominated by BC &omega;512 &lambda;2 on both axes, so the tolerance it gives up buys nothing back.</figcaption>
 </figure>
 
 <figure>
@@ -507,38 +522,7 @@ that flag instead of checking bytes, it would have reported BC at 100%
 success at every rate.
 
 <figure>
-<svg viewBox="0 0 320 214" role="img" aria-label="Block-circulant decoder before and after the correctness fix on the same 40 trials: correct recoveries rose from 9 to 16, and silent corruptions fell from 31 to 0."><line x1="44" y1="32" x2="44" y2="172" stroke="currentColor" stroke-width="0.8"/>
-<line x1="44" y1="172" x2="306" y2="172" stroke="currentColor" stroke-width="0.8"/>
-<line x1="41" y1="172.0" x2="44" y2="172.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="44" y1="172.0" x2="306" y2="172.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="39" y="174.5" text-anchor="end" font-size="7.2">0</text>
-<line x1="41" y1="137.0" x2="44" y2="137.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="44" y1="137.0" x2="306" y2="137.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="39" y="139.5" text-anchor="end" font-size="7.2">10</text>
-<line x1="41" y1="102.0" x2="44" y2="102.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="44" y1="102.0" x2="306" y2="102.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="39" y="104.5" text-anchor="end" font-size="7.2">20</text>
-<line x1="41" y1="67.0" x2="44" y2="67.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="44" y1="67.0" x2="306" y2="67.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="39" y="69.5" text-anchor="end" font-size="7.2">30</text>
-<line x1="41" y1="32.0" x2="44" y2="32.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="44" y1="32.0" x2="306" y2="32.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="39" y="34.5" text-anchor="end" font-size="7.2">40</text>
-<rect x="80.5" y="140.5" width="26" height="31.5" fill="#8d99a6"/>
-<text x="93.5" y="137.5" text-anchor="middle" font-size="7.2" fill="#8d99a6" font-weight="700">9</text>
-<rect x="112.5" y="116.0" width="26" height="56.0" fill="#1b7a34" opacity="0.88"/>
-<text x="125.5" y="113.0" text-anchor="middle" font-size="7.2" fill="#1b7a34" font-weight="700">16</text>
-<text x="109.5" y="186" text-anchor="middle" font-size="7.4">recovered correctly</text>
-<rect x="211.5" y="63.5" width="26" height="108.5" fill="#8d99a6"/>
-<text x="224.5" y="60.5" text-anchor="middle" font-size="7.2" fill="#8d99a6" font-weight="700">31</text>
-<rect x="243.5" y="172.0" width="26" height="0.0" fill="#1b7a34" opacity="0.88"/>
-<text x="256.5" y="169.0" text-anchor="middle" font-size="7.2" fill="#1b7a34" font-weight="700">0</text>
-<text x="240.5" y="186" text-anchor="middle" font-size="7.4">silently corrupted</text>
-<rect x="44" y="12" width="11" height="8" fill="#8d99a6"/>
-<text x="59" y="19" font-size="6.6">before fix</text>
-<rect x="116" y="12" width="11" height="8" fill="#1b7a34" opacity="0.88"/>
-<text x="131" y="19" font-size="6.6">after fix</text>
-<text x="10" y="102.0" text-anchor="middle" font-size="7.4" transform="rotate(-90 10 102.0)">trials (of 40)</text></svg>
+<img src="figures/bench_decoder_fix.svg" alt="Block-circulant decoder before and after the correctness fix on the same 40 trials.">
 <figcaption>The decoder fix, measured on the parameterisation it was found at (&omega;=&rho;=&lambda;=2, &mu;=2048) &#8212; <em>not</em> the rows swept above. The same 40 trials (5%, 15%, 25% and 45% erasure, ten each) run through the decoder before and after. Correct recoveries rose from 9 to 16, because the old decoder poisoned positions with fabricated zeros that blocked later rounds from resolving them. Silent corruptions &#8212; cases where the decoder reported success on wrong data &#8212; fell from 31 to zero. The remaining failures are honest: the decoder reports the positions it could not resolve.</figcaption>
 </figure>
 
