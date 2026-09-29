@@ -43,7 +43,7 @@ P_FIELD = int(GF_BLS12_381.characteristic)
 # ==============================================================================
 # PARAMETERS
 # ==============================================================================
-omega = 2048
+omega = 1024
 rho = omega
 lambda_ = 2
 mu = FIELD_ELEMENTS_PER_BLOB // omega       # = 2 for one blob at these sizes
@@ -58,50 +58,7 @@ n0 = rho + lambda_ * omega                   # 6144
 # GALOIS FIELD LINEAR ALGEBRA (Gaussian fallback)
 # ==============================================================================
 class GFSolveError(ValueError):
-    """Raised when A * x = b has no unique solution over GF(p)."""
-
-
-def gf_solve(A, b, require_unique=True):
-    """Solve A x = b over GF(p) by Gauss-Jordan elimination with rank check."""
-    A = A.copy(); b = b.copy()
-    m, n_ = A.shape
-    row = 0
-    col_map = []
-    for col in range(n_):
-        if row >= m:
-            break
-        pivot = -1
-        for r in range(row, m):
-            if A[r, col] != 0:
-                pivot = r
-                break
-        if pivot == -1:
-            continue
-        if pivot != row:
-            A[[row, pivot]] = A[[pivot, row]]
-            b[[row, pivot]] = b[[pivot, row]]
-        inv = A[row, col] ** -1
-        A[row, :] = A[row, :] * inv
-        b[row] = b[row] * inv
-        factors = A[:, col].copy(); factors[row] = 0
-        nz = np.nonzero(factors != 0)[0]
-        if nz.size:
-            f = factors[nz]
-            A[nz, :] = A[nz, :] - f.reshape(-1, 1) * A[row, :].reshape(1, -1)
-            b[nz] = b[nz] - f * b[row]
-        col_map.append((row, col)); row += 1
-    if require_unique:
-        pivot_rows = {r for r, _ in col_map}
-        for r in range(m):
-            if r not in pivot_rows and not np.any(A[r, :] != 0) and b[r] != 0:
-                raise GFSolveError(f"inconsistent: 0 = {int(b[r])}")
-        if len(col_map) < n_:
-            raise GFSolveError(f"underdetermined: rank {len(col_map)} < {n_}")
-    x = GF_BLS12_381.Zeros(n_)
-    for r, c in col_map:
-        x[c] = b[r]
-    return x
-
+    """Raised by vandermonde_solve when the node set has a collision."""
 
 def vandermonde_solve(nodes, s, p):
     """O(e^2) solver for sum_j nodes[j]**r * x[j] = s[r], r < e."""
@@ -400,18 +357,6 @@ def _partial_syndrome(nodes, vals, rows, p):
         out.append(int((pw * vl).sum() % p))
     return out
 
-
-def _vander_rows(nodes, rows, p):
-    m = len(nodes)
-    nd = np.array([int(v) % p for v in nodes], dtype=object)
-    M = np.zeros((rows, m), dtype=object)
-    cur = np.ones(m, dtype=object)
-    for r in range(rows):
-        if r:
-            cur = cur * nd % p
-        M[r, :] = cur
-    return M
-
 def _grs_decode_arbitrary_points(received, erasure_mask, eval_pts, k_poly, p):
     """
     Erasure decoder for a GRS code with arbitrary evaluation points.
@@ -632,7 +577,7 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
 # ==============================================================================
 # VERIFICATION AGAINST BC PARITY CHECKS
 # ==============================================================================
-def _verify_aux_solution_paper(rec_aux, aux_positions,
+def _verify_aux_solution(rec_aux, aux_positions,
                                 sup_i, pts_i, sup_j, pts_j,
                                 rho, p):
     """
@@ -943,8 +888,6 @@ def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
 # ==============================================================================
 def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                       pair_unknown_cap=None, verbose=True,
-                      use_fft_phase2=True,
-                      phase2_fft_only=False,
                       eval_pts_per_block=None):
     """
     Two-phase BC decoder.
@@ -1004,11 +947,17 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     mask = mask_in.copy()
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
-    n0_local = rho + lambda_ * omega
-
-    supports = [np.asarray(block_support_indices(i, mu, omega, rho))
+    # Decoder: use get_local_indices-based supports and shared roots-of-unity eval points
+    if lambda_ != 2:
+        
+        n0_local = rho + lambda_ * omega
+        eval_pts_shared = nth_roots_of_unity(n0_local, P_FIELD)
+        eval_pts_per_block = [eval_pts_shared for _ in range(mu)]
+        supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
             for i in range(mu)]
-    locmaps = [{int(g): c for c, g in enumerate(sup)} for sup in supports]
+    else:
+        supports = [np.asarray(block_support_indices(i, mu, omega, rho))
+            for i in range(mu)]
 
     # Phase 1 eval points: caller-supplied if using the paper's layout,
     # roots of unity otherwise (matching the current encoder).
@@ -1089,6 +1038,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
         print(f"Iteration {iterations}: Phase 1 done,")
         # ---------------- PHASE 2: adjacent pair, paper's auxiliary GRS ----------------
         print(f"Phase 2 starting, progress={progress}, ")
+                # ---------------- PHASE 2: adjacent pair, Algorithm 1 only ----------------
         if not progress and np.any(mask):
             for i in range(mu):
                 next_i = (i + 1) % mu
@@ -1108,94 +1058,35 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                     _note("phase2", f"over compute cap ({num_pair} > {cap})")
                     continue
 
-                fixed = False
+                # Algorithm 1. No Gaussian fallback: if the auxiliary
+                # construction cannot resolve the pair, the pair's erasures
+                # stay honestly flagged and the decoder moves on. This is
+                # deliberate -- at benchmark sizes the Gaussian fallback is
+                # O(e^3) and takes hours per pair, so it is not a decoder
+                # any deployment would use. See the NTT section of
+                # docs/benchmark_1D_2D_BC_report.md.
 
-                # ---- Phase 2a: paper's auxiliary GRS with FFT ----
-                print("attempting Phase 2 FFT auxiliary decode")
-                if use_fft_phase2:
-                    new_r, new_mask, ok, reason = _decode_pair_alg1(
-                        r, mask, i, mu, omega, rho, p,
-                        eval_pts_per_block, supports)
-                    print(f"  [pair ({i},{next_i})] ok={ok} reason={reason}")
-                    if ok:
-                        r = new_r
-                        mask = new_mask
-                        progress = True
-                        fixed = True
-                        stats["phase2_fft_ok"] += 1
-                    else:
-                        _note("phase2", f"aux FFT failed ({reason})")
+                new_r, new_mask, ok, reason = _decode_pair_alg1(
+                    r, mask, i, mu, omega, rho, p,
+                    eval_pts_per_block, supports)
+                if ok:
+                    r = new_r
+                    mask = new_mask
+                    progress = True
+                    stats["phase2_fft_ok"] += 1
+                else:
+                    _note("phase2", f"Algorithm 1 failed ({reason})")
 
-                if fixed:
-                    continue
-
-                # ---- Phase 2b: skip or fall back to Gaussian ----
-                print("falling back to Phase 2 Gaussian elimination")
-                if phase2_fft_only:
-                    stats["phase2_skipped_fft_only"] += 1
-                    _note("phase2", "Gaussian disabled (phase2_fft_only=True)")
-                    continue
-
-                e = num_pair
-                erased_g = combined[np.nonzero(pair_mask)[0]]
-                syndrome = []
-                for blk in (i, next_i):
-                    sup = supports[blk]
-                    kn = np.nonzero(~mask[sup])[0]
-                    nodes_blk = eval_pts_per_block[blk]
-                    S = _partial_syndrome(
-                        [nodes_blk[int(c)] for c in kn],
-                        [int(v) for v in r[sup[kn]]],
-                        rho, p,
-                    )
-                    syndrome.extend([(-v) % p for v in S])
-
-                top = np.zeros((rho, e), dtype=object)
-                bot = np.zeros((rho, e), dtype=object)
-                for half, blk in ((top, i), (bot, next_i)):
-                    lm = locmaps[blk]
-                    hit = [(t, lm[int(g)]) for t, g in enumerate(erased_g)
-                           if int(g) in lm]
-                    if hit:
-                        cols, nds_idx = zip(*hit)
-                        nodes_blk = eval_pts_per_block[blk]
-                        nds = [nodes_blk[idx] for idx in nds_idx]
-                        half[:, list(cols)] = _vander_rows(nds, rho, p)
-                H_e = GF_BLS12_381(np.vstack([top, bot]))
-                syn_v = GF_BLS12_381(np.array(syndrome, dtype=object))
-
-                sol = None
-                for nrows in (min(2 * rho, e + 8), 2 * rho):
-                    try:
-                        cand = gf_solve(H_e[:nrows, :], syn_v[:nrows])
-                    except GFSolveError as exc:
-                        _note("phase2", f"Gaussian: {exc}")
-                        continue
-                    if nrows < 2 * rho:
-                        chk = H_e[nrows:nrows + 2, :] @ cand
-                        if not np.array_equal(
-                                np.asarray(chk),
-                                np.asarray(syn_v[nrows:nrows + 2])):
-                            _note("phase2", "Gaussian check failed")
-                            continue
-                    sol = cand
-                    break
-                if sol is None:
-                    continue
-                r[erased_g] = sol
-                mask[erased_g] = False
-                progress = True
-                stats["phase2_gauss_ok"] += 1
+                
 
     if verbose:
         print(f"dec_cbc_2_aux_ntt: {iterations} iterations")
         print(f"  Phase 1 (Vandermonde only): "
-              f"{stats['phase1_vandermonde_ok']} blocks recovered, "
-              f"{stats['phase1_skipped']} skipped")
-        print(f"  Phase 2: FFT={stats['phase2_fft_ok']}, "
-              f"Gaussian={stats['phase2_gauss_ok']}, "
-              f"skipped(cap)={stats['phase2_skipped_cap']}, "
-              f"skipped(fft-only)={stats['phase2_skipped_fft_only']}")
+            f"{stats['phase1_vandermonde_ok']} blocks recovered, "
+            f"{stats['phase1_skipped']} skipped")
+        print(f"  Phase 2 (Algorithm 1 only): "
+            f"FFT={stats['phase2_fft_ok']}, "
+            f"skipped(cap)={stats['phase2_skipped_cap']}")
         if stats["fallback_reasons"]:
             print("  Fallback reasons:")
             for reason, count in sorted(stats["fallback_reasons"].items(),
@@ -1208,141 +1099,11 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 # BENCHMARK WRAPPER
 # ==============================================================================
 def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
-              pair_unknown_cap=None, use_fft_phase1=True, use_fft_phase2=True):
+              pair_unknown_cap=None):
+    """Signature-compatible wrapper for the benchmark."""
     return dec_cbc_2_aux_ntt(
         r_in, mask_in, mu, lambda_, omega, rho,
-        pair_unknown_cap=pair_unknown_cap, verbose=False,
-        use_fft_phase1=use_fft_phase1, use_fft_phase2=use_fft_phase2)
-
-
-# ==============================================================================
-# GENERALISED t-BLOCK DECODER (Gaussian only, unchanged in spirit)
-# ==============================================================================
-def dec_cbc_t(r_in, mask_in, mu, lambda_, omega, rho,
-              t_max=4, unknown_cap=None, verbose=True):
-    """Combine up to t_max adjacent blocks per solve; Gaussian for t >= 2."""
-    p = int(GF_BLS12_381.characteristic)
-    r = r_in.copy(); mask = mask_in.copy()
-    if unknown_cap is None:
-        unknown_cap = t_max * rho
-    cap = int(unknown_cap)
-    n0_local = rho + lambda_ * omega
-    has_fft = (p - 1) % n0_local == 0
-    nodes_all = (nth_roots_of_unity(n0_local, p)
-                if has_fft
-                else list(range(1, n0_local + 1)))
-
-    supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
-                for i in range(mu)]
-    locmaps = [{int(g): c for c, g in enumerate(sup)} for sup in supports]
-    progress = True
-    iterations = 0
-    stats = {"phase1": 0,
-             **{f"phase{t}": 0 for t in range(2, t_max + 1)},
-             "skipped_cap": 0, "failed_rank": 0}
-
-    while np.any(mask) and progress:
-        progress = False
-        iterations += 1
-        for i in range(mu):
-            sup = supports[i]
-            local_mask = mask[sup]
-            num_local = int(np.count_nonzero(local_mask))
-            if not (0 < num_local <= rho):
-                continue
-            erased_pos = np.nonzero(local_mask)[0]
-            known_pos = np.nonzero(~local_mask)[0]
-            e = num_local
-            rows_needed = min(e + 2, rho)
-            S = _partial_syndrome(
-                [nodes_all[int(c)] for c in known_pos],
-                [int(v) for v in r[sup[known_pos]]],
-                rows_needed, p,
-            )
-            syndrome = [(-v) % p for v in S]
-            nodes_e = [nodes_all[int(c)] for c in erased_pos]
-            try:
-                x = vandermonde_solve(nodes_e, syndrome[:e], p)
-            except GFSolveError:
-                continue
-            if any(sum(pow(nd_, rr, p) * xv
-                       for nd_, xv in zip(nodes_e, x)) % p != syndrome[rr]
-                   for rr in range(e, rows_needed)):
-                continue
-            r[sup[erased_pos]] = GF_BLS12_381(np.array(x, dtype=object))
-            mask[sup[erased_pos]] = False
-            progress = True
-            stats["phase1"] += 1
-        if progress:
-            continue
-        for t in range(2, t_max + 1):
-            phase_progress = False
-            for i in range(mu):
-                combined = set(); block_ids = []
-                for j in range(t):
-                    blk = (i + j) % mu
-                    block_ids.append(blk)
-                    combined.update(supports[blk].tolist())
-                combined = np.array(sorted(combined))
-                pair_mask = mask[combined]
-                num_unknowns = int(np.count_nonzero(pair_mask))
-                if num_unknowns == 0 or num_unknowns > t * rho:
-                    continue
-                if num_unknowns > cap:
-                    stats["skipped_cap"] += 1
-                    continue
-                e = num_unknowns
-                erased_g = combined[np.nonzero(pair_mask)[0]]
-                syndrome = []
-                for blk in block_ids:
-                    sup = supports[blk]
-                    kn = np.nonzero(~mask[sup])[0]
-                    S = _partial_syndrome(
-                        [nodes_all[int(c)] for c in kn],
-                        [int(v) for v in r[sup[kn]]], rho, p,
-                    )
-                    syndrome.extend([(-v) % p for v in S])
-                H_e = GF_BLS12_381.Zeros((t * rho, e))
-                for g_idx, blk in enumerate(block_ids):
-                    lm = locmaps[blk]
-                    hit = [(c, lm[int(gg)]) for c, gg in enumerate(erased_g)
-                           if int(gg) in lm]
-                    if hit:
-                        cols, nds_idx = zip(*hit)
-                        nds = [nodes_all[idx] for idx in nds_idx]
-                        H_e[g_idx * rho:(g_idx + 1) * rho, list(cols)] = \
-                            _vander_rows(nds, rho, p)
-                syn_v = GF_BLS12_381(np.array(syndrome, dtype=object))
-                sol = None
-                for nrows in (min(t * rho, e + 8), t * rho):
-                    try:
-                        cand = gf_solve(H_e[:nrows, :], syn_v[:nrows])
-                    except GFSolveError:
-                        stats["failed_rank"] += 1
-                        continue
-                    if nrows < t * rho:
-                        chk = H_e[nrows:nrows + 2, :] @ cand
-                        if not np.array_equal(
-                                np.asarray(chk),
-                                np.asarray(syn_v[nrows:nrows + 2])):
-                            continue
-                    sol = cand
-                    break
-                if sol is None:
-                    continue
-                r[erased_g] = sol
-                mask[erased_g] = False
-                phase_progress = True
-                stats[f"phase{t}"] += 1
-            if phase_progress:
-                progress = True
-                break
-
-    if verbose:
-        print(f"dec_cbc_t(t_max={t_max}): {iterations} iterations, stats={stats}")
-    return r, mask, iterations, stats
-
-
+        pair_unknown_cap=pair_unknown_cap, verbose=False)
 # ==============================================================================
 # DEMO
 # ==============================================================================
@@ -1357,7 +1118,10 @@ if __name__ == "__main__":
     full_blob = random_blob()
     message = GF_BLS12_381(full_blob)
     t0 = time.time()
-    encoded = encode_bc_paper(GF_BLS12_381, message, mu, lambda_, omega, rho)
+    if lambda_ == 2:
+        encoded = encode_bc_paper(GF_BLS12_381, message, mu, lambda_, omega, rho)
+    else:
+        encoded = encode_bc_structured(GF_BLS12_381, message, mu, lambda_, omega, rho)
     print(f"Encoded in {time.time() - t0:.2f}s\n")
     num_erasures = int(rho * 2)
     erased_indices = sorted(np.random.choice(n, num_erasures, replace=False).tolist())
