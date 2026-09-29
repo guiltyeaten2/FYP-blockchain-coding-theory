@@ -133,47 +133,171 @@ def vandermonde_solve(nodes, s, p):
         x[j] = (tot % p) * pow(den, p - 2, p) % p
     return x
 
+def nth_roots_of_unity(n, p):
+    """
+    Return the complete set of n-th roots of unity in GF(p), in ascending
+    power order: [omega^0, omega^1, ..., omega^(n-1)], where omega is a
+    primitive n-th root.
 
-# ==============================================================================
-# EVALUATION POINTS -- n0-th roots of unity
-# ==============================================================================
-def make_eval_pts(n0_local, p):
+    These are exactly the elements of the unique subgroup of GF(p)* of
+    order n. The subgroup exists iff n divides p - 1; if it does not, no
+    such element omega exists and this function raises.
+
+    Parameters
+    ----------
+    n : int
+        Transform size. Must divide p - 1.
+    p : int
+        Field characteristic (prime).
+
+    Returns
+    -------
+    list[int], length n
+        The n distinct n-th roots of unity in GF(p).
+
+    Raises
+    ------
+    ValueError
+        If n does not divide p - 1, or if n <= 0.
+
+    Notes
+    -----
+    This is a utility, not a policy. It does not decide whether the code
+    uses roots of unity or some other evaluation points; that decision is
+    made by the encoder and mirrored by the decoder. It is called from
+    the paths that have already chosen roots-of-unity evaluation points.
     """
-    Return the n0_local-th roots of unity in ascending power order:
-        [omega^0, omega^1, ..., omega^(n0_local-1)]
-    Requires n0_local | (p - 1). Raises otherwise.
-    """
-    if (p - 1) % n0_local != 0:
+    if n <= 0:
+        raise ValueError(f"n must be positive; got {n}")
+    if (p - 1) % n != 0:
         raise ValueError(
-            f"n0 = {n0_local} does not divide p - 1; roots of unity do not exist"
+            f"n = {n} does not divide p - 1; "
+            f"no subgroup of order {n} exists in GF({p})*"
         )
     g = galois.primitive_root(p)
-    omega_ = pow(g, (p - 1) // n0_local, p)
-    return [pow(omega_, i, p) for i in range(n0_local)]
+    omega = pow(g, (p - 1) // n, p)
+    return [pow(omega, i, p) for i in range(n)]
 
-
-# ==============================================================================
-# LOCAL GRS MATRIX (uses roots of unity)
-# ==============================================================================
 def build_local_grs(GF_, rho, n0, eval_pts=None):
-    """
-    Local GRS parity-check matrix H_local[r, c] = eval_pts[c] ** r, r < rho.
-
-    If eval_pts is None, defaults to n0-th roots of unity (requires n0 | p-1).
-    Pass eval_pts to override (e.g., with the paper's integer points for
-    comparison).
-    """
     p = int(GF_.characteristic)
     if eval_pts is None:
-        eval_pts = make_eval_pts(n0, p)
+        eval_pts = nth_roots_of_unity(n0, p)      # was make_eval_pts(n0, p)
     eval_pts = GF_([int(v) % p for v in eval_pts])
     H = GF_.Zeros((rho, n0))
     if rho > 0:
         H[0, :] = GF_(np.ones(n0, dtype=np.int64))
     for r in range(1, rho):
         H[r, :] = H[r - 1, :] * eval_pts
-    return H
+    return H    
+# ==============================================================================
+# PAPER'S EVAL POINT STRUCTURE
+# ==============================================================================
+def make_paper_eval_sets(omega, rho, p):
+    """
+    Return (Lambda_1, Lambda_2, Lambda_3, Lambda_4) -- four disjoint sets of
+    sizes omega, rho, omega, rho -- using 2(omega+rho)-th roots of unity.
 
+    Requires 2(omega+rho) | (p-1). Returns None otherwise.
+    """
+    n_aux = 2 * (omega + rho)
+    if (p - 1) % n_aux != 0:
+        return None
+    g = galois.primitive_root(p)
+    alpha = pow(g, (p - 1) // n_aux, p)
+    L1 = [pow(alpha, j, p) for j in range(omega)]
+    L2 = [pow(alpha, omega + j, p) for j in range(rho)]
+    L3 = [pow(alpha, omega + rho + j, p) for j in range(omega)]
+    L4 = [pow(alpha, 2 * omega + rho + j, p) for j in range(rho)]
+    return L1, L2, L3, L4
+
+
+def block_eval_pts(i, omega, rho, L1, L2, L3, L4):
+    """
+    Eval points for block i's support in layout [info_left, parity, info_right].
+    Even i: (L1, L2, L3).  Odd i: (L3, L4, L1).
+    """
+    if i % 2 == 0:
+        return L1 + L2 + L3
+    return L3 + L4 + L1
+
+
+def block_support_indices(i, mu, omega, rho):
+    """
+    Global positions for block i in layout [info_left, parity, info_right].
+    Block i occupies [i*(omega+rho), i*(omega+rho) + 2*omega + rho),
+    wrapping modulo n = mu*(omega+rho).
+    """
+    n = mu * (omega + rho)
+    start = i * (omega + rho)
+    return [(start + t) % n for t in range(2 * omega + rho)]
+
+
+# ==============================================================================
+# PAPER'S ENCODER
+# ==============================================================================
+def encode_bc_paper(GF_, m, mu, lambda_, omega, rho):
+    """
+    Systematic encoder using the paper's coset-structured eval points.
+
+    Requires lambda_ == 2 (the paper's auxiliary construction is only
+    stated for lambda = 2).
+
+    Segment layout (rate-0.5 case, omega = rho):
+        segment 0       info (Λ₁), symbols [0*ω .. 1*ω)
+        segment 1       parity (Λ₂), symbols [1*ω .. 2*ω)
+        segment 2       info (Λ₃), symbols [2*ω .. 3*ω)
+        segment 3       parity (Λ₄), symbols [3*ω .. 4*ω)
+        ...
+        segment 2μ-2    info,  symbols [(2μ-2)*ω .. (2μ-1)*ω)
+        segment 2μ-1    parity, symbols [(2μ-1)*ω .. 2μ*ω)
+    Every segment has size ω when ω = ρ, which is the case for rate 0.5.
+    """
+    if lambda_ != 2:
+        raise ValueError("paper's construction is stated for lambda = 2")
+    p = int(GF_.characteristic)
+    Lsets = make_paper_eval_sets(omega, rho, p)
+    if Lsets is None:
+        raise ValueError(f"2*(omega+rho) = {2*(omega+rho)} does not divide p-1")
+    L1, L2, L3, L4 = Lsets
+
+    n = mu * (omega + rho)
+    k_total = mu * omega
+    c = GF_.Zeros(n)
+
+    # ---- Info: fill the even-indexed segments (0, 2, 4, ..., 2μ-2) ----
+    # Each info segment has ω symbols and is shared by exactly two adjacent
+    # blocks (block i's info_right = block i+1's info_left). Writing each
+    # segment ONCE is what makes the cursor advance exactly k_total times.
+    #
+    # Segment s starts at s * ω in the rate-0.5 case (all segments same size).
+    # For general ω ≠ ρ, segment 2j starts at j*(ω+ρ) and segment 2j+1 starts
+    # at j*(ω+ρ) + ω; the info segments 2j are what this loop touches.
+    cursor = 0
+    for j in range(mu):
+        start = j * (omega + rho)          # info segment 2j begins here
+        for w in range(omega):
+            c[start + w] = m[cursor]
+            cursor += 1
+    assert cursor == k_total, (cursor, k_total)
+
+    # ---- Parity: solve per block over its own support ----
+    for i in range(mu):
+        sup = block_support_indices(i, mu, omega, rho)
+        pts = block_eval_pts(i, omega, rho, L1, L2, L3, L4)
+        H = build_local_grs(GF_, rho, 2 * omega + rho, eval_pts=pts)
+        cols_par = list(range(omega, omega + rho))          # parity columns
+        cols_inf = [j for j in range(2 * omega + rho)
+                    if j not in cols_par]
+        H_p = H[:, cols_par]
+        H_i = H[:, cols_inf]
+        u = GF_([int(c[sup[j]]) for j in cols_inf])
+        syn = H_i @ u
+        parity_nodes = pts[omega:omega + rho]
+        p_i = GF_(vandermonde_solve(
+            parity_nodes, [int(v) for v in (-syn)], p))
+        for k_, j in enumerate(cols_par):
+            c[sup[j]] = p_i[k_]
+    return c
 
 # ==============================================================================
 # BLOCK-CIRCULANT INDEX MAPS
@@ -190,23 +314,57 @@ def get_local_indices(i, mu, lambda_, omega, rho):
             local_info.append(start + w)
     return local_parity + local_info
 
-
-# ==============================================================================
-# ENCODER -- systematic, local GRS with roots of unity
-# ==============================================================================
 def encode_bc_structured(GF_, m, mu, lambda_, omega, rho):
     """
     Systematic encoder: c = [m | p]. Parity p_i solves
+
         H_local * [p_i | u_i]^T = 0
-    where H_local is the local GRS matrix (roots of unity as evaluation
-    points), and u_i is the overlap of lambda consecutive message blocks.
+
+    where H_local is the local GRS matrix and u_i is the overlap of lambda
+    consecutive message blocks.
+
+    Evaluation points
+    -----------------
+    This encoder uses ONE shared eval-point set for every block:
+
+        eval_pts = nth_roots_of_unity(n0, p)   if n0 | (p-1)
+                 = 1, 2, ..., n0                otherwise
+
+    The same H_local is then applied to each block's support via the
+    permutation in get_local_indices. Consequence: a global codeword
+    position that two adjacent blocks share receives DIFFERENT eval points
+    in the two blocks (because it sits at different positions in each
+    block's support). This is fine for Phase 1 (each block's parity checks
+    are self-consistent) but it prevents the paper's auxiliary GRS
+    construction from applying, since the union of the two blocks' eval
+    points is not a single coset.
+
+    If you need the paper's auxiliary Phase 2 to actually succeed, use
+    encode_bc_paper (which builds the paper's Lambda_1..Lambda_4 layout)
+    instead of this function.
+
+    Parameters
+    ----------
+    GF_ : galois field class
+    m : GF_ vector of length k = mu * omega (the message)
+    mu, lambda_, omega, rho : BC parameters
+
+    Returns
+    -------
+    c : GF_ vector of length n = mu * (rho + omega)
+        The systematic codeword.
     """
     p = int(GF_.characteristic)
     k_total = mu * omega
     n_tot = mu * (rho + omega)
     n0 = rho + lambda_ * omega
 
-    eval_pts = make_eval_pts(n0, p) if (p - 1) % n0 == 0 else list(range(1, n0 + 1))
+    # Eval point choice, mirrored by the decoder.
+    if (p - 1) % n0 == 0:
+        eval_pts = nth_roots_of_unity(n0, p)
+    else:
+        eval_pts = list(range(1, n0 + 1))
+
     H_local = build_local_grs(GF_, rho, n0, eval_pts=eval_pts)
     H_i = H_local[:, rho:]
     parity_nodes = eval_pts[:rho]
@@ -225,8 +383,6 @@ def encode_bc_structured(GF_, m, mu, lambda_, omega, rho):
             parity_nodes, [int(v) for v in (-syn)], p))
         c[k_total + i * rho:k_total + (i + 1) * rho] = p_i
     return c
-
-
 # ==============================================================================
 # SYNDROME HELPERS
 # ==============================================================================
@@ -256,7 +412,47 @@ def _vander_rows(nodes, rows, p):
         M[r, :] = cur
     return M
 
+def _grs_decode_arbitrary_points(received, erasure_mask, eval_pts, k_poly, p):
+    """
+    Erasure decoder for a GRS code with arbitrary evaluation points.
 
+    The code is {c : sum_c eval_pts[c]^r * c_c = 0  for r = 0..rho-1},
+    where rho = n - k_poly. Corrects up to rho erasures. Uses the
+    transposed-Vandermonde system on the erased positions, so no coset
+    or subgroup structure is required of the eval points.
+
+    Returns (recovered, success).
+    """
+    n = len(eval_pts)
+    if n != len(received) or n != len(erasure_mask):
+        return None, False
+    erased_idx = [i for i in range(n) if erasure_mask[i]]
+    known_idx = [i for i in range(n) if not erasure_mask[i]]
+    e = len(erased_idx)
+    if e == 0:
+        return [int(v) % p for v in received], True
+    if e > n - k_poly:
+        return None, False
+
+    # syndrome S_r = -sum_{known} pts[c]^r * received[c], r = 0..e-1
+    S = _partial_syndrome(
+        [int(eval_pts[i]) for i in known_idx],
+        [int(received[i]) for i in known_idx],
+        e, p,
+    )
+    S = [(-v) % p for v in S]
+
+    # solve sum_{erased} pts[c]^r * c_c = S_r  for r = 0..e-1
+    nodes_e = [int(eval_pts[i]) % p for i in erased_idx]
+    try:
+        x = vandermonde_solve(nodes_e, S, p)
+    except GFSolveError as exc:
+        return None, False
+
+    out = [int(v) % p for v in received]
+    for idx, val in zip(erased_idx, x):
+        out[idx] = int(val) % p
+    return out, True
 # ==============================================================================
 # FFT-BASED GRS ERASURE DECODER
 # ==============================================================================
@@ -436,61 +632,372 @@ def fft_grs_erasure_decode(received, erasure_mask, eval_pts, k_poly, p,
 # ==============================================================================
 # VERIFICATION AGAINST BC PARITY CHECKS
 # ==============================================================================
-def _verify_aux_solution(rec_aux, combined, sup_i, sup_j,
-                          rho, lambda_, omega, p):
-    """Verify rec_aux satisfies the actual BC stacked parity checks for
-    blocks i and j over the union `combined`."""
-    lm_i = {int(g): c for c, g in enumerate(sup_i)}
-    lm_j = {int(g): c for c, g in enumerate(sup_j)}
-    cols_i = [(c, lm_i[int(g)]) for c, g in enumerate(combined)
-              if int(g) in lm_i]
-    cols_j = [(c, lm_j[int(g)]) for c, g in enumerate(combined)
-              if int(g) in lm_j]
-    n0 = rho + lambda_ * omega
-    if (p - 1) % n0 == 0:
-        eval_pts_local = make_eval_pts(n0, p)
-    else:
-        eval_pts_local = list(range(1, n0 + 1))
+def _verify_aux_solution_paper(rec_aux, aux_positions,
+                                sup_i, pts_i, sup_j, pts_j,
+                                rho, p):
+    """
+    Verify that rec_aux satisfies the parity checks of both blocks i and j,
+    using each block's own per-position eval points.
 
+    Used by Phase 2 of dec_cbc_2_aux_ntt after the paper's auxiliary GRS
+    decoder returns a candidate. The auxiliary code is a flat GRS code
+    only over the *deduplicated union* of the two blocks' eval points, and
+    its candidate must satisfy each block's original rho parity checks in
+    order to be a legitimate BC codeword.
+
+    Parameters
+    ----------
+    rec_aux : list[int], length n_aux
+        Candidate values, aligned with aux_positions.
+    aux_positions : list[int], length n_aux
+        Global codeword indices, aligned with rec_aux. This is the
+        deduplicated union of sup_i and sup_j.
+    sup_i : array-like of int, length n0
+        Support positions of block i (from get_local_indices).
+    pts_i : list[int], length n0
+        Eval points for block i, aligned with sup_i. Must be the same
+        points the encoder used to define block i's parity checks.
+    sup_j : array-like of int, length n0
+        Support positions of block j.
+    pts_j : list[int], length n0
+        Eval points for block j, aligned with sup_j.
+    rho : int
+        Number of parity checks per block.
+    p : int
+        Field characteristic.
+
+    Returns
+    -------
+    bool
+        True iff both blocks' parity checks are satisfied by rec_aux.
+
+    Complexity
+    ----------
+    Two calls to build_local_grs (O(rho * n0) each) plus two matrix-vector
+    multiplies of shape (rho, n0) @ (n0,). The galois library vectorises
+    these, so the cost is the same order as a single Phase-1 solve.
+    """
+    # Map global positions to column indices in rec_aux.
+    pos_to_col = {int(g): c for c, g in enumerate(aux_positions)}
     xv = [int(v) % p for v in rec_aux]
-    for cols in (cols_i, cols_j):
-        pw = [1] * len(cols)
-        xa = [xv[c] for c, _ in cols]
-        for r in range(rho):
-            if r:
-                pw = [pw[k] * eval_pts_local[cols[k][1]] % p
-                      for k in range(len(cols))]
-            if sum(pw[k] * xa[k] for k in range(len(cols))) % p != 0:
-                return False
+
+    for sup, pts in ((sup_i, pts_i), (sup_j, pts_j)):
+        sup_list = [int(g) for g in np.asarray(sup).tolist()]
+
+        # Every support position must appear in the candidate's positions.
+        try:
+            block_x = [xv[pos_to_col[g]] for g in sup_list]
+        except KeyError:
+            # A support position is absent from the union -- cannot verify
+            # against this block. Treat as failure so the caller falls back.
+            return False
+
+        n0 = len(pts)
+        if len(sup_list) != n0:
+            return False
+
+        # Build this block's parity-check matrix from its own eval points.
+        # This mirrors exactly what the encoder did, so the checks below
+        # are the same equations the encoder enforced.
+        H = build_local_grs(GF_BLS12_381, rho, n0, eval_pts=pts)
+        v = GF_BLS12_381(block_x)
+        syndrome = H @ v
+        if np.any(np.asarray(syndrome) != 0):
+            return False
+
     return True
 
+def _lagrange_eval(xs, ys, target, p):
+    """Evaluate the unique polynomial through (xs[i], ys[i]) at `target`."""
+    result = 0
+    n = len(xs)
+    for i in range(n):
+        num = 1
+        den = 1
+        xi = int(xs[i]) % p
+        for j in range(n):
+            if i == j:
+                continue
+            xj = int(xs[j]) % p
+            num = (num * (target - xj)) % p
+            den = (den * (xi - xj)) % p
+        result = (result + int(ys[i]) * num % p * pow(den, p - 2, p)) % p
+    return result
 
+def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
+                       eval_pts_per_block, supports):
+    """
+    Paper's Algorithm 1, Phase 2, for one adjacent pair (i_1, i_1+1).
+
+    Returns (new_r, new_mask, success, reason).
+
+    Prerequisites
+    -------------
+    - `supports[i]` must follow the paper's layout:
+          [info_left (ω) | parity (ρ) | info_right (ω)]
+      i.e. `block_support_indices(i, mu, omega, rho)`, NOT get_local_indices.
+    - `eval_pts_per_block[i]` must be the paper's per-block eval points:
+          even i: Λ₁ + Λ₂ + Λ₃
+          odd  i: Λ₃ + Λ₄ + Λ₁
+      i.e. `block_eval_pts(i, omega, rho, L1, L2, L3, L4)`.
+    """
+    i_2 = (i_1 + 1) % mu
+    sup_1 = supports[i_1]
+    sup_2 = supports[i_2]
+    pts_1 = eval_pts_per_block[i_1]
+    pts_2 = eval_pts_per_block[i_2]
+    n = mu * (omega + rho)
+    shift = 2 * (omega + rho)
+
+    # Recover the four Λ sets. Assumes i_1 is even (Λ₁,Λ₂,Λ₃ layout).
+    # If i_1 is odd, swap the roles.
+    if i_1 % 2 == 0:
+        L1 = list(pts_1[:omega])
+        L2 = list(pts_1[omega:omega + rho])
+        L3 = list(pts_1[omega + rho:])
+        L4 = list(pts_2[omega:omega + rho])
+    else:
+        L3 = list(pts_1[:omega])
+        L4 = list(pts_1[omega:omega + rho])
+        L1 = list(pts_1[omega + rho:])
+        L2 = list(pts_2[omega:omega + rho])
+
+    # Auxiliary code eval points, paper's order: Λ₁, Λ₂, Λ₃, Λ₄.
+    aux_pts = L1 + L2 + L3 + L4
+    # ===== DEBUG 3: verify that j + shift mod n lands on a position
+    # whose eval point matches pts_1[k], for a few sample k values. =====
+    for k0 in (0, 1, omega - 1):
+        j0 = int(sup_1[k0])
+        jp0 = (j0 + shift) % n
+        pt_at_j0_in_block_1 = pts_1[k0]
+        sup_2_list = [int(g) for g in sup_2]
+        if jp0 in sup_2_list:
+            idx = sup_2_list.index(jp0)
+            pt_at_jp0_in_block_2 = pts_2[idx]
+            print(f"    shift check k={k0}: j={j0} jp={jp0} "
+                  f"pts_1={pt_at_j0_in_block_1} pts_2={pt_at_jp0_in_block_2} "
+                  f"match={pt_at_j0_in_block_1 == pt_at_jp0_in_block_2}")
+        else:
+            print(f"    shift check k={k0}: j={j0} jp={jp0} "
+                  f"NOT IN sup_2  <-- layout mismatch")
+    # --- Step 1: build ŝ (length 2ω+ρ), aligned with sup_1 ---
+    s_hat = [0] * (2 * omega + rho)
+    s_hat_mask = [True] * (2 * omega + rho)
+    
+    # B_{1,1} (info_left): ŝ_j = r[j] - r[j + 2(ρ+ω)]
+    for k in range(omega):
+        j = int(sup_1[k])
+        jp = (j + shift) % n
+        if not mask[j] and not mask[jp]:
+            s_hat[k] = (int(r[j]) - int(r[jp])) % p
+            s_hat_mask[k] = False
+
+    s_hat_erased = sum(1 for m in s_hat_mask if m)
+    print(f"    ŝ: length={len(s_hat)}, erased={s_hat_erased}, "
+        f"capacity={len(s_hat) - 2*omega}")
+    # B_{1,0} (parity): erased
+    # (stays masked)
+    # B_{1,2} (info_right): value 0
+    for k in range(omega + rho, 2 * omega + rho):
+        s_hat[k] = 0
+        s_hat_mask[k] = False
+    # --- Step 2: decode ŝ with the local code (arbitrary-points GRS) ---
+    s_dec, ok = _grs_decode_arbitrary_points(
+        s_hat, s_hat_mask, pts_1, k_poly=2 * omega, p=p,
+    )
+    if not ok:
+        return r, mask, False, "ŝ decode failed (arbitrary-points GRS)"
+
+    # --- Evaluate s at Λ₄ (positions not in pts_1) ---
+    # Use 2ω of the known (pts_1, s_dec) pairs to interpolate s.
+    interp_xs = list(pts_1[:2 * omega])
+    interp_ys = list(s_dec[:2 * omega])
+    s_L4 = [_lagrange_eval(interp_xs, interp_ys, a, p) for a in L4]
+
+    # --- Step 3: build û_1 (auxiliary codeword with message m_1) ---
+    u_1 = [0] * (2 * omega + 2 * rho)
+    u_1_mask = [True] * (2 * omega + 2 * rho)
+
+    # Λ₁ from B_{1,1}: r[j] = m_1(L1[k])
+    for k in range(omega):
+        j = int(sup_1[k])
+        if not mask[j]:
+            u_1[k] = int(r[j])
+            u_1_mask[k] = False
+    # Λ₂ from B_{1,0}
+    for k in range(omega, omega + rho):
+        j = int(sup_1[k])
+        if not mask[j]:
+            u_1[k] = int(r[j])
+            u_1_mask[k] = False
+    # Λ₃ from B_{1,2}
+    for k in range(omega + rho, 2 * omega + rho):
+        j = int(sup_1[k])
+        if not mask[j]:
+            u_1[k] = int(r[j])
+            u_1_mask[k] = False
+    # Λ₄ from B_{2,0} (parity of block 2) + s(L4)
+    # B_{2,0} positions = sup_2[ω:ω+ρ]
+    for t in range(rho):
+        j = int(sup_2[omega + t])
+        k = 2 * omega + rho + t
+        if not mask[j]:
+            u_1[k] = (int(r[j]) + s_L4[t]) % p
+            u_1_mask[k] = False
+
+    res_1 = fft_grs_erasure_decode(
+        u_1, u_1_mask, aux_pts, k_poly=2 * omega, p=p, explain=True,
+        col_mult=aux_pts,
+    )
+    m_1_dec, reason_1 = res_1
+    if m_1_dec is None:
+        return r, mask, False, f"û_1 decode failed: {reason_1}"
+
+    # --- Step 3b: build û_2 (auxiliary codeword with message m_2) ---
+    u_2 = [0] * (2 * omega + 2 * rho)
+    u_2_mask = [True] * (2 * omega + 2 * rho)
+
+    # Λ₁ from B_{2,2}: positions sup_2[ω+ρ:]
+    for t in range(omega):
+        j = int(sup_2[omega + rho + t])
+        if not mask[j]:
+            u_2[t] = int(r[j])
+            u_2_mask[t] = False
+    # Λ₂ from B_{1,0} with −s adjustment: sup_1[ω+t], s_dec[ω+t]
+    for t in range(rho):
+        j = int(sup_1[omega + t])
+        k = omega + t
+        if not mask[j]:
+            u_2[k] = (int(r[j]) - s_dec[k]) % p
+            u_2_mask[k] = False
+    # Λ₃ from B_{2,1}: positions sup_2[:ω]
+    for t in range(omega):
+        j = int(sup_2[t])
+        k = omega + rho + t
+        if not mask[j]:
+            u_2[k] = int(r[j])
+            u_2_mask[k] = False
+    # Λ₄ from B_{2,0}: positions sup_2[ω+t]
+    for t in range(rho):
+        j = int(sup_2[omega + t])
+        k = 2 * omega + rho + t
+        if not mask[j]:
+            u_2[k] = int(r[j])
+            u_2_mask[k] = False
+
+    res_2 = fft_grs_erasure_decode(
+        u_2, u_2_mask, aux_pts, k_poly=2 * omega, p=p, explain=True,
+        col_mult=aux_pts,
+    )
+    m_2_dec, reason_2 = res_2
+    if m_2_dec is None:
+        return r, mask, False, f"û_2 decode failed: {reason_2}"
+
+    # --- Step 4: write back recovered values ---
+    new_r = r.copy()
+    new_mask = mask.copy()
+
+    # m_1_dec[k] is m_1 at aux_pts[k]. Map aux_pts indices to sup_1 positions.
+    # Λ₁ → B_{1,1}: sup_1[0..ω)
+    for k in range(omega):
+        j = int(sup_1[k])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_1_dec[k])
+            new_mask[j] = False
+    # Λ₂ → B_{1,0}: sup_1[ω..ω+ρ)
+    for t in range(rho):
+        j = int(sup_1[omega + t])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_1_dec[omega + t])
+            new_mask[j] = False
+    # Λ₃ → B_{1,2}: sup_1[ω+ρ..2ω+ρ)
+    for t in range(omega):
+        j = int(sup_1[omega + rho + t])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_1_dec[omega + rho + t])
+            new_mask[j] = False
+
+    # m_2_dec[k] is m_2 at aux_pts[k]. Map to sup_2 positions.
+    # Λ₁ → B_{2,2}: sup_2[ω+ρ..2ω+ρ)
+    for t in range(omega):
+        j = int(sup_2[omega + rho + t])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_2_dec[t])
+            new_mask[j] = False
+    # Λ₃ → B_{2,1}: sup_2[0..ω)
+    for t in range(omega):
+        j = int(sup_2[t])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_2_dec[omega + rho + t])
+            new_mask[j] = False
+    # Λ₄ → B_{2,0}: sup_2[ω..ω+ρ)
+    for t in range(rho):
+        j = int(sup_2[omega + t])
+        if new_mask[j]:
+            new_r[j] = GF_BLS12_381(m_2_dec[2 * omega + rho + t])
+            new_mask[j] = False
+
+    return new_r, new_mask, True, "Algorithm 1 succeeded"
 # ==============================================================================
 # PAIRWISE DECODER -- FFT first, Gaussian fallback
 # ==============================================================================
 def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                       pair_unknown_cap=None, verbose=True,
-                      use_fft_phase1=True, use_fft_phase2=True):
+                      use_fft_phase2=True,
+                      phase2_fft_only=False,
+                      eval_pts_per_block=None):
     """
     Two-phase BC decoder.
 
-    Phase 1: for each block with <= rho erasures, try FFT-based single-block
-             decode. Fall back to vandermonde_solve if FFT is unavailable or
-             fails.
-    Phase 2: for each adjacent pair with <= 2*rho erasures, try FFT-based
-             decode of the union. Fall back to Gaussian elimination.
+    Phase 1 -- single block.
+        Every block with <= rho erasures is decoded with vandermonde_solve
+        on the block's own eval points. FFT is not attempted at this phase:
+        at e <= rho the O(e^2) Vandermonde solve beats the FFT path's
+        O(n0 log n0 + k0 * e) once the two transforms and the schoolbook
+        polynomial division are counted. See the NTT section of
+        docs/benchmark_1D_2D_BC_report.md for the measurement.
 
-    use_fft_phase1 / use_fft_phase2 exist so the two paths can be measured
-    against each other rather than argued about. Phase 1 is the interesting
-    one: it admits at most rho erasures and k_poly = n0 - rho, so the FFT
-    path's schoolbook division costs O(rho*e) while vandermonde_solve costs
-    O(e^2), and e <= rho makes the Vandermonde solve the cheaper of the two
-    before the two NTTs are even counted. Setting use_fft_phase1=False
-    selects that cheaper path. Phase 2 is the opposite case -- its fallback
-    is Gaussian O(e^3) -- so there the FFT should win where it is available
-    at all.
+    Phase 2 -- adjacent pair.
+        The paper's auxiliary [2(omega+rho), 2*omega, 2*rho+1] GRS code is
+        built over the union of the two blocks' eval points
+        (Lambda_1 U Lambda_2 U Lambda_3 U Lambda_4), decoded with NTT via
+        fft_grs_erasure_decode, and verified against the two blocks'
+        parity checks. On failure, either falls back to Gaussian
+        elimination on the stacked BC parity checks (default), or skips
+        the pair (phase2_fft_only=True).
 
-    Every fallback prints a reason when verbose=True.
+    PREREQUISITE
+    ------------
+    The paper's auxiliary construction only applies when the encoder uses
+    the paper's coset-structured eval points: four disjoint sets
+    Lambda_1, Lambda_2, Lambda_3, Lambda_4 of sizes omega, rho, omega,
+    rho, with even blocks using (Lambda_1, Lambda_2, Lambda_3) and odd
+    blocks using (Lambda_3, Lambda_4, Lambda_1). If eval_pts_per_block is
+    None, the decoder falls back to roots of unity per block, the union
+    size will not be 2*(omega+rho), and Phase 2 will route to the Gaussian
+    fallback every time.
+
+    Parameters
+    ----------
+    pair_unknown_cap : int, optional
+        Skip pairs with more than this many erasures. Default 2*rho.
+    verbose : bool
+        Print per-phase stats at the end.
+    use_fft_phase2 : bool
+        Attempt the FFT auxiliary decode in Phase 2. Set False to skip
+        directly to the Gaussian fallback.
+    phase2_fft_only : bool
+        If True, skip the Gaussian fallback in Phase 2 and leave pairs
+        that FFT could not resolve honestly flagged.
+    eval_pts_per_block : list[list[int]], optional
+        Per-block eval points aligned with get_local_indices(i, ...).
+        Must be supplied for the paper's auxiliary construction to
+        succeed. See make_paper_eval_sets / block_eval_pts for the
+        canonical paper layout.
+
+    Returns
+    -------
+    (recovered, remaining_mask)
     """
     p = int(GF_BLS12_381.characteristic)
     r = r_in.copy()
@@ -498,39 +1005,44 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
     n0_local = rho + lambda_ * omega
-    # These are two different things and conflating them is a trap: the
-    # evaluation points DEFINE the code (the encoder uses the same ones), so
-    # the Vandermonde path needs them just as much as the FFT path does.
-    # Gating eval_pts_local on the FFT switch silently breaks the fallback.
-    fft_available = ((p - 1) % n0_local == 0)
-    eval_pts_local = make_eval_pts(n0_local, p) if fft_available else None
-    has_fft_phase1 = use_fft_phase1 and fft_available
 
-    supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
-                for i in range(mu)]
+    supports = [np.asarray(block_support_indices(i, mu, omega, rho))
+            for i in range(mu)]
     locmaps = [{int(g): c for c, g in enumerate(sup)} for sup in supports]
 
-    progress = True
-    iterations = 0
+    # Phase 1 eval points: caller-supplied if using the paper's layout,
+    # roots of unity otherwise (matching the current encoder).
+    if eval_pts_per_block is None:
+        Lsets = make_paper_eval_sets(omega, rho, p)
+        if Lsets is None:
+            raise ValueError("paper's construction requires 2(omega+rho) | (p-1)")
+        L1, L2, L3, L4 = Lsets
+        eval_pts_per_block = [
+            block_eval_pts(i, omega, rho, L1, L2, L3, L4) for i in range(mu)
+        ]
+
     stats = {
-        "phase1_fft_ok": 0,
         "phase1_vandermonde_ok": 0,
         "phase1_skipped": 0,
         "phase2_fft_ok": 0,
         "phase2_gauss_ok": 0,
-        "phase2_skipped": 0,
+        "phase2_skipped_cap": 0,
+        "phase2_skipped_fft_only": 0,
         "fallback_reasons": {},
     }
 
-    def _note_fallback(tag, reason):
-        key = f"{tag}: {reason}"
-        stats["fallback_reasons"][key] = stats["fallback_reasons"].get(key, 0) + 1
+    def _note(tag, reason):
+        k = f"{tag}: {reason}"
+        stats["fallback_reasons"][k] = stats["fallback_reasons"].get(k, 0) + 1
+
+    progress = True
+    iterations = 0
 
     while np.any(mask) and progress:
         progress = False
         iterations += 1
 
-        # ---------------- PHASE 1: single block ----------------
+        # ---------------- PHASE 1: single block, Vandermonde only ----------------
         for i in range(mu):
             sup = supports[i]
             local_mask = mask[sup]
@@ -541,49 +1053,8 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
             known_pos = np.nonzero(~local_mask)[0]
             e = num_local
             rows_needed = min(e + 2, rho)
+            nodes_all = eval_pts_per_block[i]
 
-            fixed = False
-
-            # ---- Phase 1a: try FFT ----
-            if has_fft_phase1:
-                # Local codeword values in support order
-                local_rec = [int(r[g]) if not mask[g] else 0 for g in sup]
-                local_mask_list = [bool(mask[g]) for g in sup]
-                # Local code is n0 symbols, dimension k0 = n0 - rho
-                res = fft_grs_erasure_decode(
-                    local_rec, local_mask_list, eval_pts_local,
-                    k_poly=n0_local - rho, p=p, explain=True,
-                    col_mult=eval_pts_local,
-                )
-                fft_out, reason = res
-                if fft_out is not None:
-                    # Verify against stacked BC parity checks
-                    if _verify_aux_solution(
-                            fft_out, sup, sup, sup, rho, lambda_, omega, p):
-                        for k_, g in enumerate(sup):
-                            if mask[g]:
-                                r[g] = GF_BLS12_381(fft_out[k_])
-                                mask[g] = False
-                        progress = True
-                        fixed = True
-                        stats["phase1_fft_ok"] += 1
-                    else:
-                        _note_fallback("phase1", "FFT candidate failed verification")
-                else:
-                    _note_fallback("phase1", f"FFT unavailable/failed ({reason})")
-            elif not fft_available:
-                _note_fallback("phase1", f"n0={n0_local} does not divide p-1")
-            else:
-                _note_fallback("phase1", "FFT disabled by use_fft_phase1=False")
-
-            if fixed:
-                continue
-
-            # ---- Phase 1b: fallback to vandermonde_solve ----
-            # Must track the ENCODER's choice of evaluation points, which
-            # depends on the field (fft_available), never on whether the FFT
-            # decode path happens to be switched on.
-            nodes_all = eval_pts_local if fft_available else list(range(1, n0_local + 1))
             S = _partial_syndrome(
                 [nodes_all[int(c)] for c in known_pos],
                 [int(v) for v in r[sup[known_pos]]],
@@ -591,11 +1062,14 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
             )
             syndrome = [(-v) % p for v in S]
             nodes_e = [nodes_all[int(c)] for c in erased_pos]
+
             try:
                 x = vandermonde_solve(nodes_e, syndrome[:e], p)
             except GFSolveError as exc:
-                _note_fallback("phase1", f"vandermonde_solve failed ({exc})")
+                _note("phase1", f"vandermonde failed ({exc})")
+                stats["phase1_skipped"] += 1
                 continue
+
             consistent = True
             for rr in range(e, rows_needed):
                 acc = sum(pow(nd_, rr, p) * xv
@@ -604,86 +1078,71 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                     consistent = False
                     break
             if not consistent:
-                _note_fallback("phase1", "vandermonde consistency check failed")
+                _note("phase1", "consistency check failed")
+                stats["phase1_skipped"] += 1
                 continue
+
             r[sup[erased_pos]] = GF_BLS12_381(np.array(x, dtype=object))
             mask[sup[erased_pos]] = False
             progress = True
             stats["phase1_vandermonde_ok"] += 1
-
-        # ---------------- PHASE 2: pairwise ----------------
+        print(f"Iteration {iterations}: Phase 1 done,")
+        # ---------------- PHASE 2: adjacent pair, paper's auxiliary GRS ----------------
+        print(f"Phase 2 starting, progress={progress}, ")
         if not progress and np.any(mask):
             for i in range(mu):
                 next_i = (i + 1) % mu
                 if next_i == i:
                     continue
+
                 sup_i, sup_j = supports[i], supports[next_i]
                 combined = np.array(
                     sorted(set(sup_i.tolist()) | set(sup_j.tolist())))
-                n_aux = len(combined)
                 pair_mask = mask[combined]
                 num_pair = int(np.count_nonzero(pair_mask))
 
                 if not (0 < num_pair <= 2 * rho):
                     continue
                 if num_pair > cap:
-                    stats["phase2_skipped"] += 1
-                    _note_fallback("phase2",
-                                    f"over compute cap ({num_pair} > {cap})")
+                    stats["phase2_skipped_cap"] += 1
+                    _note("phase2", f"over compute cap ({num_pair} > {cap})")
                     continue
 
                 fixed = False
 
-                # ---- Phase 2a: try FFT on flat union ----
-                if use_fft_phase2 and (p - 1) % n_aux == 0:
-                    eval_pts_aux = make_eval_pts(n_aux, p)
-                    k_aux = n_aux - 2 * rho
-                    if k_aux > 0:
-                        rec_aux = [int(r[g]) if not mask[g] else 0
-                                   for g in combined]
-                        mask_aux = [bool(mask[g]) for g in combined]
-                        res = fft_grs_erasure_decode(
-                            rec_aux, mask_aux, eval_pts_aux,
-                            k_poly=k_aux, p=p, explain=True,
-                        )
-                        fft_out, reason = res
-                        if fft_out is not None:
-                            if _verify_aux_solution(
-                                    fft_out, combined, sup_i, sup_j,
-                                    rho, lambda_, omega, p):
-                                for k_, g in enumerate(combined):
-                                    if mask[g]:
-                                        r[g] = GF_BLS12_381(fft_out[k_])
-                                        mask[g] = False
-                                progress = True
-                                fixed = True
-                                stats["phase2_fft_ok"] += 1
-                            else:
-                                _note_fallback(
-                                    "phase2",
-                                    "FFT candidate failed verification")
-                        else:
-                            _note_fallback("phase2",
-                                            f"FFT failed ({reason})")
+                # ---- Phase 2a: paper's auxiliary GRS with FFT ----
+                print("attempting Phase 2 FFT auxiliary decode")
+                if use_fft_phase2:
+                    new_r, new_mask, ok, reason = _decode_pair_alg1(
+                        r, mask, i, mu, omega, rho, p,
+                        eval_pts_per_block, supports)
+                    print(f"  [pair ({i},{next_i})] ok={ok} reason={reason}")
+                    if ok:
+                        r = new_r
+                        mask = new_mask
+                        progress = True
+                        fixed = True
+                        stats["phase2_fft_ok"] += 1
                     else:
-                        _note_fallback("phase2", "k_aux <= 0")
-                else:
-                    _note_fallback(
-                        "phase2",
-                        f"n_aux={n_aux} does not divide p-1")
+                        _note("phase2", f"aux FFT failed ({reason})")
 
                 if fixed:
                     continue
 
-                # ---- Phase 2b: Gaussian fallback ----
+                # ---- Phase 2b: skip or fall back to Gaussian ----
+                print("falling back to Phase 2 Gaussian elimination")
+                if phase2_fft_only:
+                    stats["phase2_skipped_fft_only"] += 1
+                    _note("phase2", "Gaussian disabled (phase2_fft_only=True)")
+                    continue
+
                 e = num_pair
                 erased_g = combined[np.nonzero(pair_mask)[0]]
                 syndrome = []
                 for blk in (i, next_i):
                     sup = supports[blk]
                     kn = np.nonzero(~mask[sup])[0]
-                    nodes_blk = (eval_pts_local if has_fft_phase1
-                                 else list(range(1, n0_local + 1)))
+                    nodes_blk = eval_pts_per_block[blk]
                     S = _partial_syndrome(
                         [nodes_blk[int(c)] for c in kn],
                         [int(v) for v in r[sup[kn]]],
@@ -699,8 +1158,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                            if int(g) in lm]
                     if hit:
                         cols, nds_idx = zip(*hit)
-                        nodes_blk = (eval_pts_local if has_fft_phase1
-                                     else list(range(1, n0_local + 1)))
+                        nodes_blk = eval_pts_per_block[blk]
                         nds = [nodes_blk[idx] for idx in nds_idx]
                         half[:, list(cols)] = _vander_rows(nds, rho, p)
                 H_e = GF_BLS12_381(np.vstack([top, bot]))
@@ -711,16 +1169,14 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                     try:
                         cand = gf_solve(H_e[:nrows, :], syn_v[:nrows])
                     except GFSolveError as exc:
-                        _note_fallback("phase2",
-                                        f"Gaussian: {exc}")
+                        _note("phase2", f"Gaussian: {exc}")
                         continue
                     if nrows < 2 * rho:
                         chk = H_e[nrows:nrows + 2, :] @ cand
                         if not np.array_equal(
                                 np.asarray(chk),
                                 np.asarray(syn_v[nrows:nrows + 2])):
-                            _note_fallback("phase2",
-                                            "Gaussian consistency check failed")
+                            _note("phase2", "Gaussian check failed")
                             continue
                     sol = cand
                     break
@@ -733,13 +1189,15 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 
     if verbose:
         print(f"dec_cbc_2_aux_ntt: {iterations} iterations")
-        print(f"  Phase 1: FFT={stats['phase1_fft_ok']}, "
-              f"Vandermonde={stats['phase1_vandermonde_ok']}")
+        print(f"  Phase 1 (Vandermonde only): "
+              f"{stats['phase1_vandermonde_ok']} blocks recovered, "
+              f"{stats['phase1_skipped']} skipped")
         print(f"  Phase 2: FFT={stats['phase2_fft_ok']}, "
               f"Gaussian={stats['phase2_gauss_ok']}, "
-              f"skipped={stats['phase2_skipped']}")
+              f"skipped(cap)={stats['phase2_skipped_cap']}, "
+              f"skipped(fft-only)={stats['phase2_skipped_fft_only']}")
         if stats["fallback_reasons"]:
-            print(f"  Fallback reasons (aggregated):")
+            print("  Fallback reasons:")
             for reason, count in sorted(stats["fallback_reasons"].items(),
                                         key=lambda kv: -kv[1]):
                 print(f"    [{count:5d}x] {reason}")
@@ -751,7 +1209,6 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 # ==============================================================================
 def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
               pair_unknown_cap=None, use_fft_phase1=True, use_fft_phase2=True):
-    """Signature-compatible wrapper for the benchmark."""
     return dec_cbc_2_aux_ntt(
         r_in, mask_in, mu, lambda_, omega, rho,
         pair_unknown_cap=pair_unknown_cap, verbose=False,
@@ -771,7 +1228,9 @@ def dec_cbc_t(r_in, mask_in, mu, lambda_, omega, rho,
     cap = int(unknown_cap)
     n0_local = rho + lambda_ * omega
     has_fft = (p - 1) % n0_local == 0
-    nodes_all = make_eval_pts(n0_local, p) if has_fft else list(range(1, n0_local + 1))
+    nodes_all = (nth_roots_of_unity(n0_local, p)
+                if has_fft
+                else list(range(1, n0_local + 1)))
 
     supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
                 for i in range(mu)]
@@ -898,10 +1357,9 @@ if __name__ == "__main__":
     full_blob = random_blob()
     message = GF_BLS12_381(full_blob)
     t0 = time.time()
-    encoded = encode_bc_structured(GF_BLS12_381, message, mu, lambda_, omega, rho)
+    encoded = encode_bc_paper(GF_BLS12_381, message, mu, lambda_, omega, rho)
     print(f"Encoded in {time.time() - t0:.2f}s\n")
-
-    num_erasures = 2 * rho
+    num_erasures = int(rho * 2)
     erased_indices = sorted(np.random.choice(n, num_erasures, replace=False).tolist())
     received = encoded.copy()
     mask = np.zeros(n, dtype=bool)
