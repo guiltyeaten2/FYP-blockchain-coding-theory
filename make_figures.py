@@ -53,6 +53,13 @@ COLOURS = {
 ORDER = ["1D-RS", "2D-RS", "BC-2048-L2", "BC-1024-L2",
          "BC-1024-L3", "BC-1024-L4", "BC-512-L2"]
 
+# Deterministic output. Without these two, every regeneration rewrites all
+# 14 files: matplotlib stamps the SVG with the current time and salts its
+# internal clip-path ids randomly. That turns "did the data change?" into an
+# unanswerable question in a diff, so both are pinned and the date is
+# dropped at save time below.
+plt.rcParams["svg.hashsalt"] = "fyp-blockchain-coding-theory"
+
 plt.rcParams.update({
     "figure.dpi": 110,
     "savefig.bbox": "tight",
@@ -72,7 +79,7 @@ plt.rcParams.update({
 def _save(fig, name):
     os.makedirs(FIGDIR, exist_ok=True)
     path = os.path.join(FIGDIR, name)
-    fig.savefig(path, format="svg")
+    fig.savefig(path, format="svg", metadata={"Date": None})
     plt.close(fig)
     print(f"  wrote docs/figures/{name}")
     return path
