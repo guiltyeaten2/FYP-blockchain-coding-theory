@@ -1175,7 +1175,7 @@ L 381.714219 209.294437
    </g>
    <g id="text_16">
     <!-- $p^{4}$ = 0.008 -->
-    <g style="fill: #666666" transform="translate(327.996037 188.489401) scale(0.07 -0.07)">
+    <g style="fill: #666666" transform="translate(62.132401 185.489401) scale(0.07 -0.07)">
      <defs>
       <path id="DejaVuSans-Oblique-70" d="M 3175 2156 
 Q 3175 2616 2975 2859 
@@ -1244,7 +1244,7 @@ z
    </g>
    <g id="text_17">
     <!-- $p^{4}$ = 0.130 -->
-    <g style="fill: #666666" transform="translate(327.996037 26.98386) scale(0.07 -0.07)">
+    <g style="fill: #666666" transform="translate(62.132401 23.98386) scale(0.07 -0.07)">
      <use xlink:href="#DejaVuSans-Oblique-70" transform="translate(0 0.684375)"/>
      <use xlink:href="#DejaVuSans-34" transform="translate(68.126458 38.965625) scale(0.7)"/>
      <use xlink:href="#DejaVuSans-20" transform="translate(115.396966 0.684375)"/>

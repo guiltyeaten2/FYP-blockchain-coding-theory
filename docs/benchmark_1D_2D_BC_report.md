@@ -251,54 +251,14 @@ bound its construction cannot reach.
 
 |  | 1D-RS | 2D-RS | BC ω2048 λ2 | BC ω1024 λ2 | BC ω512 λ2 | BC ω1024 λ3 | BC ω1024 λ4 |
 |---|---|---|---|---|---|---|---|
-| Message *k* | 4096 | 4096 | 4096 | 4096 | 4096 | 4096 | 4096 |
-| Codeword *n* | 8192 | 8448 | 8192 | 8192 | 8192 | 8192 | 8192 |
-| Code rate *R* | 0.500 | 0.485 | 0.500 | 0.500 | 0.500 | 0.500 | 0.500 |
-| Storage overhead | 2.00&times; | 2.06&times; | 2.00&times; | 2.00&times; | 2.00&times; | 2.00&times; | 2.00&times; |
-| Stored per blob | 256 KiB | 264 KiB | 256 KiB | 256 KiB | 256 KiB | 256 KiB | 256 KiB |
-| Component **N&#8320;** | 8192 | 96 | 6144 | 3072 | 1536 | 4096 | 5120 |
-| Component **K&#8320;** | 4096 | 64 | 4096 | 2048 | 1024 | 3072 | 4096 |
-| Min. distance *d* | 4097 | 825 | 4097 | 2049 | 1025 | 3073 | 4097 |
-| Guarantee (*d*&minus;1)/*n* | 0.500 | 0.098 | 0.500 | 0.250 | 0.125 | 0.375 | 0.500 |
-| Rate bound 1&minus;*R* | 0.500 | 0.515 | 0.500 | 0.500 | 0.500 | 0.500 | 0.500 |
-
-The five Block-Circulant rows differ in how the same 4096 message symbols
-are cut into blocks and in how far the blocks overlap. Every row sets
-&rho; = &omega;, which fixes *n* = 2*k* = 8192 and rate 0.5 throughout, so
-&lambda; and &mu; are the only things varying. Read the last three rows
-together: the *predicted* decoder reach S&#8320; and what was *measured*
-agree at every point, and both are governed by &lambda; rather than by
-&omega; or &mu;.
-
-| | BC ω2048 λ2 | BC ω1024 λ2 | BC ω512 λ2 | BC ω1024 λ3 | BC ω1024 λ4 |
-|---|---|---|---|---|---|
-| Information/block &omega; | 2048 | 1024 | 512 | 1024 | 1024 |
-| Parity/block &rho; | 2048 | 1024 | 512 | 1024 | 1024 |
-| Local blocks &mu; | 2 | 4 | 8 | 4 | 4 |
-| Overlap &lambda; | 2 | 2 | 2 | 3 | 4 |
-| Local length N&#8320; | 6144 | 3072 | 1536 | 4096 | 5120 |
-| Local dim K&#8320; | 4096 | 2048 | 1024 | 3072 | 4096 |
-| Local rate R&#8320; | 0.667 | 0.667 | 0.667 | 0.750 | 0.800 |
-| Min. distance *d* | 4097 | 2049 | 1025 | 3073 | 4097 |
-| Stopping rate *S* | 0.500 | 0.250 | 0.125 | 0.375 | 0.500 |
-| Predicted S&#8320; = &rho;/N&#8320; | 0.333 | 0.333 | 0.333 | 0.250 | 0.200 |
-| **Measured** | **0.34** | **0.35** | **0.35** | **0.28** | **0.20** |
-| Local solve size | 2048&times;2048 | 1024&times;1024 | 512&times;512 | 1024&times;1024 | 1024&times;1024 |
-
-Encode and decode cost, from the same run. Decode times are the mean
-over trials that actually recovered the blob; a dash means nothing
-recovered at that rate, so there is no decode time to report.
-
-|  | 1D-RS | 2D-RS | BC ω2048 λ2 | BC ω1024 λ2 | BC ω512 λ2 | BC ω1024 λ3 | BC ω1024 λ4 |
-|---|---|---|---|---|---|---|---|
-| Encode | 0.46s | 2.65s | 14.16s | 6.65s | 3.56s | 7.86s | 9.00s |
-| Decode @ 2% | 5.18s | 2.44s | 0.41s | 0.24s | 0.15s | 0.30s | 0.38s |
-| Decode @ 5% | 11.10s | 3.11s | 0.98s | 0.54s | 0.32s | 0.69s | 0.85s |
-| Decode @ 10% | 20.55s | 3.35s | 2.01s | 1.09s | 0.63s | 1.39s | 1.70s |
-| Decode @ 20% | 40.36s | 5.08s | 4.43s | 2.33s | 1.32s | 2.96s | 3.61s |
-| Decode @ 30% | 56.94s | 4.50s | 7.15s | 3.71s | 2.08s | &mdash; | &mdash; |
-| Decode @ 35% | 63.25s | 5.85s | &mdash; | 4.30s | 2.43s | &mdash; | &mdash; |
-| Decode @ 48% | 81.77s | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; |
+| Encode | 0.23s | 1.37s | 15.73s | 6.86s | 3.32s | 7.67s | 4.57s |
+| Decode @ 2% | 2.63s | 1.29s | 0.53s | 0.29s | 0.17s | 0.38s | 0.20s |
+| Decode @ 5% | 5.69s | 1.62s | 1.22s | 0.65s | 0.36s | 0.84s | 0.44s |
+| Decode @ 10% | 10.69s | 1.78s | 2.52s | 1.28s | 0.71s | 1.67s | 0.88s |
+| Decode @ 20% | 20.42s | 2.68s | 5.48s | 2.78s | 1.47s | 3.57s | 1.85s |
+| Decode @ 30% | 29.89s | 2.32s | 8.86s | 4.47s | 2.35s | &mdash; | &mdash; |
+| Decode @ 35% | 33.33s | 3.03s | &mdash; | 5.17s | 2.76s | &mdash; | &mdash; |
+| Decode @ 48% | 42.15s | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; |
 
 ## Results
 
@@ -328,6 +288,13 @@ recovered/attempted rather than a bare percentage.
 | 52% | 0/3 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
 | 55% | 0/2 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
 
+Every block-circulant row here is decoded with the NTT path switched off
+(`use_fft_phase1=False`), which is the faster of the two by a wide margin
+and is now set explicitly in the adapter rather than left at its default.
+The section on the NTT decoder below measures both paths and explains the
+choice; the erasure tolerances are identical either way, so only the decode
+times depend on it.
+
 Across all 520 trials, no scheme returned corrupted data while reporting
 success: silent corruption was zero everywhere (0/28 for 1D-RS, 0/60 for
 2D-RS, and 0/88, 0/88, 0/88, 0/84, 0/84 across the five BC rows). Before
@@ -350,7 +317,7 @@ the decoder fix described below, BC's figure was 31 of 40.
 
 <figure>
 <img src="figures/bench_decode_time.svg" alt="Mean decode time of successful decodes against erasure rate, log scale.">
-<figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is an order of magnitude more expensive than everything else at every rate, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at the same rate, and cheaper than 2D-RS too below about 30%.</figcaption>
+<figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is the most expensive scheme at every rate, by a factor of three to five over the dearest block-circulant row, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at every rate measured. Against 2D-RS the picture is now mixed rather than one-sided: below about 8% erasure every BC row is cheaper, but 2D-RS decode barely grows with erasure rate while BC decode grows roughly linearly, so above that only &omega;512 &lambda;2 and &omega;1024 &lambda;4 stay below it. These are Vandermonde-path timings, with the NTT path switched off &mdash; see the NTT section for what turning it on costs, and for why defining the local code over roots of unity raises the block-circulant numbers here by roughly a factor of two whether or not the transform is ever used.</figcaption>
 </figure>
 
 <figure>
@@ -420,8 +387,12 @@ codes with far better distance. That is the sense in which parameters
 that are "not fully decodable" still demonstrate the construction's
 potential.
 
-Set against that, the λ=2 rows cost less decode time than anything except
-each other, and every BC row is cheaper than 1D-RS at every rate measured.
+Set against that, every BC row is cheaper than 1D-RS at every rate
+measured. Within the block-circulant family the ordering is now set as much
+by the field as by λ: ω1024 λ4 decodes faster than either λ=2 row of the
+same ω, not because λ=4 is a better choice but because its local length
+5120 does not divide *p*&minus;1, so it never moved onto 255-bit evaluation
+points and never paid for them. The NTT section below measures that cost.
 The local system each solves is ρ×ρ, which generic elimination handles in
 ρ³ — which is why the pairwise phase stays unaffordable while the
 single-block phase does not, the latter's system being Vandermonde and so

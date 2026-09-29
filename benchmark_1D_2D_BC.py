@@ -544,10 +544,25 @@ class BCAdapter:
         return out
 
     def decode(self, corrupted, mask):
+        # The NTT path is switched off deliberately, not left at its default.
+        #
+        # It is correct -- it recovers the blob exactly on every eligible
+        # parameterisation -- but it is 7-23x slower than the Vandermonde
+        # solver it falls back to, because roughly four fifths of it is a
+        # schoolbook polynomial division rather than the transform. Leaving
+        # it on would make every BC row in this sweep an order of magnitude
+        # more expensive while measuring nothing new. See fft_benchmark.py
+        # for the measurement and the NTT section of
+        # docs/benchmark_1D_2D_BC_report.md for the reasoning.
+        #
+        # Flip either of these to True to measure the NTT path instead. When
+        # the divmod is replaced with Newton iteration the trade flips and
+        # phase 1 should be switched back on.
         t0 = time.time()
         recovered, remaining = bc.dec_cbc_2(
             None, corrupted, mask, self.mu, self.lambda_, self.omega, self.rho,
-            pair_unknown_cap=self.pair_unknown_cap)
+            pair_unknown_cap=self.pair_unknown_cap,
+            use_fft_phase1=False, use_fft_phase2=False)
         ok = not np.any(remaining)
         return recovered, ok, time.time() - t0
 

@@ -535,9 +535,13 @@ def fig_net_peers(runC):
                 mec="#333", mew=1.0,
                 label=f"hypergeometric, {100 * adv:.0f}% (computed)")
         ax.axhline(adv ** rep, color="#888", lw=0.9, ls=":")
+        # Anchored to the left edge and offset upward: at the right edge this
+        # label sat directly on top of the measured curve, which converges to
+        # the same value.
         ax.annotate(f"$p^{{{rep}}}$ = {adv ** rep:.3f}",
-                    xy=(peers[-1], adv ** rep), fontsize=7, color="#666",
-                    ha="right", va="bottom")
+                    xy=(peers[0], adv ** rep), fontsize=7, color="#666",
+                    ha="left", va="bottom",
+                    xytext=(0, 3), textcoords="offset points")
     ax.set_xscale("log", base=2)
     ax.set_xlabel("peers in the sampled network")
     ax.set_ylabel("realised erasure fraction")
