@@ -60,20 +60,84 @@ ORDER = ["1D-RS", "2D-RS", "BC-2048-L2", "BC-1024-L2",
 # dropped at save time below.
 plt.rcParams["svg.hashsalt"] = "fyp-blockchain-coding-theory"
 
+# Page geometry, because a figure that is wider than the text column gets
+# scaled down by the browser and every font size in it shrinks with it. The
+# reports are A4 with 16mm side margins, so the text column is 178mm =
+# 7.01in. Nothing here is drawn wider than that, and the two-panel figures
+# use exactly it rather than sprawling and being shrunk to fit.
+FIGW = 7.0
+HALF = 3.4          # one panel of a two-panel figure
+
 plt.rcParams.update({
     "figure.dpi": 110,
     "savefig.bbox": "tight",
-    "font.size": 9,
-    "axes.titlesize": 10,
-    "axes.labelsize": 9,
+    # Sized against 10.5pt body text. The previous 9pt base put legends at
+    # 8pt and tick labels lower still, which is not comfortably readable on
+    # paper once a figure is placed in the column.
+    "font.size": 10,
+    "axes.titlesize": 11,
+    "axes.labelsize": 10,
+    "xtick.labelsize": 9,
+    "ytick.labelsize": 9,
     "axes.spines.top": False,
     "axes.spines.right": False,
     "axes.grid": True,
     "grid.alpha": 0.25,
     "grid.linewidth": 0.6,
     "legend.frameon": False,
-    "legend.fontsize": 8,
+    "legend.fontsize": 9,
+    "lines.linewidth": 1.8,
+    "lines.markersize": 4,
 })
+
+
+def _label_ends(ax, series, fontsize=9):
+    """Label each line at its right-hand end instead of in a legend.
+
+    A seven-entry legend makes the reader hold seven colour-to-name pairings
+    in their head and then find each one in a thicket of overlapping curves.
+    Putting the name where the line ends removes that lookup entirely. Labels
+    are pushed apart vertically when they would collide, so the nudged ones
+    no longer sit exactly on their line -- which is why each is drawn in its
+    line's own colour.
+
+    `series` is [(name, xs, ys, colour)]; lines must already be plotted.
+    """
+    ends = sorted(((ys[-1], xs[-1], name, colour)
+                   for name, xs, ys, colour in series if xs),
+                  key=lambda t: t[0])
+    if not ends:
+        return
+    y0, y1 = ax.get_ylim()
+    log = ax.get_yscale() == "log"
+    import math
+    to = (lambda v: math.log10(v)) if log else (lambda v: v)
+    fro = (lambda v: 10 ** v) if log else (lambda v: v)
+    lo, hi = to(y0), to(y1)
+    gap = (hi - lo) * 0.062          # minimum spacing in axis units
+    placed = []
+    for yv, xv, name, colour in ends:
+        t = to(yv)
+        if placed and t - placed[-1][0] < gap:
+            t = placed[-1][0] + gap
+        placed.append((t, xv, name, colour))
+    # If the stack overflowed the top, slide the whole run back down.
+    over = placed[-1][0] - hi
+    if over > 0:
+        placed = [(t - over, xv, n, c) for t, xv, n, c in placed]
+    xr = ax.get_xlim()
+    for t, xv, name, colour in placed:
+        # Series end at different x, so a label can land on a NEIGHBOUR's
+        # curve even after vertical de-collision. The white backing keeps it
+        # legible wherever it lands, which is cheaper than solving the
+        # general label-placement problem.
+        ax.annotate(name, xy=(xv, fro(t)), xytext=(7, 0),
+                    textcoords="offset points",
+                    ha="left", va="center", fontsize=fontsize, color=colour,
+                    bbox=dict(boxstyle="round,pad=0.18", fc="white",
+                              ec="none", alpha=0.85))
+    # Room on the right for the labels to live in.
+    ax.set_xlim(xr[0], xr[1] + (xr[1] - xr[0]) * 0.22)
 
 
 def _save(fig, name):
@@ -133,9 +197,11 @@ def fig_success_curves(bench):
         "BC-1024-L4": ("P", "-",  7),
         "BC-512-L2":  ("X", ":",  7),
     }
-    fig, (ax, axz) = plt.subplots(
-        1, 2, figsize=(9.2, 3.9),
-        gridspec_kw={"width_ratios": [1.35, 1]})
+    # Stacked, not side by side. Two panels sharing 7in of column width left
+    # each one about 3.4in, at which the titles collided and both legends sat
+    # on top of the data. Full width each, one shared legend underneath.
+    fig, (ax, axz) = plt.subplots(2, 1, figsize=(FIGW, 6.6))
+    fig.subplots_adjust(hspace=0.42)
 
     def draw(a, schemes):
         for r in bench["results"]:
@@ -157,7 +223,7 @@ def fig_success_curves(bench):
     ax.set_xlabel("erasure rate")
     ax.set_ylabel("fraction of trials recovered")
     ax.set_title("Fault tolerance across the full sweep")
-    ax.legend(ncol=2, loc="lower left", fontsize=7.5)
+    handles, labels = ax.get_legend_handles_labels()
 
     # Zoom on the CLUSTER, not on the whole transition: the thresholds span
     # 0.21 to 0.51, so a window covering all of them is barely a zoom at all.
@@ -174,8 +240,9 @@ def fig_success_curves(bench):
     draw(axz, inband)
     axz.set_xlim(lo, hi)
     axz.set_xlabel("erasure rate")
-    axz.set_title(f"Zoom: the {len(inband)} schemes that land together "
-                  f"({100 * lo:.0f}–{100 * hi:.0f}%)")
+    axz.set_ylabel("fraction of trials recovered")
+    axz.set_title(f"Zoom on the {len(inband)} schemes that land together "
+                  f"({100 * lo:.0f}–{100 * hi:.0f}% erasure)")
     # Stagger the value labels: several thresholds sit within a thousandth
     # of each other, so stacking them at one height is unreadable.
     for k, (n, t) in enumerate(sorted((p_ for p_ in pairs if p_[0] in inband),
@@ -183,11 +250,15 @@ def fig_success_curves(bench):
         axz.plot([t], [0.5], marker="|", ms=13, mew=1.8,
                  color=COLOURS.get(n))
         axz.annotate(f"{n}  {t:.3f}", xy=(t, 0.5),
-                     xytext=(6, -16 - 11 * k), textcoords="offset points",
-                     ha="left", fontsize=6.8, color=COLOURS.get(n),
-                     arrowprops=dict(arrowstyle="-", lw=0.5,
-                                     color=COLOURS.get(n), alpha=0.6))
-    axz.legend(loc="upper left", fontsize=7.5)
+                     xytext=(10, -26 - 17 * k), textcoords="offset points",
+                     ha="left", fontsize=8.5, color=COLOURS.get(n),
+                     bbox=dict(boxstyle="round,pad=0.2", fc="white",
+                               ec="none", alpha=0.9),
+                     arrowprops=dict(arrowstyle="-", lw=0.6,
+                                     color=COLOURS.get(n), alpha=0.7))
+    # One shared legend below both panels, so neither has one over its data.
+    fig.legend(handles, labels, loc="lower center", ncol=4,
+               bbox_to_anchor=(0.5, -0.02), fontsize=9)
     return _save(fig, "bench_success_curves.svg")
 
 
@@ -211,7 +282,7 @@ def fig_tolerance_vs_guarantee(bench):
         meas.append(th)
         guar.append(r["params"]["worst_case_tolerance"])
     x = range(len(labels))
-    fig, ax = plt.subplots(figsize=(6.8, 3.5))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
     w = 0.38
     # One colour, not the per-scheme palette: a multi-coloured bar series
     # gives the legend a single swatch, which reads as "measured means 1D-RS".
@@ -252,7 +323,7 @@ def fig_bc_threshold_prediction(bench):
             rows.append((r["scheme"], r["params"]["lambda"],
                          r["params"]["predicted_local_reach"], th))
     rows.sort(key=lambda t: (t[1], t[0]))
-    fig, ax = plt.subplots(figsize=(6.2, 3.5))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
     x = range(len(rows))
     ax.bar(x, [t[3] for t in rows], 0.52,
            color=[COLOURS[t[0]] for t in rows], label="measured threshold")
@@ -272,22 +343,23 @@ def fig_bc_threshold_prediction(bench):
 
 def fig_decode_time(bench):
     """Decode cost against erasure rate, successes only, log axis."""
-    fig, ax = plt.subplots(figsize=(6.6, 3.6))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    series = []
     for r in bench["results"]:
         ts = [t for t in sorted(r["trials"], key=lambda t: t["rate"])
               if t["mean_decode_time_success_only_s"]]
         if not ts:
             continue
-        ax.plot([t["rate"] for t in ts],
-                [t["mean_decode_time_success_only_s"] for t in ts],
-                marker="o", ms=3.2, lw=1.5, label=r["scheme"],
-                color=COLOURS.get(r["scheme"]))
+        xs = [t["rate"] for t in ts]
+        ys = [t["mean_decode_time_success_only_s"] for t in ts]
+        ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
+        series.append((r["scheme"], xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
     ax.set_xlabel("erasure rate")
-    ax.set_ylabel("mean decode time, successes only (s)")
+    ax.set_ylabel("mean decode time (s), log scale")
     ax.set_title("Decode cost against erasure rate")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.legend(ncol=2, loc="upper left")
+    _label_ends(ax, series)          # named at the line end, not in a legend
     return _save(fig, "bench_decode_time.svg")
 
 
@@ -308,7 +380,7 @@ def fig_data_needed(bench):
             continue
         labels.append(name)
         mult.append(r["n"] * (1.0 - th) / r["k"])
-    fig, ax = plt.subplots(figsize=(6.4, 3.3))
+    fig, ax = plt.subplots(figsize=(FIGW, 3.8))
     bars = ax.bar(range(len(labels)), mult, 0.55,
                   color=[COLOURS[l] for l in labels])
     ax.axhline(1.0, color="#c1442e", ls="--", lw=1.2,
@@ -357,7 +429,7 @@ def fig_tolerance_vs_cost(bench):
         if th and c:
             pts.append((r["scheme"], th, c))
 
-    fig, ax = plt.subplots(figsize=(6.6, 4.0))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.4))
     for name, th, c in pts:
         ax.scatter([th], [c], s=95, color=COLOURS.get(name), zorder=3,
                    edgecolor="white", linewidth=0.8)
@@ -394,7 +466,7 @@ def fig_encode_decode(bench):
     names = [s for s in ORDER if any(r["scheme"] == s
                                      for r in bench["results"])]
     enc = {r["scheme"]: r["encode_time_s"] for r in bench["results"]}
-    fig, ax = plt.subplots(figsize=(6.6, 3.6))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
     x = range(len(names))
     w = 0.38
     ax.bar([i - w / 2 for i in x], [enc[n] for n in names], w,
@@ -418,7 +490,8 @@ def fig_cost_per_erasure(bench):
     symbols actually erased removes that and leaves the algorithmic
     difference: a flat line is linear work per erasure, a rising one is
     superlinear."""
-    fig, ax = plt.subplots(figsize=(6.6, 3.6))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    series = []
     for r in bench["results"]:
         xs, ys = [], []
         for t in sorted(r["trials"], key=lambda t: t["rate"]):
@@ -427,14 +500,14 @@ def fig_cost_per_erasure(bench):
                 xs.append(t["rate"])
                 ys.append(1e3 * c / e)          # milliseconds per erasure
         if xs:
-            ax.plot(xs, ys, marker="o", ms=3.2, lw=1.5, label=r["scheme"],
-                    color=COLOURS.get(r["scheme"]))
+            ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
+            series.append((r["scheme"], xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
     ax.set_xlabel("erasure rate")
-    ax.set_ylabel("decode time per erased symbol (ms), log scale")
+    ax.set_ylabel("decode time per erased symbol (ms)")
     ax.set_title("Cost per erasure repaired, with the workload divided out")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.legend(ncol=2, loc="upper left", fontsize=8)
+    _label_ends(ax, series)
     return _save(fig, "bench_cost_per_erasure.svg")
 
 
@@ -445,7 +518,7 @@ def fig_decode_vs_erasure_count(bench):
     have different lengths (8192 against 8448), so the same rate is not the
     same amount of repair work. This is the figure in the 1D-vs-2D
     comparison document, regenerated from the current sweep."""
-    fig, ax = plt.subplots(figsize=(6.4, 3.6))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
     for name in ("1D-RS", "2D-RS"):
         r = next((x for x in bench["results"] if x["scheme"] == name), None)
         if not r:
@@ -472,7 +545,7 @@ def fig_decoder_fix(data):
     cats = ["correct recovery", "silent corruption", "honest failure"]
     keys = ["correct", "silent_corruption", "honest_failure"]
     cols = ["#1a7f37", "#c1442e", "#999999"]
-    fig, ax = plt.subplots(figsize=(6.2, 3.4))
+    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
     x = range(len(cats))
     w = 0.38
     for off, phase, shade in ((-w / 2, "before", 0.45), (w / 2, "after", 1.0)):
@@ -505,7 +578,7 @@ def fig_fft_vs_vandermonde(fft):
     rows = fft["ab"]
     rates = sorted({r["rate"] for r in rows})
     schemes = [s for s in ORDER if any(r["scheme"] == s for r in rows)]
-    fig, axes = plt.subplots(1, len(rates), figsize=(3.1 * len(rates), 3.6),
+    fig, axes = plt.subplots(1, len(rates), figsize=(FIGW, 4.4),
                              sharey=True)
     axes = [axes] if len(rates) == 1 else list(axes)
     for ax, rate in zip(axes, rates):
@@ -532,11 +605,14 @@ def fig_fft_vs_vandermonde(fft):
         ax.set_ylim(top=top * 3.2)
         ax.set_xticks(list(x))
         ax.set_xticklabels([s.replace("BC-", "") for s in schemes],
-                           rotation=40, ha="right", fontsize=7.5)
+                           rotation=45, ha="right", fontsize=8.5)
         ax.set_title(f"{100 * rate:.0f}% erased")
     axes[0].set_ylabel("mean decode time (s), log scale")
-    axes[0].legend(loc="lower left")
-    fig.suptitle("The NTT decoder is slower than the path it replaces", y=1.02)
+    # Legend below the panels: inside the first one it covered the bars it
+    # was labelling.
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.06))
+    fig.suptitle("The NTT decoder is slower than the path it replaces", y=1.0)
     return _save(fig, "fft_vs_vandermonde.svg")
 
 
@@ -547,7 +623,7 @@ def fig_fft_profile(fft):
              "erasure locator build", "everything else"]
     items = [(k, b[k]) for k in order if k in b]
     total = fft["profile"]["total_s"]
-    fig, ax = plt.subplots(figsize=(6.4, 1.9))
+    fig, ax = plt.subplots(figsize=(FIGW, 2.3))
     left = 0.0
     shades = {"polynomial division": "#c1442e", "NTT / inverse NTT": "#2e75b6",
               "erasure locator build": "#9dc3e6", "everything else": "#cccccc"}
@@ -573,7 +649,7 @@ def fig_node_width(fft):
     """The cost of defining the code over roots of unity at all."""
     n = fft["nodes"]
     keys = ["small integers", "roots of unity"]
-    fig, ax = plt.subplots(figsize=(4.4, 3.0))
+    fig, ax = plt.subplots(figsize=(5.0, 3.4))
     bars = ax.bar(keys, [n[k] for k in keys], 0.5,
                   color=["#2e75b6", "#c1442e"])
     for b_, k in zip(bars, keys):
@@ -598,7 +674,7 @@ def fig_grs_premise(fft):
     s_ = fft["structure"]
     panels = [("Phase 1 — single local block", s_["phase1"], "#1a7f37"),
               ("Phase 2 — union of two blocks", s_["phase2"], "#c1442e")]
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.3))
+    fig, axes = plt.subplots(1, 2, figsize=(FIGW, 3.7))
     for ax, (title, d, fixed_colour) in zip(axes, panels):
         bars = ax.bar(["as received", "after undoing\nGRS multipliers"],
                       [d["raw"], d["fixed"]], 0.55,
@@ -631,48 +707,53 @@ def _net_series(rows, scheme, xkey, ykey):
 
 
 def fig_net_erasure(runA):
-    fig, ax = plt.subplots(figsize=(6.0, 3.4))
+    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
     rows = runA["rows"]
-    for s in ORDER:
-        if not any(r["scheme"] == s for r in rows):
-            continue
+    # Every scheme produces the SAME curve here -- the erasure rate is set by
+    # the network and custody, not by the code. Six legend entries would
+    # describe one visible line, so they are drawn in a common grey and
+    # named once.
+    names = [s for s in ORDER if any(r["scheme"] == s for r in rows)]
+    for s in names:
         x, y = _net_series(rows, s, "adversarial", "mean_erasure_fraction")
-        ax.plot(x, y, marker="o", ms=3, lw=1.4, label=s, color=COLOURS[s])
+        ax.plot(x, y, marker="o", lw=1.4, color="#2e75b6", alpha=0.55)
+    ax.plot([], [], marker="o", lw=1.4, color="#2e75b6", alpha=0.55,
+            label=f"all {len(names)} schemes (curves coincide)")
     rep = runA["config"].get("custody_replication", 4)
     xs = [i / 20 for i in range(17)]
-    ax.plot(xs, [p ** rep for p in xs], ls="--", lw=1.3, color="#444",
-            label=f"$p^{{{rep}}}$ (custody replication {rep})")
+    ax.plot(xs, [p ** rep for p in xs], ls="--", lw=1.6, color="#c1442e",
+            label=f"$p^{{{rep}}}$ prediction (custody replication {rep})")
     ax.set_xlabel("fraction of peers withholding")
     ax.set_ylabel("realised erasure fraction")
-    ax.set_title("Custody replication turns withholding into a much smaller erasure rate")
-    ax.annotate("all six schemes coincide: the erasure rate is set by the\n"
-                "network and custody, not by the code being carried",
-                xy=(0.03, 0.62), xycoords="axes fraction", fontsize=7.5,
-                color="#555")
+    ax.set_title("Custody replication turns withholding into a much smaller\n"
+                 "erasure rate — and the code carried makes no difference",
+                 fontsize=11)
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.legend(ncol=2, loc="upper left")
+    ax.legend(loc="upper left")
     return _save(fig, "net_erasure_vs_adversarial.svg")
 
 
 def fig_net_recovery(runA):
-    fig, ax = plt.subplots(figsize=(6.0, 3.4))
+    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
     rows = runA["rows"]
+    series = []
     for s in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == s),
                      key=lambda r: r["adversarial"])
         if not sub:
             continue
-        ax.plot([r["adversarial"] for r in sub],
-                [r["recovered"] / r["trials"] for r in sub],
-                marker="o", ms=3, lw=1.4, label=s, color=COLOURS[s])
+        xs = [r["adversarial"] for r in sub]
+        ys = [r["recovered"] / r["trials"] for r in sub]
+        ax.plot(xs, ys, marker="o", color=COLOURS[s])
+        series.append((s, xs, ys, COLOURS[s]))
     ax.set_xlabel("fraction of peers withholding")
     ax.set_ylabel("fraction of trials recovered")
     ax.set_title("Recovery against adversarial withholding")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.set_ylim(-0.04, 1.05)
-    ax.legend(ncol=2, loc="lower left")
+    ax.set_ylim(-0.08, 1.08)
+    _label_ends(ax, series)
     return _save(fig, "net_recovery_vs_adversarial.svg")
 
 
@@ -688,7 +769,7 @@ def fig_net_gather_vs_decode(runB):
          for s in schemes]
     x = range(len(schemes))
     w = 0.38
-    fig, ax = plt.subplots(figsize=(6.2, 3.5))
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
     ax.bar([i - w / 2 for i in x], g, w, color="#2e75b6", label="gather (network)")
     ax.bar([i + w / 2 for i in x], d, w, color="#c1442e", label="decode (CPU)")
     deadline = runB["config"].get("deadline_s")
@@ -722,64 +803,78 @@ def fig_net_throughput(runB):
     because its decode is too slow to fit the slot."""
     rows = runB["rows"]
     target = runB["config"].get("blobs_per_slot", 6)
-    fig, ax = plt.subplots(figsize=(6.0, 3.4))
+    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
+    series = []
     for s_ in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == s_),
                      key=lambda r: r["adversarial"])
         if not sub:
             continue
-        ax.plot([r["adversarial"] for r in sub],
-                [r["blobs_per_slot"] for r in sub],
-                marker="o", ms=3.2, lw=1.5, label=s_, color=COLOURS[s_])
-    ax.axhline(target, color="#444", ls="--", lw=1.1,
-               label=f"blobs attempted ({target:.0f})")
+        xs = [r["adversarial"] for r in sub]
+        ys = [r["blobs_per_slot"] for r in sub]
+        ax.plot(xs, ys, marker="o", color=COLOURS[s_])
+        series.append((s_, xs, ys, COLOURS[s_]))
+    ax.axhline(target, color="#444", ls="--", lw=1.1)
+    # Labelled on the line: the legend that used to carry this was removed in
+    # favour of naming each curve at its end.
+    ax.annotate(f"blobs attempted ({target:.0f})", xy=(0.0, target),
+                xytext=(2, 4), textcoords="offset points",
+                fontsize=8.5, color="#444")
     ax.set_xlabel("fraction of peers withholding")
     ax.set_ylabel("blobs reconstructed per slot")
     ax.set_title("Throughput inverts the tolerance ordering")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.legend(ncol=2, loc="lower left")
+    _label_ends(ax, series)
     return _save(fig, "net_throughput.svg")
 
 
 def fig_net_peers(runC):
-    fig, ax = plt.subplots(figsize=(6.0, 3.4))
-    rows = runC["rows"]
-    styles = {0.3: "-", 0.6: "--"}
-    for s in sorted({r["scheme"] for r in rows}):
-        for adv in sorted({r["adversarial"] for r in rows}):
-            sub = sorted((r for r in rows
-                          if r["scheme"] == s and r["adversarial"] == adv),
-                         key=lambda r: r["peers"])
-            if not sub:
-                continue
-            ax.plot([r["peers"] for r in sub],
-                    [r["mean_erasure_fraction"] for r in sub],
-                    marker="o", ms=3, lw=1.4, color=COLOURS.get(s),
-                    ls=styles.get(adv, "-"),
-                    label=f"{s}, {100 * adv:.0f}% withholding")
+    """Realised erasure against peer count, at two withholding levels.
+
+    The two schemes coincide exactly at each level -- as they must, since
+    the erasure rate is a property of the network rather than the code -- so
+    a four-entry legend would describe two visible curves. Each withholding
+    level is drawn as one band and named beside it, leaving the legend to
+    carry only the computed prediction."""
     from math import comb
+    rows = runC["rows"]
     rep = runC["config"].get("custody_replication", 4)
     peers = sorted({r["peers"] for r in rows})
-    for adv in sorted({r["adversarial"] for r in rows}):
+    levels = sorted({r["adversarial"] for r in rows})
+    shade = {levels[0]: "#9dc3e6", levels[-1]: "#1f4e79"}
+
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    for adv in levels:
+        col = shade.get(adv, "#2e75b6")
+        for sc in sorted({r["scheme"] for r in rows}):
+            sub = sorted((r for r in rows
+                          if r["scheme"] == sc and r["adversarial"] == adv),
+                         key=lambda r: r["peers"])
+            if sub:
+                ax.plot([r["peers"] for r in sub],
+                        [r["mean_erasure_fraction"] for r in sub],
+                        marker="o", lw=1.6, color=col, alpha=0.85)
         hyp = [comb(round(adv * n), rep) / comb(n, rep) if n >= rep else 0.0
                for n in peers]
-        ax.plot(peers, hyp, ls="none", marker="o", ms=7, mfc="none",
-                mec="#333", mew=1.0,
-                label=f"hypergeometric, {100 * adv:.0f}% (computed)")
-        ax.axhline(adv ** rep, color="#888", lw=0.9, ls=":")
-        # Anchored to the left edge and offset upward: at the right edge this
-        # label sat directly on top of the measured curve, which converges to
-        # the same value.
-        ax.annotate(f"$p^{{{rep}}}$ = {adv ** rep:.3f}",
-                    xy=(peers[0], adv ** rep), fontsize=7, color="#666",
-                    ha="left", va="bottom",
-                    xytext=(0, 3), textcoords="offset points")
+        ax.plot(peers, hyp, ls="none", marker="o", ms=9, mfc="none",
+                mec="#333", mew=1.1,
+                label="exact hypergeometric (computed, not fitted)"
+                      if adv == levels[0] else None)
+        ax.axhline(adv ** rep, color=col, lw=1.0, ls=":")
+        # Name the band beside its own curve rather than in a legend.
+        ax.annotate(f"{100 * adv:.0f}% of peers withholding\n"
+                    f"$p^{{{rep}}}$ limit {adv ** rep:.3f}",
+                    xy=(peers[-1], hyp[-1]), xytext=(9, 0),
+                    textcoords="offset points", va="center",
+                    fontsize=8.5, color=col)
     ax.set_xscale("log", base=2)
+    ax.set_xlim(peers[0] * 0.85, peers[-1] * 3.6)
     ax.set_xlabel("peers in the sampled network")
     ax.set_ylabel("realised erasure fraction")
     ax.set_title("Realised erasure rises with peer count, then plateaus")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
-    ax.legend(loc="best")
+    # Below the axes: inside, it landed on the marker row it describes.
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.20))
     return _save(fig, "net_peers.svg")
 
 
