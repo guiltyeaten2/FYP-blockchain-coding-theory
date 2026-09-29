@@ -138,157 +138,12 @@ schemes are the transferable part. `--speedup N` divides decode by N to ask
 what production arithmetic would look like.
 
 <figure>
-<svg viewBox="0 0 430 240" role="img" aria-label="Realised erasure fraction against the fraction of withholding peers, compared with the p to the fourth prediction from custody replication four.">
-<line x1="52" y1="24" x2="52" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="52" y1="186" x2="330" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="49" y1="186.0" x2="52" y2="186.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="186.0" x2="330" y2="186.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="188.5" text-anchor="end" font-size="7">0.00</text>
-<line x1="49" y1="153.6" x2="52" y2="153.6" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="153.6" x2="330" y2="153.6" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="156.1" text-anchor="end" font-size="7">0.09</text>
-<line x1="49" y1="121.2" x2="52" y2="121.2" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="121.2" x2="330" y2="121.2" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="123.7" text-anchor="end" font-size="7">0.18</text>
-<line x1="49" y1="88.8" x2="52" y2="88.8" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="88.8" x2="330" y2="88.8" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="91.3" text-anchor="end" font-size="7">0.27</text>
-<line x1="49" y1="56.4" x2="52" y2="56.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="56.4" x2="330" y2="56.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="58.9" text-anchor="end" font-size="7">0.36</text>
-<line x1="49" y1="24.0" x2="52" y2="24.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="24.0" x2="330" y2="24.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="26.5" text-anchor="end" font-size="7">0.45</text>
-<line x1="52.0" y1="186" x2="52.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<text x="52.0" y="198" text-anchor="middle" font-size="7">0%</text>
-<line x1="121.5" y1="186" x2="121.5" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<text x="121.5" y="198" text-anchor="middle" font-size="7">20%</text>
-<line x1="191.0" y1="186" x2="191.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<text x="191.0" y="198" text-anchor="middle" font-size="7">40%</text>
-<line x1="260.5" y1="186" x2="260.5" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<text x="260.5" y="198" text-anchor="middle" font-size="7">60%</text>
-<line x1="330.0" y1="186" x2="330.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<text x="330.0" y="198" text-anchor="middle" font-size="7">80%</text>
-<text x="191" y="212" text-anchor="middle" font-size="7.6">fraction of peers withholding</text>
-<text x="11" y="105" text-anchor="middle" font-size="7.6" transform="rotate(-90 11 105)">realised erasure fraction</text>
-<polyline points="52.0,186.0 86.8,186.0 121.5,185.4 156.2,183.1 191.0,176.8 225.8,163.5 260.5,139.3 295.2,99.6 330.0,38.5" fill="none" stroke="#8d99a6" stroke-width="1.4" stroke-dasharray="4,2.5"/>
-<polyline points="52.0,186.0 86.8,185.9 121.5,185.5 156.2,183.8 191.0,178.6 225.8,165.8 260.5,145.1 295.2,102.3 330.0,42.0" fill="none" stroke="#1546a0" stroke-width="1.6"/>
-<circle cx="52.0" cy="186.0" r="2.3" fill="#1546a0"/>
-<circle cx="86.8" cy="185.9" r="2.3" fill="#1546a0"/>
-<circle cx="121.5" cy="185.5" r="2.3" fill="#1546a0"/>
-<circle cx="156.2" cy="183.8" r="2.3" fill="#1546a0"/>
-<circle cx="191.0" cy="178.6" r="2.3" fill="#1546a0"/>
-<circle cx="225.8" cy="165.8" r="2.3" fill="#1546a0"/>
-<circle cx="260.5" cy="145.1" r="2.3" fill="#1546a0"/>
-<circle cx="295.2" cy="102.3" r="2.3" fill="#1546a0"/>
-<circle cx="330.0" cy="42.0" r="2.3" fill="#1546a0"/>
-<text x="60" y="34" font-size="7" fill="#8d99a6" font-weight="700">- - predicted p⁴ (all 4 custodians withhold)</text>
-<text x="60" y="45" font-size="7" fill="#1546a0" font-weight="700">&#8212; measured, 30 trials per point</text>
-</svg>
+<img src="figures/net_erasure_vs_adversarial.svg" alt="Realised erasure fraction against the fraction of withholding peers, against the p-to-the-fourth prediction from custody replication four.">
 <figcaption><b>Custody replication, not the code, is what absorbs peer failure.</b> A cell is lost only when every one of its four custodians withholds, so the erasure the code actually sees is roughly the fourth power of the fraction of bad peers. The dashed line is that p⁴ prediction, computed from the model and not fitted; the solid line is what 30 trials per point produced. Measurement sits slightly below prediction throughout, because a node that gets an early refusal still has time to retry another custodian. The practical reading: 40% of peers withholding costs about 2% of the data.</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 430 250" role="img" aria-label="Fraction of trials that recovered the blob, against withholding peers, for each coding scheme.">
-<line x1="52" y1="24" x2="52" y2="190" stroke="currentColor" stroke-width="0.8"/>
-<line x1="52" y1="190" x2="320" y2="190" stroke="currentColor" stroke-width="0.8"/>
-<line x1="49" y1="190.0" x2="52" y2="190.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="190.0" x2="320" y2="190.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="192.5" text-anchor="end" font-size="7">0.00</text>
-<line x1="49" y1="156.8" x2="52" y2="156.8" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="156.8" x2="320" y2="156.8" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="159.3" text-anchor="end" font-size="7">0.20</text>
-<line x1="49" y1="123.6" x2="52" y2="123.6" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="123.6" x2="320" y2="123.6" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="126.1" text-anchor="end" font-size="7">0.40</text>
-<line x1="49" y1="90.4" x2="52" y2="90.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="90.4" x2="320" y2="90.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="92.9" text-anchor="end" font-size="7">0.60</text>
-<line x1="49" y1="57.2" x2="52" y2="57.2" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="57.2" x2="320" y2="57.2" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="59.7" text-anchor="end" font-size="7">0.80</text>
-<line x1="49" y1="24.0" x2="52" y2="24.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="24.0" x2="320" y2="24.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="26.5" text-anchor="end" font-size="7">1.00</text>
-<line x1="52.0" y1="190" x2="52.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="52.0" y="202" text-anchor="middle" font-size="7">0%</text>
-<line x1="119.0" y1="190" x2="119.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="119.0" y="202" text-anchor="middle" font-size="7">20%</text>
-<line x1="186.0" y1="190" x2="186.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="186.0" y="202" text-anchor="middle" font-size="7">40%</text>
-<line x1="253.0" y1="190" x2="253.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="253.0" y="202" text-anchor="middle" font-size="7">60%</text>
-<line x1="320.0" y1="190" x2="320.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="320.0" y="202" text-anchor="middle" font-size="7">80%</text>
-<text x="186" y="216" text-anchor="middle" font-size="7.6">fraction of peers withholding</text>
-<text x="11" y="107" text-anchor="middle" font-size="7.6" transform="rotate(-90 11 107)">trials recovered</text>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,24.0 286.5,24.0 320.0,24.0" fill="none" stroke="#c62828" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="253.0" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="286.5" cy="24.0" r="1.9" fill="#c62828"/>
-<circle cx="320.0" cy="24.0" r="1.9" fill="#c62828"/>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,24.0 286.5,24.0 320.0,79.3" fill="none" stroke="#1546a0" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="253.0" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="286.5" cy="24.0" r="1.9" fill="#1546a0"/>
-<circle cx="320.0" cy="79.3" r="1.9" fill="#1546a0"/>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,24.0 286.5,29.5 320.0,184.5" fill="none" stroke="#14532d" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="253.0" cy="24.0" r="1.9" fill="#14532d"/>
-<circle cx="286.5" cy="29.5" r="1.9" fill="#14532d"/>
-<circle cx="320.0" cy="184.5" r="1.9" fill="#14532d"/>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,24.0 286.5,29.5 320.0,178.9" fill="none" stroke="#1b7a34" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="253.0" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="286.5" cy="29.5" r="1.9" fill="#1b7a34"/>
-<circle cx="320.0" cy="178.9" r="1.9" fill="#1b7a34"/>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,24.0 286.5,35.1 320.0,190.0" fill="none" stroke="#b45309" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="253.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="286.5" cy="35.1" r="1.9" fill="#b45309"/>
-<circle cx="320.0" cy="190.0" r="1.9" fill="#b45309"/>
-<polyline points="52.0,24.0 85.5,24.0 119.0,24.0 152.5,24.0 186.0,24.0 219.5,24.0 253.0,29.5 286.5,145.7 320.0,190.0" fill="none" stroke="#7c2d92" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="85.5" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="119.0" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="152.5" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="186.0" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="219.5" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="253.0" cy="29.5" r="1.9" fill="#7c2d92"/>
-<circle cx="286.5" cy="145.7" r="1.9" fill="#7c2d92"/>
-<circle cx="320.0" cy="190.0" r="1.9" fill="#7c2d92"/>
-<text x="326" y="34" font-size="6.8" fill="#c62828" font-weight="700">1D-RS</text>
-<text x="326" y="45" font-size="6.8" fill="#1546a0" font-weight="700">2D-RS</text>
-<text x="326" y="56" font-size="6.8" fill="#14532d" font-weight="700">BC ω2048 λ2</text>
-<text x="326" y="67" font-size="6.8" fill="#1b7a34" font-weight="700">BC ω1024 λ2</text>
-<text x="326" y="78" font-size="6.8" fill="#b45309" font-weight="700">BC ω1024 λ3</text>
-<text x="326" y="89" font-size="6.8" fill="#7c2d92" font-weight="700">BC ω1024 λ4</text>
-</svg>
+<img src="figures/net_recovery_vs_adversarial.svg" alt="Fraction of trials that recovered the blob, against withholding peers, for each coding scheme.">
 <figcaption><b>The benchmark's tolerance ordering reappears through a completely different mechanism.</b> No erasure rate is injected here — losses come from peers refusing to answer. Yet the schemes fail in exactly the order the coding benchmark predicted, and at the adversarial rates that produce their measured erasure thresholds. BC ω1024 λ4 breaks first (tolerance 0.20, and 70% withholding yields 0.233 erasure); 2D-RS and the λ2 rows hold until 80% withholding drives erasure to 0.400; 1D-RS, tolerating 0.50, never fails anywhere in this sweep. 30 trials per point.</figcaption>
 </figure>
 
@@ -363,197 +218,17 @@ what production arithmetic would look like.
 | BC ω1024 λ4 | 60% | 0/30 | 0.511 | 756 | 4.00s | &mdash; | &mdash; | 0.00 |
 
 <figure>
-<svg viewBox="0 0 430 250" role="img" aria-label="Blobs reconstructed per slot out of six, against withholding peers, for each coding scheme.">
-<line x1="52" y1="24" x2="52" y2="190" stroke="currentColor" stroke-width="0.8"/>
-<line x1="52" y1="190" x2="316" y2="190" stroke="currentColor" stroke-width="0.8"/>
-<line x1="49" y1="190.0" x2="52" y2="190.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="190.0" x2="316" y2="190.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="192.5" text-anchor="end" font-size="7">0.0</text>
-<line x1="49" y1="156.8" x2="52" y2="156.8" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="156.8" x2="316" y2="156.8" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="159.3" text-anchor="end" font-size="7">1.2</text>
-<line x1="49" y1="123.6" x2="52" y2="123.6" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="123.6" x2="316" y2="123.6" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="126.1" text-anchor="end" font-size="7">2.4</text>
-<line x1="49" y1="90.4" x2="52" y2="90.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="90.4" x2="316" y2="90.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="92.9" text-anchor="end" font-size="7">3.6</text>
-<line x1="49" y1="57.2" x2="52" y2="57.2" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="57.2" x2="316" y2="57.2" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="59.7" text-anchor="end" font-size="7">4.8</text>
-<line x1="49" y1="24.0" x2="52" y2="24.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="24.0" x2="316" y2="24.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="26.5" text-anchor="end" font-size="7">6.0</text>
-<line x1="52.0" y1="190" x2="52.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="52.0" y="202" text-anchor="middle" font-size="7">0%</text>
-<line x1="140.0" y1="190" x2="140.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="140.0" y="202" text-anchor="middle" font-size="7">20%</text>
-<line x1="228.0" y1="190" x2="228.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="228.0" y="202" text-anchor="middle" font-size="7">40%</text>
-<line x1="316.0" y1="190" x2="316.0" y2="193" stroke="currentColor" stroke-width="0.7"/>
-<text x="316.0" y="202" text-anchor="middle" font-size="7">60%</text>
-<text x="184" y="216" text-anchor="middle" font-size="7.6">fraction of peers withholding</text>
-<text x="11" y="107" text-anchor="middle" font-size="7.6" transform="rotate(-90 11 107)">blobs reconstructed / slot</text>
-<line x1="52" y1="24" x2="316" y2="24" stroke="#8d99a6" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="56" y="20" font-size="6.6" fill="#8d99a6">6 = keeping up with the block</text>
-<polyline points="52.0,184.4 140.0,184.4 228.0,184.6 316.0,187.9" fill="none" stroke="#c62828" stroke-width="1.5"/>
-<circle cx="52.0" cy="184.4" r="1.9" fill="#c62828"/>
-<circle cx="140.0" cy="184.4" r="1.9" fill="#c62828"/>
-<circle cx="228.0" cy="184.6" r="1.9" fill="#c62828"/>
-<circle cx="316.0" cy="187.9" r="1.9" fill="#c62828"/>
-<polyline points="52.0,128.0 140.0,130.0 228.0,134.8 316.0,186.7" fill="none" stroke="#1546a0" stroke-width="1.5"/>
-<circle cx="52.0" cy="128.0" r="1.9" fill="#1546a0"/>
-<circle cx="140.0" cy="130.0" r="1.9" fill="#1546a0"/>
-<circle cx="228.0" cy="134.8" r="1.9" fill="#1546a0"/>
-<circle cx="316.0" cy="186.7" r="1.9" fill="#1546a0"/>
-<polyline points="52.0,95.3 140.0,100.1 228.0,129.5 316.0,188.5" fill="none" stroke="#14532d" stroke-width="1.5"/>
-<circle cx="52.0" cy="95.3" r="1.9" fill="#14532d"/>
-<circle cx="140.0" cy="100.1" r="1.9" fill="#14532d"/>
-<circle cx="228.0" cy="129.5" r="1.9" fill="#14532d"/>
-<circle cx="316.0" cy="188.5" r="1.9" fill="#14532d"/>
-<polyline points="52.0,24.0 140.0,32.2 228.0,85.9 316.0,187.4" fill="none" stroke="#1b7a34" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#1b7a34"/>
-<circle cx="140.0" cy="32.2" r="1.9" fill="#1b7a34"/>
-<circle cx="228.0" cy="85.9" r="1.9" fill="#1b7a34"/>
-<circle cx="316.0" cy="187.4" r="1.9" fill="#1b7a34"/>
-<polyline points="52.0,24.0 140.0,24.0 228.0,99.3 316.0,190.0" fill="none" stroke="#b45309" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="140.0" cy="24.0" r="1.9" fill="#b45309"/>
-<circle cx="228.0" cy="99.3" r="1.9" fill="#b45309"/>
-<circle cx="316.0" cy="190.0" r="1.9" fill="#b45309"/>
-<polyline points="52.0,24.0 140.0,24.0 228.0,125.4 316.0,190.0" fill="none" stroke="#7c2d92" stroke-width="1.5"/>
-<circle cx="52.0" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="140.0" cy="24.0" r="1.9" fill="#7c2d92"/>
-<circle cx="228.0" cy="125.4" r="1.9" fill="#7c2d92"/>
-<circle cx="316.0" cy="190.0" r="1.9" fill="#7c2d92"/>
-<text x="322" y="34" font-size="6.8" fill="#c62828" font-weight="700">1D-RS</text>
-<text x="322" y="45" font-size="6.8" fill="#1546a0" font-weight="700">2D-RS</text>
-<text x="322" y="56" font-size="6.8" fill="#14532d" font-weight="700">BC ω2048 λ2</text>
-<text x="322" y="67" font-size="6.8" fill="#1b7a34" font-weight="700">BC ω1024 λ2</text>
-<text x="322" y="78" font-size="6.8" fill="#b45309" font-weight="700">BC ω1024 λ3</text>
-<text x="322" y="89" font-size="6.8" fill="#7c2d92" font-weight="700">BC ω1024 λ4</text>
-</svg>
+<img src="figures/net_throughput.svg" alt="Blobs reconstructed per slot out of six, against withholding peers, for each coding scheme.">
 <figcaption><b>Throughput at six blobs per slot and 25 Mbps — the ordering inverts.</b> 1D-RS tolerates the most erasure of any scheme here and reconstructs the fewest blobs, roughly 0.2 of the six, because one 8192-length polynomial division costs roughly 59s per blob. BC ω1024 λ2, λ3 and λ4 keep up with all six until 20% withholding. Note this is throughput <em>implied by</em> the measured time — blobs attempted, scaled by the measured recovery rate and by whether the total fits the 12s slot — not an independently measured rate.</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 430 216" role="img" aria-label="Gather time and decode time per scheme on a logarithmic axis, six blobs, showing decode exceeding gather by two to three orders of magnitude.">
-<line x1="128" y1="28" x2="128" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="128" y1="186" x2="386" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="128.0" y1="186" x2="128.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<line x1="128.0" y1="28" x2="128.0" y2="186" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="128.0" y="197" text-anchor="middle" font-size="7">0.1</text>
-<line x1="192.5" y1="186" x2="192.5" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<line x1="192.5" y1="28" x2="192.5" y2="186" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="192.5" y="197" text-anchor="middle" font-size="7">1</text>
-<line x1="257.0" y1="186" x2="257.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<line x1="257.0" y1="28" x2="257.0" y2="186" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="257.0" y="197" text-anchor="middle" font-size="7">10</text>
-<line x1="321.5" y1="186" x2="321.5" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<line x1="321.5" y1="28" x2="321.5" y2="186" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="321.5" y="197" text-anchor="middle" font-size="7">100</text>
-<line x1="386.0" y1="186" x2="386.0" y2="189" stroke="currentColor" stroke-width="0.7"/>
-<line x1="386.0" y1="28" x2="386.0" y2="186" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="386.0" y="197" text-anchor="middle" font-size="7">1000</text>
-<text x="257" y="210" text-anchor="middle" font-size="7.4">seconds (log scale)</text>
-<line x1="262.1" y1="28" x2="262.1" y2="186" stroke="#c62828" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="265.1" y="25" font-size="6.6" fill="#c62828" font-weight="700">12s slot</text>
-<text x="122" y="45" text-anchor="end" font-size="7">1D-RS</text>
-<rect x="128" y="35" width="58.1" height="7" fill="#9bb0c9"/>
-<rect x="128" y="44" width="228.9" height="7" fill="#c62828" opacity="0.9"/>
-<text x="189.1" y="41.5" font-size="6.2" fill="#5b6572">0.80s gather</text>
-<text x="359.9" y="50.5" font-size="6.2" fill="#c62828">354.1s decode</text>
-<text x="122" y="71" text-anchor="end" font-size="7">2D-RS</text>
-<rect x="128" y="61" width="63.2" height="7" fill="#9bb0c9"/>
-<rect x="128" y="70" width="160.8" height="7" fill="#1546a0" opacity="0.9"/>
-<text x="194.2" y="67.5" font-size="6.2" fill="#5b6572">0.95s gather</text>
-<text x="291.8" y="76.5" font-size="6.2" fill="#1546a0">31.2s decode</text>
-<text x="122" y="97" text-anchor="end" font-size="7">BC ω2048 λ2</text>
-<rect x="128" y="87" width="64.2" height="7" fill="#9bb0c9"/>
-<rect x="128" y="96" width="148.5" height="7" fill="#14532d" opacity="0.9"/>
-<text x="195.2" y="93.5" font-size="6.2" fill="#5b6572">0.99s gather</text>
-<text x="279.5" y="102.5" font-size="6.2" fill="#14532d">20.1s decode</text>
-<text x="122" y="123" text-anchor="end" font-size="7">BC ω1024 λ2</text>
-<rect x="128" y="113" width="64.2" height="7" fill="#9bb0c9"/>
-<rect x="128" y="122" width="130.5" height="7" fill="#1b7a34" opacity="0.9"/>
-<text x="195.2" y="119.5" font-size="6.2" fill="#5b6572">0.99s gather</text>
-<text x="261.5" y="128.5" font-size="6.2" fill="#1b7a34">10.6s decode</text>
-<text x="122" y="149" text-anchor="end" font-size="7">BC ω1024 λ3</text>
-<rect x="128" y="139" width="67.1" height="7" fill="#9bb0c9"/>
-<rect x="128" y="148" width="111.0" height="7" fill="#b45309" opacity="0.9"/>
-<text x="198.1" y="145.5" font-size="6.2" fill="#5b6572">1.10s gather</text>
-<text x="242.0" y="154.5" font-size="6.2" fill="#b45309">5.3s decode</text>
-<text x="122" y="175" text-anchor="end" font-size="7">BC ω1024 λ4</text>
-<rect x="128" y="165" width="70.9" height="7" fill="#9bb0c9"/>
-<rect x="128" y="174" width="0.8" height="7" fill="#7c2d92" opacity="0.9"/>
-<text x="201.9" y="171.5" font-size="6.2" fill="#5b6572">1.26s gather</text>
-<text x="131.0" y="180.5" font-size="6.2" fill="#7c2d92">0.0s decode</text>
-</svg>
+<img src="figures/net_gather_vs_decode.svg" alt="Gather time and decode time per scheme on a logarithmic axis, six blobs, with the four second slot deadline marked.">
 <figcaption><b>Where the time goes, six blobs, no adversaries, log scale.</b> Gather and decode are drawn as separate bars rather than stacked, because stacking on a log axis would misrepresent the sum. Every scheme gathers in about one second; decode spans three orders of magnitude above that. This is the central result of the network layer: at every setting tried, arithmetic rather than bandwidth or latency decides whether a scheme fits the slot. BC ω1024 λ4 shows no decode bar because it has the weakest decoder and therefore fetches the most (80% of the codeword); with nothing missing there is nothing to reconstruct. It buys its speed with bandwidth.</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 430 245" role="img" aria-label="Realised erasure fraction against peer count at sixty percent withholding, with the hypergeometric prediction and its p to the fourth asymptote.">
-<line x1="52" y1="26" x2="52" y2="188" stroke="currentColor" stroke-width="0.8"/>
-<line x1="52" y1="188" x2="322" y2="188" stroke="currentColor" stroke-width="0.8"/>
-<line x1="49" y1="188.0" x2="52" y2="188.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="188.0" x2="322" y2="188.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="190.5" text-anchor="end" font-size="7">0.000</text>
-<line x1="49" y1="155.6" x2="52" y2="155.6" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="155.6" x2="322" y2="155.6" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="158.1" text-anchor="end" font-size="7">0.030</text>
-<line x1="49" y1="123.2" x2="52" y2="123.2" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="123.2" x2="322" y2="123.2" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="125.7" text-anchor="end" font-size="7">0.060</text>
-<line x1="49" y1="90.8" x2="52" y2="90.8" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="90.8" x2="322" y2="90.8" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="93.3" text-anchor="end" font-size="7">0.090</text>
-<line x1="49" y1="58.4" x2="52" y2="58.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="58.4" x2="322" y2="58.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="60.9" text-anchor="end" font-size="7">0.120</text>
-<line x1="49" y1="26.0" x2="52" y2="26.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="26.0" x2="322" y2="26.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="28.5" text-anchor="end" font-size="7">0.150</text>
-<line x1="52.0" y1="188" x2="52.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="52.0" y="200" text-anchor="middle" font-size="7">8</text>
-<line x1="106.0" y1="188" x2="106.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="106.0" y="200" text-anchor="middle" font-size="7">16</text>
-<line x1="160.0" y1="188" x2="160.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="160.0" y="200" text-anchor="middle" font-size="7">32</text>
-<line x1="214.0" y1="188" x2="214.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="214.0" y="200" text-anchor="middle" font-size="7">64</text>
-<line x1="268.0" y1="188" x2="268.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="268.0" y="200" text-anchor="middle" font-size="7">128</text>
-<line x1="322.0" y1="188" x2="322.0" y2="191" stroke="currentColor" stroke-width="0.7"/>
-<text x="322.0" y="200" text-anchor="middle" font-size="7">256</text>
-<text x="187" y="214" text-anchor="middle" font-size="7.6">peers in the network (log₂ scale)</text>
-<text x="11" y="107" text-anchor="middle" font-size="7.6" transform="rotate(-90 11 107)">realised erasure fraction</text>
-<line x1="52" y1="48.0" x2="322" y2="48.0" stroke="#c62828" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="319" y="58.0" text-anchor="end" font-size="6.6" fill="#c62828" font-weight="700">p⁴ = 0.130, the large-network limit</text>
-<polyline points="52.0,110.9 106.0,63.4 160.0,71.6 214.0,62.5 268.0,51.0 322.0,48.8" fill="none" stroke="#8d99a6" stroke-width="1.4" stroke-dasharray="4,2.5"/>
-<circle cx="52.0" cy="110.9" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<circle cx="106.0" cy="63.4" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<circle cx="160.0" cy="71.6" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<circle cx="214.0" cy="62.5" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<circle cx="268.0" cy="51.0" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<circle cx="322.0" cy="48.8" r="2" fill="none" stroke="#8d99a6" stroke-width="1.1"/>
-<polyline points="52.0,114.1 106.0,68.0 160.0,71.5 214.0,65.0 268.0,54.9 322.0,55.5" fill="none" stroke="#1546a0" stroke-width="1.5"/>
-<circle cx="52.0" cy="114.1" r="2.1" fill="#1546a0"/>
-<circle cx="106.0" cy="68.0" r="2.1" fill="#1546a0"/>
-<circle cx="160.0" cy="71.5" r="2.1" fill="#1546a0"/>
-<circle cx="214.0" cy="65.0" r="2.1" fill="#1546a0"/>
-<circle cx="268.0" cy="54.9" r="2.1" fill="#1546a0"/>
-<circle cx="322.0" cy="55.5" r="2.1" fill="#1546a0"/>
-<polyline points="52.0,112.3 106.0,68.2 160.0,71.6 214.0,65.4 268.0,54.7 322.0,56.1" fill="none" stroke="#1b7a34" stroke-width="1.5"/>
-<circle cx="52.0" cy="112.3" r="2.1" fill="#1b7a34"/>
-<circle cx="106.0" cy="68.2" r="2.1" fill="#1b7a34"/>
-<circle cx="160.0" cy="71.6" r="2.1" fill="#1b7a34"/>
-<circle cx="214.0" cy="65.4" r="2.1" fill="#1b7a34"/>
-<circle cx="268.0" cy="54.7" r="2.1" fill="#1b7a34"/>
-<circle cx="322.0" cy="56.1" r="2.1" fill="#1b7a34"/>
-<text x="58" y="34" font-size="6.8" fill="#8d99a6" font-weight="700">○ hypergeometric prediction</text>
-<text x="58" y="44" font-size="6.8" fill="#1546a0" font-weight="700">● measured (2D-RS, BC ω1024 λ2 overlap)</text>
-</svg>
+<img src="figures/net_peers.svg" alt="Realised erasure fraction against peer count, with the exact hypergeometric prediction and its p-to-the-fourth asymptote.">
 <figcaption><b>Growing the network makes things slightly worse, up to a limit.</b> At 60% withholding and fixed replication 4, custodians are drawn without replacement, so in a small network it is combinatorially hard for all four custodians of a cell to be adversarial — with 8 peers only 5 are bad and there are few ways to choose 4 of them. As the network grows this constraint relaxes and the loss rate climbs toward the independent-sampling limit p⁴ = 0.130. The open markers are the exact hypergeometric probability, again computed rather than fitted; both schemes sit on it. The lesson for scalability claims is that what protects a cell is the <em>fraction</em> of the network custodying it, so peer count cannot be varied without saying what replication does too.</figcaption>
 </figure>
 
@@ -679,7 +354,7 @@ claimed.
 ## Running it
 
 ```
-pip install simpy galois numpy
+pip install simpy galois numpy matplotlib
 
 python3 network_sim.py                                   # defaults
 python3 network_sim.py --blobs 6 --downlink 25           # bandwidth pressure
@@ -712,6 +387,19 @@ the table alone buries the one thing that matters:
 
 `--figures out.md` writes the first two as inline SVG in the same style as
 the rest of `docs/`, so they can be pasted into the write-up directly.
+
+The figures in *this* report are not those, and are not drawn by hand
+either. They are generated from the committed run data by `make_figures.py`:
+
+```
+python3 make_figures.py --only netA netB netC
+```
+
+`docs/runA.json` holds the adversarial sweep at one blob, `runB.json` the
+same sweep at six, and `runC.json` the peer-count sweep. Regenerating from
+those files rather than redrawing means a figure cannot drift out of step
+with the numbers quoted beside it, and the hypergeometric and p&#8308; curves
+are computed in the plotting code rather than transcribed.
 
 Scheme names match `benchmark_results.json`, so every parameterisation the
 coding benchmark measured can be driven through the network layer without

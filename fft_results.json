@@ -1,0 +1,223 @@
+{
+  "quick": false,
+  "trials": 3,
+  "rates": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "pair_unknown_cap": 256,
+  "seed": 1000,
+  "structure": {
+    "phase1": {
+      "n": 4096,
+      "tail_len": 1024,
+      "raw": 1,
+      "fixed": 0
+    },
+    "phase2": {
+      "n": 6144,
+      "tail_len": 2048,
+      "raw": 2048,
+      "fixed": 2048
+    }
+  },
+  "nodes": {
+    "small integers": 0.0705,
+    "roots of unity": 0.1246,
+    "ratio": 1.77,
+    "n_nodes": 300
+  },
+  "profile": {
+    "n0": 3072,
+    "total_s": 1.272,
+    "buckets": {
+      "NTT / inverse NTT": 0.154,
+      "erasure locator build": 0.022,
+      "polynomial division": 1.024,
+      "everything else": 0.071
+    }
+  },
+  "ab": [
+    {
+      "scheme": "BC-2048-L2",
+      "omega": 2048,
+      "lam": 2,
+      "n0": 6144,
+      "fft_eligible": true,
+      "rate": 0.05,
+      "fft_s": 28.709,
+      "vandermonde_s": 1.272,
+      "ratio": 22.58,
+      "exact": true
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "omega": 2048,
+      "lam": 2,
+      "n0": 6144,
+      "fft_eligible": true,
+      "rate": 0.1,
+      "fft_s": 31.517,
+      "vandermonde_s": 2.498,
+      "ratio": 12.62,
+      "exact": true
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "omega": 2048,
+      "lam": 2,
+      "n0": 6144,
+      "fft_eligible": true,
+      "rate": 0.2,
+      "fft_s": 37.618,
+      "vandermonde_s": 5.622,
+      "ratio": 6.69,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L2",
+      "omega": 1024,
+      "lam": 2,
+      "n0": 3072,
+      "fft_eligible": true,
+      "rate": 0.05,
+      "fft_s": 15.272,
+      "vandermonde_s": 0.687,
+      "ratio": 22.24,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L2",
+      "omega": 1024,
+      "lam": 2,
+      "n0": 3072,
+      "fft_eligible": true,
+      "rate": 0.1,
+      "fft_s": 16.411,
+      "vandermonde_s": 1.309,
+      "ratio": 12.53,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L2",
+      "omega": 1024,
+      "lam": 2,
+      "n0": 3072,
+      "fft_eligible": true,
+      "rate": 0.2,
+      "fft_s": 19.566,
+      "vandermonde_s": 2.803,
+      "ratio": 6.98,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L3",
+      "omega": 1024,
+      "lam": 3,
+      "n0": 4096,
+      "fft_eligible": true,
+      "rate": 0.05,
+      "fft_s": 20.057,
+      "vandermonde_s": 0.872,
+      "ratio": 23.0,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L3",
+      "omega": 1024,
+      "lam": 3,
+      "n0": 4096,
+      "fft_eligible": true,
+      "rate": 0.1,
+      "fft_s": 22.158,
+      "vandermonde_s": 1.677,
+      "ratio": 13.21,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L3",
+      "omega": 1024,
+      "lam": 3,
+      "n0": 4096,
+      "fft_eligible": true,
+      "rate": 0.2,
+      "fft_s": 26.345,
+      "vandermonde_s": 3.554,
+      "ratio": 7.41,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L4",
+      "omega": 1024,
+      "lam": 4,
+      "n0": 5120,
+      "fft_eligible": false,
+      "rate": 0.05,
+      "fft_s": 0.457,
+      "vandermonde_s": 0.455,
+      "ratio": 1.0,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L4",
+      "omega": 1024,
+      "lam": 4,
+      "n0": 5120,
+      "fft_eligible": false,
+      "rate": 0.1,
+      "fft_s": 0.883,
+      "vandermonde_s": 0.884,
+      "ratio": 1.0,
+      "exact": true
+    },
+    {
+      "scheme": "BC-1024-L4",
+      "omega": 1024,
+      "lam": 4,
+      "n0": 5120,
+      "fft_eligible": false,
+      "rate": 0.2,
+      "fft_s": 1.244,
+      "vandermonde_s": 1.244,
+      "ratio": 1.0,
+      "exact": false
+    },
+    {
+      "scheme": "BC-512-L2",
+      "omega": 512,
+      "lam": 2,
+      "n0": 1536,
+      "fft_eligible": true,
+      "rate": 0.05,
+      "fft_s": 7.928,
+      "vandermonde_s": 0.377,
+      "ratio": 21.04,
+      "exact": true
+    },
+    {
+      "scheme": "BC-512-L2",
+      "omega": 512,
+      "lam": 2,
+      "n0": 1536,
+      "fft_eligible": true,
+      "rate": 0.1,
+      "fft_s": 8.592,
+      "vandermonde_s": 0.698,
+      "ratio": 12.32,
+      "exact": true
+    },
+    {
+      "scheme": "BC-512-L2",
+      "omega": 512,
+      "lam": 2,
+      "n0": 1536,
+      "fft_eligible": true,
+      "rate": 0.2,
+      "fft_s": 10.06,
+      "vandermonde_s": 1.458,
+      "ratio": 6.9,
+      "exact": true
+    }
+  ]
+}

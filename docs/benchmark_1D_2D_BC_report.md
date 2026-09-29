@@ -334,337 +334,27 @@ success: silent corruption was zero everywhere (0/28 for 1D-RS, 0/60 for
 the decoder fix described below, BC's figure was 31 of 40.
 
 <figure>
-<svg viewBox="0 0 500 260" role="img" aria-label="Measured erasure tolerance for each scheme beside its own minimum-distance guarantee and the rate bound. 1D-RS reaches its bound; 2D-RS and the lambda=2 block circulant rows exceed their own guarantees.">
-<line x1="52" y1="30" x2="52" y2="196" stroke="currentColor" stroke-width="0.8"/>
-<line x1="52" y1="196" x2="492" y2="196" stroke="currentColor" stroke-width="0.8"/>
-<line x1="49" y1="196.0" x2="52" y2="196.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="196.0" x2="492" y2="196.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="198.5" text-anchor="end" font-size="7">0.0</text>
-<line x1="49" y1="168.3" x2="52" y2="168.3" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="168.3" x2="492" y2="168.3" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="170.8" text-anchor="end" font-size="7">0.1</text>
-<line x1="49" y1="140.7" x2="52" y2="140.7" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="140.7" x2="492" y2="140.7" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="143.2" text-anchor="end" font-size="7">0.2</text>
-<line x1="49" y1="113.0" x2="52" y2="113.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="113.0" x2="492" y2="113.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="115.5" text-anchor="end" font-size="7">0.3</text>
-<line x1="49" y1="85.3" x2="52" y2="85.3" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="85.3" x2="492" y2="85.3" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="87.8" text-anchor="end" font-size="7">0.4</text>
-<line x1="49" y1="57.7" x2="52" y2="57.7" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="57.7" x2="492" y2="57.7" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="60.2" text-anchor="end" font-size="7">0.5</text>
-<line x1="49" y1="30.0" x2="52" y2="30.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="52" y1="30.0" x2="492" y2="30.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="46" y="32.5" text-anchor="end" font-size="7">0.6</text>
-<rect x="68.4" y="57.7" width="13" height="138.3" fill="none" stroke="#c62828" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="68.4" y="57.7" width="13" height="138.3" fill="#c62828" opacity="0.22"/>
-<rect x="84.4" y="57.7" width="13" height="138.3" fill="#c62828" opacity="0.9"/>
-<text x="90.9" y="54.7" text-anchor="middle" font-size="7" font-weight="700" fill="#c62828">0.50</text>
-<text x="83.4" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">1D-RS</text>
-<text x="83.4" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="131.3" y="53.5" width="13" height="142.5" fill="none" stroke="#1546a0" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="131.3" y="169.0" width="13" height="27.0" fill="#1546a0" opacity="0.22"/>
-<rect x="147.3" y="81.2" width="13" height="114.8" fill="#1546a0" opacity="0.9"/>
-<text x="153.8" y="78.2" text-anchor="middle" font-size="7" font-weight="700" fill="#1546a0">0.42</text>
-<text x="146.3" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">2D-RS</text>
-<text x="146.3" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.06×</text>
-<rect x="194.1" y="57.7" width="13" height="138.3" fill="none" stroke="#14532d" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="194.1" y="57.7" width="13" height="138.3" fill="#14532d" opacity="0.22"/>
-<rect x="210.1" y="101.9" width="13" height="94.1" fill="#14532d" opacity="0.9"/>
-<text x="216.6" y="98.9" text-anchor="middle" font-size="7" font-weight="700" fill="#14532d">0.34</text>
-<text x="209.1" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 2048 λ2</text>
-<text x="209.1" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="257.0" y="57.7" width="13" height="138.3" fill="none" stroke="#1b7a34" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="257.0" y="126.8" width="13" height="69.2" fill="#1b7a34" opacity="0.22"/>
-<rect x="273.0" y="97.8" width="13" height="98.2" fill="#1b7a34" opacity="0.9"/>
-<text x="279.5" y="94.8" text-anchor="middle" font-size="7" font-weight="700" fill="#1b7a34">0.35</text>
-<text x="272.0" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ2</text>
-<text x="272.0" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="319.9" y="57.7" width="13" height="138.3" fill="none" stroke="#5aab74" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="319.9" y="161.4" width="13" height="34.6" fill="#5aab74" opacity="0.22"/>
-<rect x="335.9" y="97.8" width="13" height="98.2" fill="#5aab74" opacity="0.9"/>
-<text x="342.4" y="94.8" text-anchor="middle" font-size="7" font-weight="700" fill="#5aab74">0.35</text>
-<text x="334.9" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 512 λ2</text>
-<text x="334.9" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="382.7" y="57.7" width="13" height="138.3" fill="none" stroke="#b45309" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="382.7" y="92.2" width="13" height="103.8" fill="#b45309" opacity="0.22"/>
-<rect x="398.7" y="119.9" width="13" height="76.1" fill="#b45309" opacity="0.9"/>
-<text x="405.2" y="116.9" text-anchor="middle" font-size="7" font-weight="700" fill="#b45309">0.28</text>
-<text x="397.7" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ3</text>
-<text x="397.7" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="445.6" y="57.7" width="13" height="138.3" fill="none" stroke="#7c2d92" stroke-width="0.8" stroke-dasharray="2,1.6" opacity="0.8"/>
-<rect x="445.6" y="57.7" width="13" height="138.3" fill="#7c2d92" opacity="0.22"/>
-<rect x="461.6" y="140.7" width="13" height="55.3" fill="#7c2d92" opacity="0.9"/>
-<text x="468.1" y="137.7" text-anchor="middle" font-size="7" font-weight="700" fill="#7c2d92">0.20</text>
-<text x="460.6" y="207.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ4</text>
-<text x="460.6" y="216.0" text-anchor="middle" font-size="6" fill="#5b6572">2.00×</text>
-<rect x="52" y="8" width="9" height="7" fill="#555" opacity="0.9"/>
-<text x="65" y="14.5" font-size="6.4">measured</text>
-<rect x="122" y="8" width="9" height="7" fill="#555" opacity="0.22"/>
-<text x="135" y="14.5" font-size="6.4">its own guarantee (d−1)/n</text>
-<rect x="272" y="8" width="9" height="7" fill="none" stroke="#555" stroke-width="0.8" stroke-dasharray="2,1.6"/>
-<text x="285" y="14.5" font-size="6.4">rate bound 1−R</text>
-<text x="11" y="113" text-anchor="middle" font-size="7.2" transform="rotate(-90 11 113)">erasure rate tolerated</text>
-</svg>
-<figcaption>What each scheme actually tolerated (solid), beside its own minimum-distance guarantee (pale) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands exactly on its bound &mdash; that is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at more than four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Solid bars are the midpoint of the measured transition.</figcaption>
+<img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme.">
+<figcaption>The table above, drawn. Every scheme holds at 100% and then falls off a cliff rather than degrading gradually &mdash; the transition from &ldquo;always recovers&rdquo; to &ldquo;never recovers&rdquo; spans a few percent of erasure rate, which is what makes a single threshold number a fair summary of each scheme. The three &lambda;=2 block-circulant rows fall together near 0.34 and are hard to separate by eye, which is itself the result: &mu; and &omega; move the curve by nothing. The dotted line at 50% is where the thresholds in the next figure are read off.</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 470 250" role="img" aria-label="Block circulant decoder threshold against the prediction one over one plus lambda. All three lambda equals two rows land together near 0.34 despite differing mu and omega, while lambda three and four fall to 0.27 and 0.20.">
-<line x1="50" y1="34" x2="50" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="50" y1="186" x2="460" y2="186" stroke="currentColor" stroke-width="0.8"/>
-<line x1="47" y1="186.0" x2="50" y2="186.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="186.0" x2="460" y2="186.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="188.5" text-anchor="end" font-size="7">0.0</text>
-<line x1="47" y1="158.4" x2="50" y2="158.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="158.4" x2="460" y2="158.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="160.9" text-anchor="end" font-size="7">0.1</text>
-<line x1="47" y1="130.7" x2="50" y2="130.7" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="130.7" x2="460" y2="130.7" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="133.2" text-anchor="end" font-size="7">0.2</text>
-<line x1="47" y1="103.1" x2="50" y2="103.1" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="103.1" x2="460" y2="103.1" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="105.6" text-anchor="end" font-size="7">0.3</text>
-<line x1="47" y1="75.5" x2="50" y2="75.5" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="75.5" x2="460" y2="75.5" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="78.0" text-anchor="end" font-size="7">0.4</text>
-<line x1="47" y1="47.8" x2="50" y2="47.8" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="47.8" x2="460" y2="47.8" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="50.3" text-anchor="end" font-size="7">0.5</text>
-<line x1="50" y1="47.8" x2="460" y2="47.8" stroke="#c62828" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="54" y="44.8" font-size="6.4" fill="#c62828" font-weight="700">0.50 — the rate bound</text>
-<rect x="78.0" y="92.0" width="26" height="94.0" fill="#14532d" opacity="0.85"/>
-<line x1="91.0" y1="94.8" x2="91.0" y2="89.3" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="87.0" y1="94.8" x2="95.0" y2="94.8" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="87.0" y1="89.3" x2="95.0" y2="89.3" stroke="#1b1f24" stroke-width="0.9"/>
-<circle cx="91.0" cy="93.9" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="91.0" y="83.3" text-anchor="middle" font-size="7" font-weight="700" fill="#14532d">0.34</text>
-<text x="91.0" y="198.0" text-anchor="middle" font-size="7.2" font-weight="700">λ=2</text>
-<text x="91.0" y="207.0" text-anchor="middle" font-size="6.2" fill="#5b6572">μ=2, ω=2048</text>
-<text x="91.0" y="216.0" text-anchor="middle" font-size="6.2" fill="#5b6572">N₀=6144</text>
-<rect x="160.0" y="87.9" width="26" height="98.1" fill="#1b7a34" opacity="0.85"/>
-<line x1="173.0" y1="94.8" x2="173.0" y2="81.0" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="169.0" y1="94.8" x2="177.0" y2="94.8" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="169.0" y1="81.0" x2="177.0" y2="81.0" stroke="#1b1f24" stroke-width="0.9"/>
-<circle cx="173.0" cy="93.9" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="173.0" y="75.0" text-anchor="middle" font-size="7" font-weight="700" fill="#1b7a34">0.35</text>
-<text x="173.0" y="198.0" text-anchor="middle" font-size="7.2" font-weight="700">λ=2</text>
-<text x="173.0" y="207.0" text-anchor="middle" font-size="6.2" fill="#5b6572">μ=4, ω=1024</text>
-<text x="173.0" y="216.0" text-anchor="middle" font-size="6.2" fill="#5b6572">N₀=3072</text>
-<rect x="242.0" y="87.9" width="26" height="98.1" fill="#5aab74" opacity="0.85"/>
-<line x1="255.0" y1="94.8" x2="255.0" y2="81.0" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="251.0" y1="94.8" x2="259.0" y2="94.8" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="251.0" y1="81.0" x2="259.0" y2="81.0" stroke="#1b1f24" stroke-width="0.9"/>
-<circle cx="255.0" cy="93.9" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="255.0" y="75.0" text-anchor="middle" font-size="7" font-weight="700" fill="#5aab74">0.35</text>
-<text x="255.0" y="198.0" text-anchor="middle" font-size="7.2" font-weight="700">λ=2</text>
-<text x="255.0" y="207.0" text-anchor="middle" font-size="6.2" fill="#5b6572">μ=8, ω=512</text>
-<text x="255.0" y="216.0" text-anchor="middle" font-size="6.2" fill="#5b6572">N₀=1536</text>
-<rect x="324.0" y="110.0" width="26" height="76.0" fill="#b45309" opacity="0.85"/>
-<line x1="337.0" y1="116.9" x2="337.0" y2="103.1" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="333.0" y1="116.9" x2="341.0" y2="116.9" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="333.0" y1="103.1" x2="341.0" y2="103.1" stroke="#1b1f24" stroke-width="0.9"/>
-<circle cx="337.0" cy="116.9" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="337.0" y="97.1" text-anchor="middle" font-size="7" font-weight="700" fill="#b45309">0.28</text>
-<text x="337.0" y="198.0" text-anchor="middle" font-size="7.2" font-weight="700">λ=3</text>
-<text x="337.0" y="207.0" text-anchor="middle" font-size="6.2" fill="#5b6572">μ=4, ω=1024</text>
-<text x="337.0" y="216.0" text-anchor="middle" font-size="6.2" fill="#5b6572">N₀=4096</text>
-<rect x="406.0" y="130.7" width="26" height="55.3" fill="#7c2d92" opacity="0.85"/>
-<line x1="419.0" y1="144.5" x2="419.0" y2="116.9" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="415.0" y1="144.5" x2="423.0" y2="144.5" stroke="#1b1f24" stroke-width="0.9"/>
-<line x1="415.0" y1="116.9" x2="423.0" y2="116.9" stroke="#1b1f24" stroke-width="0.9"/>
-<circle cx="419.0" cy="130.7" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="419.0" y="110.9" text-anchor="middle" font-size="7" font-weight="700" fill="#7c2d92">0.20</text>
-<text x="419.0" y="198.0" text-anchor="middle" font-size="7.2" font-weight="700">λ=4</text>
-<text x="419.0" y="207.0" text-anchor="middle" font-size="6.2" fill="#5b6572">μ=4, ω=1024</text>
-<text x="419.0" y="216.0" text-anchor="middle" font-size="6.2" fill="#5b6572">N₀=5120</text>
-<circle cx="56" cy="16" r="3.2" fill="#ffffff" stroke="#c62828" stroke-width="1.3"/>
-<text x="64" y="18.5" font-size="6.4">predicted S₀ = ρ/N₀ = 1/(1+λ)</text>
-<line x1="220" y1="10" x2="220" y2="22" stroke="#1b1f24" stroke-width="0.9"/>
-<text x="228" y="18.5" font-size="6.4">measured transition band</text>
-<text x="11" y="110" text-anchor="middle" font-size="7.2" transform="rotate(-90 11 110)">erasure rate tolerated</text>
-<text x="255" y="244" text-anchor="middle" font-size="7" fill="#5b6572">λ sets the threshold; μ and ω barely move it</text>
-</svg>
-<figcaption>The block-circulant parameter sweep, and the clearest single result here. The decoder's reach is set by &lambda; alone: all three &lambda;=2 rows land together at 0.34&ndash;0.35 despite &mu; ranging over 2, 4, 8 and &omega; over 2048, 1024, 512 &mdash; a factor of four in block size that moves the threshold by nothing. Raising &lambda; to 3 drops it to 0.28, and to 4 drops it to 0.20. The open markers are the prediction S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;), which is the local code's stopping rate in the source paper's own notation; the bars are what was measured, and the two agree at every point.</figcaption>
+<img src="figures/bench_tolerance_vs_guarantee.svg" alt="Measured tolerance for each scheme beside its own minimum-distance guarantee and the rate bound.">
+<figcaption>What each scheme actually tolerated (blue), beside its own minimum-distance guarantee (grey) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed red). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands on its bound &mdash; 0.51 measured against 0.50, inside one step of the sweep &mdash; which is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at more than four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Each blue bar is the erasure rate at which that scheme's success rate crosses 50%, linearly interpolated between the two swept rates that bracket the crossing (<code>_threshold</code> in <code>make_figures.py</code>).</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 420 270" role="img" aria-label="Mean decode time of successful decodes against erasure rate on a log scale. 1D-RS is an order of magnitude more expensive than every block circulant row at every rate.">
-<line x1="46" y1="20" x2="46" y2="214" stroke="currentColor" stroke-width="0.8"/>
-<line x1="46" y1="214" x2="300" y2="214" stroke="currentColor" stroke-width="0.8"/>
-<line x1="43" y1="214.0" x2="46" y2="214.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="46" y1="214.0" x2="300" y2="214.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="40" y="216.5" text-anchor="end" font-size="7">0.1</text>
-<line x1="43" y1="149.3" x2="46" y2="149.3" stroke="currentColor" stroke-width="0.7"/>
-<line x1="46" y1="149.3" x2="300" y2="149.3" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="40" y="151.8" text-anchor="end" font-size="7">1</text>
-<line x1="43" y1="84.7" x2="46" y2="84.7" stroke="currentColor" stroke-width="0.7"/>
-<line x1="46" y1="84.7" x2="300" y2="84.7" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="40" y="87.2" text-anchor="end" font-size="7">10</text>
-<line x1="43" y1="20.0" x2="46" y2="20.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="46" y1="20.0" x2="300" y2="20.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="40" y="22.5" text-anchor="end" font-size="7">100</text>
-<line x1="46.0" y1="214" x2="46.0" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="46.0" y="225" text-anchor="middle" font-size="7">0.0</text>
-<line x1="92.2" y1="214" x2="92.2" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="92.2" y="225" text-anchor="middle" font-size="7">0.1</text>
-<line x1="138.4" y1="214" x2="138.4" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="138.4" y="225" text-anchor="middle" font-size="7">0.2</text>
-<line x1="184.5" y1="214" x2="184.5" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="184.5" y="225" text-anchor="middle" font-size="7">0.3</text>
-<line x1="230.7" y1="214" x2="230.7" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="230.7" y="225" text-anchor="middle" font-size="7">0.4</text>
-<line x1="276.9" y1="214" x2="276.9" y2="217" stroke="currentColor" stroke-width="0.7"/>
-<text x="276.9" y="225" text-anchor="middle" font-size="7">0.5</text>
-<polyline points="55.2,103.2 69.1,81.7 82.9,67.7 92.2,64.4 101.4,60.1 115.3,53.8 138.4,45.5 161.5,40.8 184.5,35.8 198.4,34.3 207.6,32.9 221.5,31.3 230.7,30.1 253.8,26.5 267.7,25.7 276.9,25.1" fill="none" stroke="#c62828" stroke-width="1.3"/>
-<circle cx="55.2" cy="103.2" r="1.8" fill="#c62828"/>
-<circle cx="69.1" cy="81.7" r="1.8" fill="#c62828"/>
-<circle cx="82.9" cy="67.7" r="1.8" fill="#c62828"/>
-<circle cx="92.2" cy="64.4" r="1.8" fill="#c62828"/>
-<circle cx="101.4" cy="60.1" r="1.8" fill="#c62828"/>
-<circle cx="115.3" cy="53.8" r="1.8" fill="#c62828"/>
-<circle cx="138.4" cy="45.5" r="1.8" fill="#c62828"/>
-<circle cx="161.5" cy="40.8" r="1.8" fill="#c62828"/>
-<circle cx="184.5" cy="35.8" r="1.8" fill="#c62828"/>
-<circle cx="198.4" cy="34.3" r="1.8" fill="#c62828"/>
-<circle cx="207.6" cy="32.9" r="1.8" fill="#c62828"/>
-<circle cx="221.5" cy="31.3" r="1.8" fill="#c62828"/>
-<circle cx="230.7" cy="30.1" r="1.8" fill="#c62828"/>
-<circle cx="253.8" cy="26.5" r="1.8" fill="#c62828"/>
-<circle cx="267.7" cy="25.7" r="1.8" fill="#c62828"/>
-<circle cx="276.9" cy="25.1" r="1.8" fill="#c62828"/>
-<polyline points="55.2,124.2 69.1,117.5 82.9,116.1 92.2,115.4 101.4,114.8 115.3,113.8 138.4,103.7 161.5,101.2 184.5,107.1 198.4,98.2 207.6,99.7 221.5,99.0 230.7,98.2" fill="none" stroke="#1546a0" stroke-width="1.3" stroke-dasharray="5,2.5"/>
-<circle cx="55.2" cy="124.2" r="1.8" fill="#1546a0"/>
-<circle cx="69.1" cy="117.5" r="1.8" fill="#1546a0"/>
-<circle cx="82.9" cy="116.1" r="1.8" fill="#1546a0"/>
-<circle cx="92.2" cy="115.4" r="1.8" fill="#1546a0"/>
-<circle cx="101.4" cy="114.8" r="1.8" fill="#1546a0"/>
-<circle cx="115.3" cy="113.8" r="1.8" fill="#1546a0"/>
-<circle cx="138.4" cy="103.7" r="1.8" fill="#1546a0"/>
-<circle cx="161.5" cy="101.2" r="1.8" fill="#1546a0"/>
-<circle cx="184.5" cy="107.1" r="1.8" fill="#1546a0"/>
-<circle cx="198.4" cy="98.2" r="1.8" fill="#1546a0"/>
-<circle cx="207.6" cy="99.7" r="1.8" fill="#1546a0"/>
-<circle cx="221.5" cy="99.0" r="1.8" fill="#1546a0"/>
-<circle cx="230.7" cy="98.2" r="1.8" fill="#1546a0"/>
-<polyline points="55.2,174.1 69.1,149.9 82.9,135.5 92.2,129.7 101.4,124.7 115.3,116.8 138.4,107.6 161.5,101.0 184.5,94.1 198.4,91.1" fill="none" stroke="#14532d" stroke-width="1.3" stroke-dasharray="1.6,1.8"/>
-<circle cx="55.2" cy="174.1" r="1.8" fill="#14532d"/>
-<circle cx="69.1" cy="149.9" r="1.8" fill="#14532d"/>
-<circle cx="82.9" cy="135.5" r="1.8" fill="#14532d"/>
-<circle cx="92.2" cy="129.7" r="1.8" fill="#14532d"/>
-<circle cx="101.4" cy="124.7" r="1.8" fill="#14532d"/>
-<circle cx="115.3" cy="116.8" r="1.8" fill="#14532d"/>
-<circle cx="138.4" cy="107.6" r="1.8" fill="#14532d"/>
-<circle cx="161.5" cy="101.0" r="1.8" fill="#14532d"/>
-<circle cx="184.5" cy="94.1" r="1.8" fill="#14532d"/>
-<circle cx="198.4" cy="91.1" r="1.8" fill="#14532d"/>
-<polyline points="55.2,190.0 69.1,166.8 82.9,152.8 92.2,147.0 101.4,142.2 115.3,134.8 138.4,125.6 161.5,119.0 184.5,112.5 198.4,109.5 207.6,108.3" fill="none" stroke="#1b7a34" stroke-width="1.3" stroke-dasharray="3,1.6"/>
-<circle cx="55.2" cy="190.0" r="1.8" fill="#1b7a34"/>
-<circle cx="69.1" cy="166.8" r="1.8" fill="#1b7a34"/>
-<circle cx="82.9" cy="152.8" r="1.8" fill="#1b7a34"/>
-<circle cx="92.2" cy="147.0" r="1.8" fill="#1b7a34"/>
-<circle cx="101.4" cy="142.2" r="1.8" fill="#1b7a34"/>
-<circle cx="115.3" cy="134.8" r="1.8" fill="#1b7a34"/>
-<circle cx="138.4" cy="125.6" r="1.8" fill="#1b7a34"/>
-<circle cx="161.5" cy="119.0" r="1.8" fill="#1b7a34"/>
-<circle cx="184.5" cy="112.5" r="1.8" fill="#1b7a34"/>
-<circle cx="198.4" cy="109.5" r="1.8" fill="#1b7a34"/>
-<circle cx="207.6" cy="108.3" r="1.8" fill="#1b7a34"/>
-<polyline points="55.2,202.7 69.1,181.5 82.9,168.1 92.2,162.5 101.4,157.8 115.3,150.5 138.4,141.5 161.5,135.1 184.5,128.7 198.4,125.9 207.6,124.4" fill="none" stroke="#5aab74" stroke-width="1.3" stroke-dasharray="0.9,1.4"/>
-<circle cx="55.2" cy="202.7" r="1.8" fill="#5aab74"/>
-<circle cx="69.1" cy="181.5" r="1.8" fill="#5aab74"/>
-<circle cx="82.9" cy="168.1" r="1.8" fill="#5aab74"/>
-<circle cx="92.2" cy="162.5" r="1.8" fill="#5aab74"/>
-<circle cx="101.4" cy="157.8" r="1.8" fill="#5aab74"/>
-<circle cx="115.3" cy="150.5" r="1.8" fill="#5aab74"/>
-<circle cx="138.4" cy="141.5" r="1.8" fill="#5aab74"/>
-<circle cx="161.5" cy="135.1" r="1.8" fill="#5aab74"/>
-<circle cx="184.5" cy="128.7" r="1.8" fill="#5aab74"/>
-<circle cx="198.4" cy="125.9" r="1.8" fill="#5aab74"/>
-<circle cx="207.6" cy="124.4" r="1.8" fill="#5aab74"/>
-<polyline points="55.2,182.7 69.1,159.6 82.9,145.9 92.2,140.1 101.4,135.2 115.3,127.8 138.4,118.8 161.5,112.1" fill="none" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4,1.5,1,1.5"/>
-<circle cx="55.2" cy="182.7" r="1.8" fill="#b45309"/>
-<circle cx="69.1" cy="159.6" r="1.8" fill="#b45309"/>
-<circle cx="82.9" cy="145.9" r="1.8" fill="#b45309"/>
-<circle cx="92.2" cy="140.1" r="1.8" fill="#b45309"/>
-<circle cx="101.4" cy="135.2" r="1.8" fill="#b45309"/>
-<circle cx="115.3" cy="127.8" r="1.8" fill="#b45309"/>
-<circle cx="138.4" cy="118.8" r="1.8" fill="#b45309"/>
-<circle cx="161.5" cy="112.1" r="1.8" fill="#b45309"/>
-<polyline points="55.2,176.8 69.1,153.9 82.9,140.0 92.2,134.4 101.4,129.5 115.3,122.2 138.4,113.3" fill="none" stroke="#7c2d92" stroke-width="1.3" stroke-dasharray="2,2"/>
-<circle cx="55.2" cy="176.8" r="1.8" fill="#7c2d92"/>
-<circle cx="69.1" cy="153.9" r="1.8" fill="#7c2d92"/>
-<circle cx="82.9" cy="140.0" r="1.8" fill="#7c2d92"/>
-<circle cx="92.2" cy="134.4" r="1.8" fill="#7c2d92"/>
-<circle cx="101.4" cy="129.5" r="1.8" fill="#7c2d92"/>
-<circle cx="115.3" cy="122.2" r="1.8" fill="#7c2d92"/>
-<circle cx="138.4" cy="113.3" r="1.8" fill="#7c2d92"/>
-<text x="305" y="27.6" font-size="6.8" fill="#c62828" font-weight="700">1D-RS</text>
-<text x="305" y="100.7" font-size="6.8" fill="#1546a0" font-weight="700">2D-RS</text>
-<text x="305" y="109.6" font-size="6.8" fill="#14532d" font-weight="700">BC 2048 λ2</text>
-<text x="305" y="118.8" font-size="6.8" fill="#1b7a34" font-weight="700">BC 1024 λ2</text>
-<text x="305" y="126.9" font-size="6.8" fill="#5aab74" font-weight="700">BC 512 λ2</text>
-<text x="305" y="138.6" font-size="6.8" fill="#b45309" font-weight="700">BC 1024 λ3</text>
-<text x="305" y="147.8" font-size="6.8" fill="#7c2d92" font-weight="700">BC 1024 λ4</text>
-<text x="173" y="262" text-anchor="middle" font-size="7.4">erasure rate</text>
-<text x="10" y="117" text-anchor="middle" font-size="7.4" transform="rotate(-90 10 117)">decode time (s, log)</text>
-</svg>
+<img src="figures/bench_bc_threshold.svg" alt="Block-circulant decoder threshold against the prediction one over one plus lambda.">
+<figcaption>The block-circulant parameter sweep, and the clearest single result here. The decoder's reach is set by &lambda; alone: all three &lambda;=2 rows land together at 0.34&ndash;0.35 despite &mu; ranging over 2, 4, 8 and &omega; over 2048, 1024, 512 &mdash; a factor of four in block size that moves the threshold by nothing. Raising &lambda; to 3 drops it to 0.28, and to 4 drops it to 0.21. The red rules are the prediction S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;), which is the local code's stopping rate in the source paper's own notation; the bars are what was measured, and the two agree at every point.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/bench_decode_time.svg" alt="Mean decode time of successful decodes against erasure rate, log scale.">
 <figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is an order of magnitude more expensive than everything else at every rate, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at the same rate, and cheaper than 2D-RS too below about 30%.</figcaption>
 </figure>
 
 <figure>
-<svg viewBox="0 0 480 232" role="img" aria-label="Surviving data each scheme needs to rebuild one blob, as a multiple of the blob size. 1D-RS needs almost exactly one blob; the others need more.">
-<line x1="50" y1="28" x2="50" y2="176" stroke="currentColor" stroke-width="0.8"/>
-<line x1="50" y1="176" x2="472" y2="176" stroke="currentColor" stroke-width="0.8"/>
-<line x1="47" y1="176.0" x2="50" y2="176.0" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="176.0" x2="472" y2="176.0" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="178.5" text-anchor="end" font-size="7">0.0</text>
-<line x1="47" y1="142.4" x2="50" y2="142.4" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="142.4" x2="472" y2="142.4" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="144.9" text-anchor="end" font-size="7">0.5</text>
-<line x1="47" y1="108.7" x2="50" y2="108.7" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="108.7" x2="472" y2="108.7" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="111.2" text-anchor="end" font-size="7">1.0</text>
-<line x1="47" y1="75.1" x2="50" y2="75.1" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="75.1" x2="472" y2="75.1" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="77.6" text-anchor="end" font-size="7">1.5</text>
-<line x1="47" y1="41.5" x2="50" y2="41.5" stroke="currentColor" stroke-width="0.7"/>
-<line x1="50" y1="41.5" x2="472" y2="41.5" stroke="currentColor" stroke-width="0.35" opacity="0.15"/>
-<text x="44" y="44.0" text-anchor="end" font-size="7">2.0</text>
-<line x1="50" y1="108.7" x2="472" y2="108.7" stroke="#c62828" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="54" y="104.7" font-size="6.2" fill="#c62828">1.00 = theoretical minimum (no code rebuilds a blob from less than a blob)</text>
-<rect x="69.1" y="108.7" width="22" height="67.3" fill="#c62828" opacity="0.85"/>
-<text x="80.1" y="105.7" text-anchor="middle" font-size="7" font-weight="700" fill="#c62828">1.00×</text>
-<text x="80.1" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">1D-RS</text>
-<text x="80.1" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">128 KiB</text>
-<rect x="129.4" y="94.8" width="22" height="81.2" fill="#1546a0" opacity="0.85"/>
-<text x="140.4" y="91.8" text-anchor="middle" font-size="7" font-weight="700" fill="#1546a0">1.21×</text>
-<text x="140.4" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">2D-RS</text>
-<text x="140.4" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">154 KiB</text>
-<rect x="189.7" y="87.2" width="22" height="88.8" fill="#14532d" opacity="0.85"/>
-<text x="200.7" y="84.2" text-anchor="middle" font-size="7" font-weight="700" fill="#14532d">1.32×</text>
-<text x="200.7" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 2048 λ2</text>
-<text x="200.7" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">169 KiB</text>
-<rect x="250.0" y="89.2" width="22" height="86.8" fill="#1b7a34" opacity="0.85"/>
-<text x="261.0" y="86.2" text-anchor="middle" font-size="7" font-weight="700" fill="#1b7a34">1.29×</text>
-<text x="261.0" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ2</text>
-<text x="261.0" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">165 KiB</text>
-<rect x="310.3" y="89.2" width="22" height="86.8" fill="#5aab74" opacity="0.85"/>
-<text x="321.3" y="86.2" text-anchor="middle" font-size="7" font-weight="700" fill="#5aab74">1.29×</text>
-<text x="321.3" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 512 λ2</text>
-<text x="321.3" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">165 KiB</text>
-<rect x="370.6" y="78.5" width="22" height="97.5" fill="#b45309" opacity="0.85"/>
-<text x="381.6" y="75.5" text-anchor="middle" font-size="7" font-weight="700" fill="#b45309">1.45×</text>
-<text x="381.6" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ3</text>
-<text x="381.6" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">186 KiB</text>
-<rect x="430.9" y="68.4" width="22" height="107.6" fill="#7c2d92" opacity="0.85"/>
-<text x="441.9" y="65.4" text-anchor="middle" font-size="7" font-weight="700" fill="#7c2d92">1.60×</text>
-<text x="441.9" y="187.0" text-anchor="middle" font-size="6.6" font-weight="700">BC 1024 λ4</text>
-<text x="441.9" y="196.0" text-anchor="middle" font-size="6" fill="#5b6572">205 KiB</text>
-<text x="11" y="102" text-anchor="middle" font-size="7.2" transform="rotate(-90 11 102)">surviving data needed (× blob)</text>
-</svg>
+<img src="figures/bench_data_needed.svg" alt="Surviving data each scheme needs to rebuild one blob, as a multiple of the blob size.">
 <figcaption>How much surviving data each scheme needs to rebuild one blob, as a multiple of the blob itself. This is the question that matters for data-availability sampling, where a node has to actually fetch those symbols. 1D-RS needs essentially the theoretical floor &mdash; no code rebuilds 124 KiB from less than 124 KiB. Every other scheme needs more, and a scheme tolerating a lower erasure rate at the same storage cost necessarily needs more.</figcaption>
 </figure>
 
@@ -894,13 +584,193 @@ it would also be solvable in O(*e*²) rather than O(*e*³), which would
 remove the compute wall described above. That is the single highest-value
 piece of remaining work on this file.
 
+## The NTT decoder path
+
+`BCcodeEthereum.py` carries a second decoder for the single-block phase,
+built around a number-theoretic transform rather than the Vandermonde
+solver described above. The motivation is sound: the source paper claims
+O(*n* log² *n*) for this step, the local code is a GRS code, and a GRS
+erasure decode is a transform, a pointwise multiply and a polynomial
+division. On paper it should beat an O(*e*²) solve comfortably.
+
+It does not, and the reasons are worth recording, because two of the three
+are not about the transform at all.
+
+### It was not running
+
+The first finding is that the NTT path had never once executed to
+completion. Every call ended in the same guard —
+
+```
+FFT failed (nonzero tail coefficients: input not a valid codeword)
+```
+
+— and fell through to the Vandermonde solver. The benchmark numbers were
+therefore *Vandermonde numbers plus the cost of a failed NTT attempt*, and
+the NTT rows looked slower for a reason that had nothing to do with the
+transform.
+
+The guard itself is correct and worth keeping. `fft_grs_erasure_decode`
+inverse-transforms the locator-multiplied received word and requires the
+coefficients above *k* + *e* to vanish; if they do not, the input is not a
+codeword of the code it assumed, and returning a confident wrong answer
+would be far worse than bailing out. The premise was what was wrong.
+
+The local code is not a set of bare polynomial evaluations. `build_local_grs`
+defines it by the parity check *H*[*r*, *c*] = *x*<sub>*c*</sub><sup>*r*</sup>,
+which makes it a *generalised* Reed-Solomon code: its codewords are
+*c*<sub>*j*</sub> = *v*<sub>*j*</sub> · *f*(*x*<sub>*j*</sub>) with column
+multipliers *v*<sub>*j*</sub> = 1 / &prod;<sub>*i*&ne;*j*</sub>
+(*x*<sub>*j*</sub> &minus; *x*<sub>*i*</sub>). For *n*&#8320;-th roots of
+unity that product is *n*&#8320; / *x*<sub>*j*</sub>, so
+*v*<sub>*j*</sub> is proportional to *x*<sub>*j*</sub>. The decoder was
+handed codewords and treated them as evaluations, which they are not.
+
+Dividing the received word through by *x*<sub>*c*</sub> before transforming,
+and multiplying back afterwards, fixes it exactly — not approximately.
+
+<figure>
+<img src="figures/fft_grs_premise.svg" alt="Nonzero tail coefficients for phase 1 and phase 2, before and after undoing the GRS column multipliers.">
+<figcaption>The premise the NTT decoder rests on, measured as the number of polynomial coefficients that are required to vanish and do not. <b>Phase 1</b> starts with a single stray coefficient and lands on exactly zero once the column multipliers are divided out &mdash; the local code really is GRS, and the fix is the right one. <b>Phase 2</b> is a different situation entirely: every one of its 2048 tail coefficients is nonzero, and stays nonzero after the same correction. No choice of multipliers repairs it, because the problem is not multipliers. Generated by <code>fft_benchmark.py</code>; the same two checks run as assertions in <code>test_bc_fft.py</code>, where the phase-2 case is asserted to <em>fail</em> so that the test turns red if the auxiliary construction is ever implemented.</figcaption>
+</figure>
+
+### Now that it runs, it is slower
+
+With the multipliers applied the NTT path decodes correctly on every
+FFT-eligible parameterisation. It is also between about seven and twenty-three
+times slower than the solver it was meant to replace.
+
+| variant | n&#8320; | NTT usable | 5% | 10% | 20% |
+|---|---|---|---|---|---|
+| BC ω2048 λ2 | 6144 | yes | 28.7s vs **1.3s** — 23× | 31.5s vs **2.5s** — 13× | 37.6s vs **5.6s** — 7× |
+| BC ω1024 λ2 | 3072 | yes | 15.3s vs **0.7s** — 22× | 16.4s vs **1.3s** — 13× | 19.6s vs **2.8s** — 7× |
+| BC ω1024 λ3 | 4096 | yes | 20.1s vs **0.9s** — 23× | 22.2s vs **1.7s** — 13× | 26.3s vs **3.6s** — 7× |
+| BC ω512 λ2 | 1536 | yes | 7.9s vs **0.4s** — 21× | 8.6s vs **0.7s** — 12× | 10.1s vs **1.5s** — 7× |
+| BC ω1024 λ4 | 5120 | no | **0.5s** (fallback only) | **0.9s** (fallback only) | **1.2s** (fallback only) |
+
+Each cell is the NTT path against the Vandermonde fallback, mean of
+3 trials, both decoding the same corrupted codeword in the same
+process. **Bold is the faster path.** Phase 2 is held off throughout
+(`use_fft_phase2=False`), so this isolates the single-block phase.
+
+<figure>
+<img src="figures/fft_vs_vandermonde.svg" alt="Decode time for the NTT path against the Vandermonde fallback, per scheme and erasure rate, log scale.">
+<figcaption>The same corrupted codeword decoded twice in the same process, once down each path, so machine speed and field-construction cost cancel. The NTT path loses everywhere it is available. It does scale better &mdash; across this rate range its cost grows by about a third while the Vandermonde solver's roughly quadruples &mdash; but extrapolating that trend to BC &omega;2048 &lambda;2's actual tolerance ceiling of 0.33 leaves it still roughly three to four times behind, so on this evidence the two never cross anywhere the decoder can actually operate. That last step is an extrapolation beyond the measured points and is offered as such. BC &omega;1024 &lambda;4 is marked <em>no NTT</em>: its local length is 5120 = 2<sup>10</sup>&middot;5, and the BLS12-381 scalar field has no element of order 5, so both bars are the same fallback.</figcaption>
+</figure>
+
+### The transform is not where the time goes
+
+Profiling one local-block decode explains it. The NTT is a small minority
+of the work; the dominant cost is the polynomial division that follows it.
+
+<figure>
+<img src="figures/fft_profile.svg" alt="Breakdown of one NTT block decode into transform, locator build, polynomial division and other.">
+<figcaption>Where one local-block decode actually spends its time, measured by wrapping the three <code>galois</code> entry points the decoder calls rather than by bucketing a profiler dump &mdash; <code>cProfile</code> attributes the transform's work to a generic internal dispatcher, which makes the NTT look like it costs nothing at all. Roughly four fifths of the decode is a single <code>divmod</code> of two polynomials: <code>galois</code> implements that as a dense scalar loop, O(<em>n</em>&middot;<em>e</em>) field operations in Python, which for these sizes is close to a million big-integer multiplications. The function is, in effect, an NTT wrapper around a schoolbook division.</figcaption>
+</figure>
+
+This is a fixable problem, and the file's own docstring already names the
+fix: *"Replacing the divmod with Newton iteration gives the paper's claimed
+O(n log² n) bound."* Until that is done, the asymptotic argument for the NTT
+path does not reach the code, because the step that dominates it is still
+quadratic.
+
+### Being FFT-capable is not free, even with the FFT switched off
+
+The third cost is the least obvious and the most consequential for the
+numbers in this report.
+
+An NTT needs its evaluation points to be roots of unity. But the evaluation
+points *define the code* — the encoder uses the same ones — so making the
+local code FFT-capable means defining it over 255-bit field elements
+instead of the small integers 1..*n*&#8320; the pre-NTT version used. The
+Vandermonde fallback then has to solve over those same 255-bit values, and
+in pure-Python modular arithmetic operand width is not free.
+
+<figure>
+<img src="figures/fft_node_width.svg" alt="vandermonde_solve on small-integer nodes against 255-bit roots of unity.">
+<figcaption><code>vandermonde_solve</code> given identical input on 300 nodes, differing only in how wide those nodes are. Small integers 1..300 are 9 bits; roots of unity in this field are 253&ndash;255 bits. The solver does the same number of operations either way &mdash; the gap is the cost of the operands themselves.</figcaption>
+</figure>
+
+Measured end to end against the pre-NTT decoder (commit `8d93ae3`), on the
+same machine within the same hour, with the NTT path switched *off* so that
+both versions run the same algorithm:
+
+| variant | pre-NTT | current | |
+|---|---|---|---|
+| BC ω2048 λ2 @ 20% | 2.71s | 6.12s | 2.26× |
+| BC ω1024 λ2 @ 20% | 1.44s | 3.13s | 2.17× |
+| BC ω1024 λ3 @ 20% | 1.82s | 4.01s | 2.21× |
+| BC ω512 λ2 @ 20% | 0.80s | 1.67s | 2.08× |
+| **BC ω1024 λ4 @ 10%** | **1.04s** | **1.05s** | **1.01×** |
+
+The slowdown tracks FFT-*eligibility* precisely. The one row that is
+unchanged is the one row whose local length does not divide *p* &minus; 1,
+so it never moved to roots of unity and never paid for them. The
+microbenchmark above accounts for essentially all of the gap.
+
+This particular table is the one measurement here that `fft_benchmark.py`
+does not reproduce, because it needs both versions of the decoder present
+at once. To repeat it, check the old file out beside the current one and
+run the same decodes against each:
+
+```
+git worktree add /tmp/prefft 8d93ae3
+```
+
+### What this means for the parameterisations swept here
+
+Three separate conclusions, which are easy to run together and should not
+be:
+
+**Phase 1's NTT path is correct but not yet worth using.** It needs the
+Newton-iteration division before its asymptotics reach the measured cost.
+Until then the Vandermonde solver is the faster path, and the switch
+`use_fft_phase1` exists so that this is a decision rather than an accident.
+
+**Phase 2's NTT path cannot work as written, and this is not a speed
+question.** It relabels the union of two adjacent supports with a fresh set
+of *n*<sub>aux</sub>-th roots of unity and decodes it as a flat GRS code.
+The union is not one — as the section above on the pairwise phase already
+notes, the two blocks' parity checks assign different evaluation points to
+the columns they share, and relabelling discards exactly the structure that
+would be needed. This is the same gap identified there: the paper's
+Algorithm 1 auxiliary GRS construction is the missing piece, and it would
+fix the correction radius and the cost together.
+
+**Moving to roots of unity is a bet, not an improvement.** It costs a
+factor of about 2.2 today and buys nothing until the division is fixed. It
+is the right bet *if* the Newton iteration lands, because then the same
+choice that costs 2.2× unlocks an O(*n* log² *n*) decoder. It is the wrong
+one if the work stops here.
+
 ## Reproducing
 
 ```
-pip install galois numpy
-python3 benchmark_1D_2D_BC.py
+pip install galois numpy matplotlib
+
+python3 benchmark_1D_2D_BC.py     # the erasure sweep -> benchmark_results.json
+python3 fft_benchmark.py          # the NTT measurements -> fft_results.json
+python3 test_bc_fft.py            # structural checks on both decoder phases
+python3 make_figures.py           # every figure -> docs/figures/
+python3 make_docs.py              # every report -> docs/*.pdf
 ```
 
 Per-trial results — erasure counts, decode times, success flags, and the
 decoder's own claim separately from ground truth — are written to
-`benchmark_results.json`.
+`benchmark_results.json`. The NTT comparison, its profile breakdown, the
+node-width microbenchmark and the phase-by-phase structural check go to
+`fft_results.json`.
+
+Both sweeps take a while: the erasure sweep is hours, and `fft_benchmark.py`
+is 10–20 minutes because it deliberately runs the slow path it is measuring.
+Neither is a prerequisite for the figures. `make_figures.py` reads the
+committed JSON, so every figure in this report regenerates in a couple of
+seconds without re-measuring anything.
+
+That indirection is the point. These figures were previously hand-written
+SVG, which meant a re-run could leave a chart quietly disagreeing with the
+table printed beside it. Every figure here is now computed from the same
+file the prose quotes, and the predictions drawn on them — the rate bound
+1−R, the 1/(1+λ) local reach, the p⁴ and hypergeometric curves in the
+network report — are calculated in the plotting code rather than
+transcribed into it.
