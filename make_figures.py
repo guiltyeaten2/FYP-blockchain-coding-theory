@@ -240,89 +240,109 @@ def _threshold(trials):
 
 
 # --------------------------------------------------------------- benchmark
+def _transition_band(trials):
+    """(last rate at 100%, first rate at 0%) -- where a scheme falls over.
+
+    These codes do not degrade gradually; they hold and then collapse. The
+    width of that collapse is the honest uncertainty around a threshold, and
+    showing it is more informative than a single number with no spread."""
+    pts = sorted((t["rate"], t["success_rate"]) for t in trials)
+    full = [r for r, sr in pts if sr >= 1.0]
+    zero = [r for r, sr in pts if sr <= 0.0]
+    lo = max(full) if full else pts[0][0]
+    hi = min((r for r in zero if r > lo), default=pts[-1][0])
+    return lo, hi
+
+
 def fig_success_curves(bench):
-    """Success rate against erasure rate -- the fault-tolerance result.
+    """Fault tolerance: the curves, and the thresholds read off them.
 
-    Two panels. The left is the whole sweep; the right zooms on the band
-    where everything actually happens. Both are needed because the three
-    lambda=2 rows land on top of each other -- which IS the result, so the
-    figure has to make them separable rather than hide the coincidence.
-    Colour alone cannot do that when curves overlap exactly, so each scheme
-    also gets its own marker and dash pattern, and the markers are open so
-    that one sitting on another still reads as two."""
+    Two panels doing different jobs. The top is the raw sweep. The bottom
+    replaces what used to be a zoomed copy of it -- that still had four
+    curves crossing each other inside a 10-point window, with leader lines
+    threading between them, and it labelled 2D-RS as one of the schemes
+    "landing together" when 0.397 is nowhere near the other three.
+
+    Instead the bottom panel is one row per scheme: the band between the last
+    rate where every trial recovered and the first where none did, with the
+    50% threshold marked on it. The lambda=2 cluster is then obvious without
+    anyone having to resolve overlapping lines, and the exact numbers sit in
+    clear space instead of on leader lines."""
     STYLE = {
-        "1D-RS":      ("o", "-",  8),
-        "2D-RS":      ("s", "-",  7),
-        "BC-2048-L2": ("^", "--", 7),
-        "BC-1024-L2": ("v", "-.", 7),
-        "BC-1024-L3": ("D", "-",  5.5),
-        "BC-1024-L4": ("P", "-",  7),
-        "BC-512-L2":  ("X", ":",  7),
+        "1D-RS": ("o", "-"), "2D-RS": ("s", "-"),
+        "BC-2048-L2": ("^", "--"), "BC-1024-L2": ("v", "-."),
+        "BC-1024-L3": ("D", "-"), "BC-1024-L4": ("P", "-"),
+        "BC-512-L2": ("X", ":"),
     }
-    # Stacked, not side by side. Two panels sharing 7in of column width left
-    # each one about 3.4in, at which the titles collided and both legends sat
-    # on top of the data. Full width each, one shared legend underneath.
-    fig, (ax, axz) = plt.subplots(2, 1, figsize=(FIGW, 6.6))
-    fig.subplots_adjust(hspace=0.42)
+    fig, (ax, axb) = plt.subplots(
+        2, 1, figsize=(FIGW, 7.0),
+        gridspec_kw={"height_ratios": [1.25, 1]})
+    fig.subplots_adjust(hspace=0.45)
 
-    def draw(a, schemes):
-        for r in bench["results"]:
-            if r["scheme"] not in schemes:
-                continue
-            m, ls, ms = STYLE[r["scheme"]]
-            ts = sorted(r["trials"], key=lambda t: t["rate"])
-            a.plot([t["rate"] for t in ts], [t["success_rate"] for t in ts],
-                   marker=m, ms=ms, lw=1.4, ls=ls, label=disp(r["scheme"]),
-                   color=COLOURS.get(r["scheme"]),
-                   mfc="none", mew=1.2)
-        a.axhline(0.5, color="#888", lw=0.8, ls=":")
-        a.xaxis.set_major_formatter(FuncFormatter(_pct))
-        a.yaxis.set_major_formatter(FuncFormatter(_pct))
-        a.set_ylim(-0.06, 1.08)
+    # ---------------------------------------------------------------- curves
+    series = []
+    for r in bench["results"]:
+        m, ls = STYLE.get(r["scheme"], ("o", "-"))
+        ts = sorted(r["trials"], key=lambda t: t["rate"])
+        xs = [t["rate"] for t in ts]
+        ys = [t["success_rate"] for t in ts]
+        # Markers only where the curve is actually doing something. On the
+        # flat runs at 100% and 0% every scheme sits on the same line, and
+        # seven marker styles stacked there read as one smeared band.
+        mx = [x for x, y in zip(xs, ys) if 0.0 < y < 1.0]
+        my = [y for y in ys if 0.0 < y < 1.0]
+        ax.plot(xs, ys, ls=ls, lw=1.7, color=COLOURS.get(r["scheme"]),
+                alpha=0.95, zorder=3, label=disp(r["scheme"]))
+        ax.plot(mx, my, ls="none", marker=m, ms=7, mfc="none", mew=1.4,
+                color=COLOURS.get(r["scheme"]), zorder=4)
+        series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
 
-    allsch = [r["scheme"] for r in bench["results"]]
-    draw(ax, allsch)
+    ax.axhline(0.5, color="#888", lw=0.9, ls=":")
     ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
     ax.set_ylabel("trials recovered byte-exact")
-    ax.set_title("Fault tolerance across the full sweep")
-    _subtitle(ax, "520 trials over one EIP-4844 blob; a trial counts as "
-                  "recovered only if the bytes match the original exactly")
-    handles, labels = ax.get_legend_handles_labels()
+    ax.set_title("Every scheme holds, then collapses within a few percent")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.yaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.set_ylim(-0.08, 1.12)
+    # A legend, in the large empty region at lower left. Labelling each curve
+    # at its cliff was tried and failed: five of the seven cliffs fall inside
+    # ten percentage points, so the labels collided with each other and with
+    # the curves they named. The schemes are also listed down the y axis of
+    # the panel below, which doubles as a key.
+    ax.legend(loc="lower left", ncol=2, fontsize=8.5,
+              handlelength=2.6, columnspacing=1.2, labelspacing=0.35)
 
-    # Zoom on the CLUSTER, not on the whole transition: the thresholds span
-    # 0.21 to 0.51, so a window covering all of them is barely a zoom at all.
-    # The thing a reader cannot resolve in the left panel is the group of
-    # curves that coincide, so the window is the tightest one holding the
-    # most thresholds, and only those schemes are drawn in it.
-    pairs = [(r["scheme"], t) for r in bench["results"]
-             if (t := _threshold(r["trials"])) is not None]
-    width = 0.055
-    centre = max((c for _, c in pairs),
-                 key=lambda c: sum(abs(t - c) <= width for _, t in pairs))
-    lo, hi = centre - width, centre + width
-    inband = {n for n, t in pairs if lo <= t <= hi}
-    draw(axz, inband)
-    axz.set_xlim(lo, hi)
-    axz.set_xlabel("erasure rate")
-    axz.set_ylabel("fraction of trials recovered")
-    axz.set_title(f"Zoom on the {len(inband)} schemes that land together "
-                  f"({100 * lo:.0f}–{100 * hi:.0f}% erasure)")
-    # Stagger the value labels: several thresholds sit within a thousandth
-    # of each other, so stacking them at one height is unreadable.
-    for k, (n, t) in enumerate(sorted((p_ for p_ in pairs if p_[0] in inband),
-                                      key=lambda p_: p_[1])):
-        axz.plot([t], [0.5], marker="|", ms=13, mew=1.8,
-                 color=COLOURS.get(n))
-        axz.annotate(f"{disp(n)}  {t:.3f}", xy=(t, 0.5),
-                     xytext=(10, -26 - 17 * k), textcoords="offset points",
-                     ha="left", fontsize=8.5, color=COLOURS.get(n),
-                     bbox=dict(boxstyle="round,pad=0.2", fc="white",
-                               ec="none", alpha=0.9),
-                     arrowprops=dict(arrowstyle="-", lw=0.6,
-                                     color=COLOURS.get(n), alpha=0.7))
-    # One shared legend below both panels, so neither has one over its data.
-    fig.legend(handles, labels, loc="lower center", ncol=4,
-               bbox_to_anchor=(0.5, -0.02), fontsize=9)
+    # ------------------------------------------------------ transition bands
+    rows = []
+    for r in bench["results"]:
+        th = _threshold(r["trials"])
+        if th is None:
+            continue
+        lo, hi = _transition_band(r["trials"])
+        rows.append((r["scheme"], th, lo, hi))
+    rows.sort(key=lambda t: t[1])
+
+    for i, (name, th, lo, hi) in enumerate(rows):
+        col = COLOURS.get(name)
+        axb.plot([lo, hi], [i, i], lw=7, color=col, alpha=0.30,
+                 solid_capstyle="butt")
+        axb.plot([th], [i], marker="|", ms=20, mew=2.6, color=col)
+        axb.annotate(f"{th:.3f}", xy=(hi, i), xytext=(10, 0),
+                     textcoords="offset points", va="center",
+                     fontsize=9, color=col)
+    axb.set_yticks(range(len(rows)))
+    axb.set_yticklabels([disp(n) for n, *_ in rows])
+    axb.set_ylim(-0.7, len(rows) - 0.3)
+    axb.set_xlim(0.15, 0.60)
+    axb.set_xlabel("erasure rate")
+    axb.set_title("Where each scheme falls over\n"
+                  "bar: all trials recovered → none did.  tick: 50% threshold",
+                  fontsize=10)
+    axb.xaxis.set_major_formatter(FuncFormatter(_pct))
+    axb.grid(axis="y", alpha=0)
+
+    _subtitle(axb, "520 trials over one EIP-4844 blob; a trial counts as "
+                   "recovered only if the bytes match the original exactly")
     return _save(fig, "bench_success_curves.svg")
 
 
