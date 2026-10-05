@@ -255,92 +255,89 @@ def _transition_band(trials):
 
 
 def fig_success_curves(bench):
-    """Fault tolerance: one small panel per scheme, then the thresholds.
+    """Fault tolerance: the curves, and the thresholds read off them.
 
-    Small multiples rather than seven curves on one axis. The curves are
-    flat at 100% and flat at 0% for most of their length, so on a shared
-    axis all seven lie exactly on top of each other everywhere except the
-    few points where they fall over -- and no choice of colour, dash or
-    marker separates lines that occupy the same pixels. Nudging them apart
-    would separate them visually by misstating their values, which is not a
-    trade worth making for a results chapter.
+    Two panels doing different jobs. The top is the raw sweep. The bottom
+    replaces what used to be a zoomed copy of it -- that still had four
+    curves crossing each other inside a 10-point window, with leader lines
+    threading between them, and it labelled 2D-RS as one of the schemes
+    "landing together" when 0.397 is nowhere near the other three.
 
-    Each panel therefore gets one scheme in colour, with the other six behind
-    it in pale grey for context, so a reader can see both the individual
-    curve and where it sits in the pack. The bottom row collects the
-    thresholds so the comparison is still available in one place."""
-    results = [r for r in bench["results"]]
-    ncol = 4
-    nrow = -(-len(results) // ncol)
+    Instead the bottom panel is one row per scheme: the band between the last
+    rate where every trial recovered and the first where none did, with the
+    50% threshold marked on it. The lambda=2 cluster is then obvious without
+    anyone having to resolve overlapping lines, and the exact numbers sit in
+    clear space instead of on leader lines."""
+    STYLE = {
+        "1D-RS": ("o", "-"), "2D-RS": ("s", "-"),
+        "BC-2048-L2": ("^", "--"), "BC-1024-L2": ("v", "-."),
+        "BC-1024-L3": ("D", "-"), "BC-1024-L4": ("P", "-"),
+        "BC-512-L2": ("X", ":"),
+    }
+    fig, (ax, axb) = plt.subplots(
+        2, 1, figsize=(FIGW, 7.0),
+        gridspec_kw={"height_ratios": [1.25, 1]})
+    fig.subplots_adjust(hspace=0.45)
 
-    fig = plt.figure(figsize=(FIGW, 3.0 + 1.85 * nrow))
-    gs = fig.add_gridspec(nrow + 1, ncol,
-                          height_ratios=[1] * nrow + [1.45],
-                          hspace=0.62, wspace=0.28)
+    # ---------------------------------------------------------------- curves
+    series = []
+    for r in bench["results"]:
+        m, ls = STYLE.get(r["scheme"], ("o", "-"))
+        ts = sorted(r["trials"], key=lambda t: t["rate"])
+        xs = [t["rate"] for t in ts]
+        ys = [t["success_rate"] for t in ts]
+        # Markers only where the curve is actually doing something. On the
+        # flat runs at 100% and 0% every scheme sits on the same line, and
+        # seven marker styles stacked there read as one smeared band.
+        mx = [x for x, y in zip(xs, ys) if 0.0 < y < 1.0]
+        my = [y for y in ys if 0.0 < y < 1.0]
+        ax.plot(xs, ys, ls=ls, lw=1.7, color=COLOURS.get(r["scheme"]),
+                alpha=0.95, zorder=3, label=disp(r["scheme"]))
+        ax.plot(mx, my, ls="none", marker=m, ms=7, mfc="none", mew=1.4,
+                color=COLOURS.get(r["scheme"]), zorder=4)
+        series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
 
-    allxy = [([t["rate"] for t in sorted(r["trials"], key=lambda t: t["rate"])],
-              [t["success_rate"] for t in sorted(r["trials"],
-                                                 key=lambda t: t["rate"])])
-             for r in results]
-
-    for k, r in enumerate(results):
-        ax = fig.add_subplot(gs[k // ncol, k % ncol])
-        for m, (xs, ys) in enumerate(allxy):          # the pack, in grey
-            if m != k:
-                ax.plot(xs, ys, lw=1.0, color="#cfcfcf", zorder=1)
-        xs, ys = allxy[k]
-        col = COLOURS.get(r["scheme"])
-        ax.plot(xs, ys, lw=2.2, color=col, zorder=3)
-        th = _threshold(r["trials"])
-        if th is not None:
-            ax.axvline(th, color=col, lw=1.0, ls="--", alpha=0.6, zorder=2)
-            ax.annotate(f"{th:.3f}", xy=(th, 1.0), xytext=(3, -2),
-                        textcoords="offset points", fontsize=8.5,
-                        color=col, va="top")
-        ax.axhline(0.5, color="#aaa", lw=0.7, ls=":", zorder=1)
-        ax.set_title(disp(r["scheme"]), fontsize=9.5, color=col, pad=4)
-        ax.set_xlim(0, 0.58)
-        ax.set_ylim(-0.08, 1.12)
-        ax.set_xticks([0, 0.2, 0.4])
-        ax.xaxis.set_major_formatter(FuncFormatter(_pct))
-        ax.yaxis.set_major_formatter(FuncFormatter(_pct))
-        ax.tick_params(labelsize=8)
-        if k % ncol:
-            ax.set_yticklabels([])
-        if k // ncol == nrow - 1 or k + ncol >= len(results):
-            ax.set_xlabel("erasure rate", fontsize=8.5)
-
-    fig.text(0.5, 1.0, "Every scheme holds, then collapses within a few "
-                       "percent", ha="center", va="bottom", fontsize=12)
-    fig.text(0.5, 0.975, "each panel highlights one scheme; the other six sit "
-                         "behind it in grey. dashed line: 50% threshold",
-             ha="center", va="bottom", fontsize=8.5, color="#555")
+    ax.axhline(0.5, color="#888", lw=0.9, ls=":")
+    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
+    ax.set_ylabel("trials recovered byte-exact")
+    ax.set_title("Every scheme holds, then collapses within a few percent")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.yaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.set_ylim(-0.08, 1.12)
+    # A legend, in the large empty region at lower left. Labelling each curve
+    # at its cliff was tried and failed: five of the seven cliffs fall inside
+    # ten percentage points, so the labels collided with each other and with
+    # the curves they named. The schemes are also listed down the y axis of
+    # the panel below, which doubles as a key.
+    ax.legend(loc="lower left", ncol=2, fontsize=8.5,
+              handlelength=2.6, columnspacing=1.2, labelspacing=0.35)
 
     # ------------------------------------------------------ transition bands
-    axb = fig.add_subplot(gs[nrow, :])
     rows = []
-    for r in results:
+    for r in bench["results"]:
         th = _threshold(r["trials"])
         if th is None:
             continue
         lo, hi = _transition_band(r["trials"])
         rows.append((r["scheme"], th, lo, hi))
     rows.sort(key=lambda t: t[1])
+
     for i, (name, th, lo, hi) in enumerate(rows):
         col = COLOURS.get(name)
-        axb.plot([lo, hi], [i, i], lw=8, color=col, alpha=0.30,
+        axb.plot([lo, hi], [i, i], lw=7, color=col, alpha=0.30,
                  solid_capstyle="butt")
-        axb.plot([th], [i], marker="|", ms=18, mew=2.6, color=col)
+        axb.plot([th], [i], marker="|", ms=20, mew=2.6, color=col)
         axb.annotate(f"{th:.3f}", xy=(hi, i), xytext=(10, 0),
                      textcoords="offset points", va="center",
                      fontsize=9, color=col)
     axb.set_yticks(range(len(rows)))
-    axb.set_yticklabels([disp(n) for n, *_ in rows], fontsize=9)
+    axb.set_yticklabels([disp(n) for n, *_ in rows])
     axb.set_ylim(-0.7, len(rows) - 0.3)
     axb.set_xlim(0.15, 0.60)
-    axb.set_xlabel("erasure rate (fraction of codeword symbols erased)")
-    axb.set_title("Where each scheme falls over — bar: all trials recovered "
-                  "\u2192 none did.  tick: 50% threshold", fontsize=10)
+    axb.set_xlabel("erasure rate")
+    axb.set_title("Where each scheme falls over\n"
+                  "bar: all trials recovered → none did.  tick: 50% threshold",
+                  fontsize=10)
     axb.xaxis.set_major_formatter(FuncFormatter(_pct))
     axb.grid(axis="y", alpha=0)
 
