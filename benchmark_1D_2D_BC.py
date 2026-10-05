@@ -561,8 +561,7 @@ class BCAdapter:
         t0 = time.time()
         recovered, remaining = bc.dec_cbc_2(
             None, corrupted, mask, self.mu, self.lambda_, self.omega, self.rho,
-            pair_unknown_cap=self.pair_unknown_cap,
-            use_fft_phase1=False, use_fft_phase2=False)
+            pair_unknown_cap=self.pair_unknown_cap)
         ok = not np.any(remaining)
         return recovered, ok, time.time() - t0
 
