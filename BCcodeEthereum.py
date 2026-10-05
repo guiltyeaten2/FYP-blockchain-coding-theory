@@ -670,7 +670,7 @@ def _lagrange_eval(xs, ys, target, p):
     return result
 
 def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
-                       eval_pts_per_block, supports):
+                       eval_pts_per_block, supports, verbose=False):
     """
     Paper's Algorithm 1, Phase 2, for one adjacent pair (i_1, i_1+1).
 
@@ -719,10 +719,12 @@ def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
         if jp0 in sup_2_list:
             idx = sup_2_list.index(jp0)
             pt_at_jp0_in_block_2 = pts_2[idx]
-            print(f"    shift check k={k0}: j={j0} jp={jp0} "
-                  f"pts_1={pt_at_j0_in_block_1} pts_2={pt_at_jp0_in_block_2} "
-                  f"match={pt_at_j0_in_block_1 == pt_at_jp0_in_block_2}")
-        else:
+            if verbose:
+                print(f"    shift check k={k0}: j={j0} jp={jp0} "
+                      f"pts_1={pt_at_j0_in_block_1} "
+                      f"pts_2={pt_at_jp0_in_block_2} "
+                      f"match={pt_at_j0_in_block_1 == pt_at_jp0_in_block_2}")
+        elif verbose:
             print(f"    shift check k={k0}: j={j0} jp={jp0} "
                   f"NOT IN sup_2  <-- layout mismatch")
     # --- Step 1: build ŝ (length 2ω+ρ), aligned with sup_1 ---
@@ -738,8 +740,9 @@ def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
             s_hat_mask[k] = False
 
     s_hat_erased = sum(1 for m in s_hat_mask if m)
-    print(f"    ŝ: length={len(s_hat)}, erased={s_hat_erased}, "
-        f"capacity={len(s_hat) - 2*omega}")
+    if verbose:
+        print(f"    \u015d: length={len(s_hat)}, erased={s_hat_erased}, "
+              f"capacity={len(s_hat) - 2*omega}")
     # B_{1,0} (parity): erased
     # (stays masked)
     # B_{1,2} (info_right): value 0
@@ -888,7 +891,7 @@ def _decode_pair_alg1(r, mask, i_1, mu, omega, rho, p,
 # ==============================================================================
 def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                       pair_unknown_cap=None, verbose=True,
-                      eval_pts_per_block=None):
+                      eval_pts_per_block=None, layout=None):
     """
     Two-phase BC decoder.
 
@@ -947,11 +950,42 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
     mask = mask_in.copy()
     cap = 2 * rho if pair_unknown_cap is None else int(pair_unknown_cap)
 
-    # Decoder: use get_local_indices-based supports and shared roots-of-unity eval points
-    if lambda_ != 2:
+    # Which encoder produced this codeword?
+    #
+    # At lambda=2 the paper's auxiliary construction is available, but it only
+    # decodes data laid out by encode_bc_paper -- different supports AND
+    # different evaluation points from encode_bc_structured. Choosing by
+    # lambda alone assumes the paper encoder was used, which silently fails
+    # on structured data: the decoder solves the wrong code and recovers
+    # nothing. The benchmark encodes every row with encode_bc_structured so
+    # that the five parameterisations stay comparable, so it asks for
+    # "structured" explicitly.
+    #
+    #   layout="structured"  get_local_indices supports, roots of unity
+    #                        (encode_bc_structured)
+    #   layout="paper"       block_support_indices, the four coset sets
+    #                        (encode_bc_paper); enables the Algorithm 1
+    #                        auxiliary decode at lambda=2
+    #   layout=None          paper at lambda=2, structured otherwise
+    if layout is None:
+        layout = "paper" if lambda_ == 2 else "structured"
+    if layout not in ("paper", "structured"):
+        raise ValueError(f"layout must be 'paper' or 'structured', got {layout!r}")
+
+    if layout == "structured":
         
         n0_local = rho + lambda_ * omega
-        eval_pts_shared = nth_roots_of_unity(n0_local, P_FIELD)
+        # Mirror encode_bc_structured exactly: roots of unity when the field
+        # has a subgroup of that order, the small integers 1..n0 otherwise.
+        # Calling nth_roots_of_unity unconditionally raises for any n0 that
+        # does not divide p-1 -- which is every lambda=4 row here, since
+        # n0 = 5120 = 2^10 * 5 and p-1 has no factor of 5. The evaluation
+        # points define the code, so the decoder has to make the same choice
+        # the encoder made or it solves a different code.
+        if (P_FIELD - 1) % n0_local == 0:
+            eval_pts_shared = nth_roots_of_unity(n0_local, P_FIELD)
+        else:
+            eval_pts_shared = list(range(1, n0_local + 1))
         eval_pts_per_block = [eval_pts_shared for _ in range(mu)]
         supports = [np.asarray(get_local_indices(i, mu, lambda_, omega, rho))
             for i in range(mu)]
@@ -1035,9 +1069,11 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
             mask[sup[erased_pos]] = False
             progress = True
             stats["phase1_vandermonde_ok"] += 1
-        print(f"Iteration {iterations}: Phase 1 done,")
+        if verbose:
+            print(f"Iteration {iterations}: Phase 1 done,")
         # ---------------- PHASE 2: adjacent pair, paper's auxiliary GRS ----------------
-        print(f"Phase 2 starting, progress={progress}, ")
+        if verbose:
+            print(f"Phase 2 starting, progress={progress}, ")
                 # ---------------- PHASE 2: adjacent pair, Algorithm 1 only ----------------
         if not progress and np.any(mask):
             for i in range(mu):
@@ -1068,7 +1104,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 
                 new_r, new_mask, ok, reason = _decode_pair_alg1(
                     r, mask, i, mu, omega, rho, p,
-                    eval_pts_per_block, supports)
+                    eval_pts_per_block, supports, verbose=verbose)
                 if ok:
                     r = new_r
                     mask = new_mask
@@ -1100,10 +1136,16 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 # ==============================================================================
 def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
               pair_unknown_cap=None):
-    """Signature-compatible wrapper for the benchmark."""
+    """Signature-compatible wrapper for the benchmark.
+
+    layout="structured" because benchmark_1D_2D_BC.py encodes every row with
+    encode_bc_structured, including the lambda=2 rows. Leaving it to the
+    default would route lambda=2 into the paper layout and decode nothing.
+    """
     return dec_cbc_2_aux_ntt(
         r_in, mask_in, mu, lambda_, omega, rho,
-        pair_unknown_cap=pair_unknown_cap, verbose=False)
+        pair_unknown_cap=pair_unknown_cap, verbose=False,
+        layout="structured")
 # ==============================================================================
 # DEMO
 # ==============================================================================

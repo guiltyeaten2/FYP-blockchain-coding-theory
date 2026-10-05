@@ -45,6 +45,21 @@ import numpy as np
 import blob_generator as bg
 import BCcodeEthereum as bc
 
+
+def eval_pts_or_none(n, p):
+    """Roots of unity of order n, or None when the field has no such subgroup.
+
+    BCcodeEthereum renamed make_eval_pts to nth_roots_of_unity and changed its
+    contract: it now raises rather than returning None. These scripts use the
+    None to mean "this parameterisation cannot use an NTT", which is a normal
+    outcome here (n0 = 5120 for every lambda=4 row), not an error.
+    """
+    try:
+        return bc.nth_roots_of_unity(n, p)
+    except ValueError:
+        return None
+
+
 GF = bg.GF
 P = bg.BLS_MODULUS
 K = bg.FIELD_ELEMENTS_PER_BLOB
@@ -70,6 +85,18 @@ PAIR_CAP = 256
 
 def _mask(n, rate, trial):
     return np.random.default_rng(SEED + trial).random(n) < rate
+
+
+def ab_is_measurable():
+    """Can the FFT-vs-Vandermonde comparison still be run?
+
+    It needs dec_cbc_2 to expose a switch for the phase-1 FFT path. The
+    decoder no longer has one: phase 1 is now Vandermonde-only by design,
+    which is what this measurement concluded it should be. There is nothing
+    left to switch, so the comparison has served its purpose and retires
+    rather than being repaired."""
+    import inspect
+    return "use_fft_phase1" in inspect.signature(bc.dec_cbc_2).parameters
 
 
 def measure_ab(blob, rates, trials):
@@ -130,7 +157,7 @@ def measure_profile(blob):
     mu = K // omega
     n0 = rho + lam * omega
     code = bc.encode_bc_structured(GF, GF(blob), mu, lam, omega, rho)
-    pts = bc.make_eval_pts(n0, P)
+    pts = eval_pts_or_none(n0, P)
     idx = bc.get_local_indices(0, mu, lam, omega, rho)
     mask = [bool(v) for v in (np.random.default_rng(7).random(n0) < 0.10)]
     recv = [0 if mask[j] else int(code[idx[j]]) for j in range(n0)]
@@ -182,7 +209,7 @@ def measure_nodes():
     not free, and this is the cost the branch pays even with the FFT off."""
     n0, e = 3072, 300
     random.seed(1)
-    roots = [int(x) for x in bc.make_eval_pts(n0, P)][:e]
+    roots = [int(x) for x in eval_pts_or_none(n0, P)][:e]
     small = list(range(1, e + 1))
     syn = [random.randrange(P) for _ in range(e)]
     out = {}
@@ -215,7 +242,7 @@ def measure_structure(blob):
     code = bc.encode_bc_structured(GF, GF(blob), mu, lam, omega, rho)
 
     n0, k0 = rho + lam * omega, lam * omega
-    pts0 = bc.make_eval_pts(n0, P)
+    pts0 = eval_pts_or_none(n0, P)
     local = [int(code[g]) for g in bc.get_local_indices(0, mu, lam, omega, rho)]
     p1_raw = tail(local, n0, k0)
     p1_fix = tail([(local[j] * pow(int(pts0[j]), P - 2, P)) % P
@@ -225,7 +252,7 @@ def measure_structure(blob):
                  | set(bc.get_local_indices(1, mu, lam, omega, rho)))
     n_aux = len(sup)
     k_aux = n_aux - 2 * rho
-    pts_a = bc.make_eval_pts(n_aux, P)
+    pts_a = eval_pts_or_none(n_aux, P)
     union = [int(code[g]) for g in sup]
     p2_raw = tail(union, n_aux, k_aux)
     p2_fix = tail([(union[j] * pow(int(pts_a[j]), P - 2, P)) % P
@@ -265,11 +292,31 @@ def main():
     print("\nprofile: where does the FFT path spend its time?")
     profile = measure_profile(blob)
     print("\nab: FFT against the Vandermonde fallback it replaces")
-    ab = measure_ab(blob, rates, trials)
+    if ab_is_measurable():
+        ab = measure_ab(blob, rates, trials)
+        ab_note = None
+    else:
+        # Carry the previous measurement forward rather than dropping it.
+        # It is cited in docs/benchmark_1D_2D_BC_report.md, it was correct
+        # when taken, and overwriting it with null on a re-run would quietly
+        # empty a table in the report.
+        ab, ab_note = None, (
+            "not re-measured: dec_cbc_2 no longer exposes use_fft_phase1. "
+            "Phase 1 is Vandermonde-only by design now, so there is no FFT "
+            "path to compare against. Any 'ab' block below is the earlier "
+            "measurement, kept because the report cites it.")
+        print("  SKIPPED -- " + ab_note)
+        if os.path.exists(args.out):
+            with open(args.out) as f:
+                ab = json.load(f).get("ab")
+            if ab:
+                print(f"  carried forward {len(ab)} rows from {args.out}")
 
     payload = dict(quick=args.quick, trials=trials, rates=rates,
                    pair_unknown_cap=PAIR_CAP, seed=SEED,
                    structure=structure, nodes=nodes, profile=profile, ab=ab)
+    if ab_note:
+        payload["ab_note"] = ab_note
     with open(args.out, "w") as f:
         json.dump(payload, f, indent=2)
     print(f"\nwrote {args.out}")

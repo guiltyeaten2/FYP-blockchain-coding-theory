@@ -22,6 +22,21 @@ import galois
 import blob_generator as bg
 import BCcodeEthereum as bc
 
+
+def eval_pts_or_none(n, p):
+    """Roots of unity of order n, or None when the field has no such subgroup.
+
+    BCcodeEthereum renamed make_eval_pts to nth_roots_of_unity and changed its
+    contract: it now raises rather than returning None. These scripts use the
+    None to mean "this parameterisation cannot use an NTT", which is a normal
+    outcome here (n0 = 5120 for every lambda=4 row), not an error.
+    """
+    try:
+        return bc.nth_roots_of_unity(n, p)
+    except ValueError:
+        return None
+
+
 GF = bg.GF
 P = bg.BLS_MODULUS
 K = bg.FIELD_ELEMENTS_PER_BLOB
@@ -48,7 +63,7 @@ def main():
     # through by x_j should therefore land exactly in evaluation form.
     n0 = rho + lam * omega
     k0 = n0 - rho
-    pts0 = bc.make_eval_pts(n0, P)
+    pts0 = eval_pts_or_none(n0, P)
     local = [int(code[g]) for g in bc.get_local_indices(0, mu, lam, omega, rho)]
 
     raw = tail_nonzero(local, n0, k0)
@@ -72,7 +87,7 @@ def main():
     combined = sorted(set(sup_i) | set(sup_j))
     n_aux = len(combined)
     k_aux = n_aux - 2 * rho
-    pts_aux = bc.make_eval_pts(n_aux, P)
+    pts_aux = eval_pts_or_none(n_aux, P)
     union = [int(code[g]) for g in combined]
 
     raw_a = tail_nonzero(union, n_aux, k_aux)
