@@ -1,0 +1,15 @@
+# Pinned to the versions these results were produced with.
+#
+# galois carries the finite-field arithmetic and the NTT; the schemes are
+# built on its GF(p) arrays, so a major version change here can move timings.
+# numpy is galois's backing store and the erasure-mask RNG.
+# simpy is the discrete-event clock behind network_sim.py only.
+# matplotlib draws every figure in docs/figures/.
+# markdown converts the reports for make_docs.py, which then needs Chrome or
+# Chromium installed to print them to PDF (not a pip dependency).
+
+galois>=0.3.0
+numpy>=1.24
+simpy>=4.0
+matplotlib>=3.7
+markdown>=3.4

@@ -687,7 +687,33 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
     }
 
 
+def _parse_args():
+    """Argument parsing exists mainly so that --help is not destructive.
+
+    This script previously took no arguments, so
+    `python3 benchmark_1D_2D_BC.py --help` ignored the flag and started the
+    full multi-hour sweep. Anyone asking what the script does got a sweep
+    instead of an answer."""
+    import argparse
+    ap = argparse.ArgumentParser(
+        description="Erasure sweep over 1D-RS, 2D-RS and five block-circulant "
+                    "parameterisations. Writes benchmark_results.json. Takes "
+                    "several hours; see --quick for a smoke test.")
+    ap.add_argument("--quick", action="store_true",
+                    help="three rates, one trial each -- verifies the pipeline "
+                         "runs; NOT a result worth reporting")
+    return ap.parse_args()
+
+
 if __name__ == "__main__":
+    _args = _parse_args()
+    if _args.quick:
+        RATES = [0.05, 0.20, 0.35]
+        _orig_trials_for = trials_for
+        trials_for = lambda *a, **k: 1
+        print("QUICK MODE: three rates, one trial each. Smoke test only --\n"
+              "these numbers are not a result.\n")
+
     print("=" * 70)
     print(" BENCHMARK: 1D-RS vs 2D-RS vs BLOCK-CIRCULANT (BC)")
     print(" same field, same blob, same erasure rates -- see module docstring")
