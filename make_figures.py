@@ -179,6 +179,26 @@ def _pct(x, _pos=None):
     return f"{100 * x:.0f}%"
 
 
+def _subtitle(ax, text, width=95):
+    """A small note under the figure saying what was actually measured.
+
+    Placed at the BOTTOM, not under the title. Several titles here run to two
+    lines, and anything positioned above the axes then has to know how tall
+    the title happens to be or it lands on top of it. The foot of the figure
+    is unoccupied, never collides, and matches the convention of a source
+    line.
+
+    Most titles here state a finding, which is what makes a figure useful in
+    a report. A finding is not a definition, though -- nothing in "Decode
+    cost against erasure rate" says whether the cost is a mean or a median,
+    over which trials, at what size. That belongs here."""
+    import textwrap
+    fig = ax.get_figure()
+    wrapped = "\n".join(textwrap.wrap(text, width))
+    fig.text(0.5, -0.015, wrapped, ha="center", va="top",
+             fontsize=8.2, color="#555", linespacing=1.35)
+
+
 def _readable_log(ax, axis="y"):
     """Put plain numbers on a log axis.
 
@@ -262,9 +282,11 @@ def fig_success_curves(bench):
 
     allsch = [r["scheme"] for r in bench["results"]]
     draw(ax, allsch)
-    ax.set_xlabel("erasure rate")
-    ax.set_ylabel("fraction of trials recovered")
+    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
+    ax.set_ylabel("trials recovered byte-exact")
     ax.set_title("Fault tolerance across the full sweep")
+    _subtitle(ax, "520 trials over one EIP-4844 blob; a trial counts as "
+                  "recovered only if the bytes match the original exactly")
     handles, labels = ax.get_legend_handles_labels()
 
     # Zoom on the CLUSTER, not on the whole transition: the thresholds span
@@ -345,9 +367,11 @@ def fig_tolerance_vs_guarantee(bench):
                 label="rate bound 1$-$R" if i == 0 else None)
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(l) for l in labels], rotation=18, ha="right")
-    ax.set_ylabel("erasure rate")
+    ax.set_ylabel("erasure rate tolerated")
     ax.set_title("Measured tolerance against each code's own worst-case bound")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
+    _subtitle(ax, "storage matched at ~2x across every scheme; guarantee is "
+                  "the minimum-distance bound, measured is the 50% threshold")
     # Headroom so the legend clears the rate-bound rules and the value labels.
     ax.set_ylim(0, max(max(meas), max(guar)) * 1.55)
     ax.legend(loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.0))
@@ -376,9 +400,11 @@ def fig_bc_threshold_prediction(bench):
         ax.text(i, t[3] + 0.006, f"{t[3]:.2f}", ha="center", fontsize=7)
     ax.set_xticks(list(x))
     ax.set_xticklabels([f"{disp(t[0])}" for t in rows], fontsize=8.5)
-    ax.set_ylabel("erasure rate")
+    ax.set_ylabel("erasure rate tolerated")
     ax.set_title("Block-circulant threshold follows $1/(1+\\lambda)$, not $\\mu$ or $\\omega$")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
+    _subtitle(ax, "bars: erasure rate at 50% success. rules: the local code's "
+                  "stopping rate $S_0=\\rho/n_0=1/(1+\\lambda)$")
     ax.legend(loc="upper right")
     return _save(fig, "bench_bc_threshold.svg")
 
@@ -397,9 +423,11 @@ def fig_decode_time(bench):
         ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
         series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
-    ax.set_xlabel("erasure rate")
-    ax.set_ylabel("mean decode time (s), log scale")
+    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
+    ax.set_ylabel("mean decode time (s)")
     ax.set_title("Decode cost against erasure rate")
+    _subtitle(ax, "mean over the trials that recovered; n$\\approx$8192, "
+                  "k=4096, single-threaded Python over galois")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
     _label_ends(ax, series)          # named at the line end, not in a legend
@@ -433,8 +461,10 @@ def fig_data_needed(bench):
                 ha="center", fontsize=7.5)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=18, ha="right")
-    ax.set_ylabel("surviving data needed / blob size")
+    ax.set_ylabel("surviving data needed (blobs)")
     ax.set_title("What a node must actually fetch to rebuild one blob")
+    _subtitle(ax, "n(1-tolerance)/k: surviving symbols required, as a "
+                  "multiple of one blob")
     ax.set_ylim(0, max(mult) * 1.18)
     ax.legend(loc="upper left")
     return _save(fig, "bench_data_needed.svg")
@@ -487,7 +517,7 @@ def fig_tolerance_vs_cost(bench):
             color="#444", zorder=2,
             label=f"frontier — not beaten on both counts ({len(front)} schemes)")
     ax.set_yscale("log")
-    ax.set_xlabel("measured erasure tolerance")
+    ax.set_xlabel("erasure tolerated (rate at 50% success)")
     ax.set_ylabel(f"decode time at {100 * rate:.0f}% erasure (s), log scale")
     ax.set_title("Tolerance against the cost of achieving it\n"
                  "lower and further right is better", fontsize=10)
@@ -520,8 +550,10 @@ def fig_encode_decode(bench):
     ax.set_yscale("log")
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(n) for n in names], rotation=20, ha="right", fontsize=8)
-    ax.set_ylabel("seconds, log scale")
+    ax.set_ylabel("time for one blob (s)")
     ax.set_title("Encode is paid once; decode is paid by everyone")
+    _subtitle(ax, "one 128 KiB blob; decode measured at the highest rate "
+                  "every scheme still recovers")
     _readable_log(ax)
     ax.legend(fontsize=8)
     return _save(fig, "bench_encode_decode.svg")
@@ -548,9 +580,11 @@ def fig_cost_per_erasure(bench):
             ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
             series.append((r["scheme"], xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
-    ax.set_xlabel("erasure rate")
+    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
     ax.set_ylabel("decode time per erased symbol (ms)")
     ax.set_title("Cost per erasure repaired, with the workload divided out")
+    _subtitle(ax, "decode time divided by the number of symbols actually "
+                  "erased in that trial")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
     _label_ends(ax, series)
@@ -604,8 +638,14 @@ def fig_decoder_fix(data):
     ax.set_xticks(list(x))
     ax.set_xticklabels(cats)
     ax.set_ylabel(f"trials (of {data['trials']})")
+    ax.set_xlabel("outcome")
     ax.set_title("The decoder fix: silent corruption eliminated,\n"
-                 "correct recoveries up", fontsize=10)
+                 "correct recoveries up", fontsize=11)
+    _subtitle(ax, f"the same {data['trials']} trials at "
+                  f"{data['parameterisation']}, spanning "
+                  f"{100 * min(data['rates']):.0f}-"
+                  f"{100 * max(data['rates']):.0f}% erasure, re-run through "
+                  "both decoders")
     ax.set_ylim(0, data["trials"] * 1.05)
     # Neutral proxies: before/after is carried by shade and position, while
     # colour carries the outcome category. Letting the legend take a bar's
@@ -769,11 +809,16 @@ def fig_net_erasure(runA):
     xs = [i / 20 for i in range(17)]
     ax.plot(xs, [p ** rep for p in xs], ls="--", lw=1.6, color="#c1442e",
             label=f"$p^{{{rep}}}$ prediction (custody replication {rep})")
-    ax.set_xlabel("fraction of peers withholding")
-    ax.set_ylabel("realised erasure fraction")
+    ax.set_xlabel("fraction of peers refusing to serve")
+    ax.set_ylabel("cells missing at the deadline")
     ax.set_title("Custody replication turns withholding into a much smaller\n"
                  "erasure rate — and the code carried makes no difference",
                  fontsize=11)
+    cfg = runA["config"]
+    _subtitle(ax, f"{cfg['n_peers']} peers, custody replication "
+                  f"{cfg.get('custody_replication', 4)}, "
+                  f"{runA['rows'][0]['trials']} trials per point; a cell is "
+                  f"lost only if every custodian withholds it")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     ax.legend(loc="upper left")
@@ -793,9 +838,14 @@ def fig_net_recovery(runA):
         ys = [r["recovered"] / r["trials"] for r in sub]
         ax.plot(xs, ys, marker="o", color=COLOURS[s])
         series.append((disp(s), xs, ys, COLOURS[s]))
-    ax.set_xlabel("fraction of peers withholding")
-    ax.set_ylabel("fraction of trials recovered")
+    ax.set_xlabel("fraction of peers refusing to serve")
+    ax.set_ylabel("trials recovered byte-exact")
     ax.set_title("Recovery against adversarial withholding")
+    cfg = runA["config"]
+    _subtitle(ax, f"{cfg['n_peers']} peers, replication "
+                  f"{cfg.get('custody_replication', 4)}, "
+                  f"{cfg.get('deadline_s', 4):.0f}s sampling deadline; "
+                  "erasures are what failed to arrive, not injected")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     ax.set_ylim(-0.08, 1.08)
@@ -834,9 +884,12 @@ def fig_net_gather_vs_decode(runB):
                     ha="center", va="bottom", fontsize=6.5, color="#666")
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(x) for x in schemes], rotation=25, ha="right", fontsize=8)
-    ax.set_ylabel("seconds per slot, log scale")
-    ax.set_title(f"Decode dominates gather by orders of magnitude "
-                 f"({runB['config'].get('blobs_per_slot', 6)} blobs, no adversary)")
+    ax.set_ylabel("seconds per slot")
+    cfg = runB["config"]
+    ax.set_title("Decode dominates gather by orders of magnitude")
+    _subtitle(ax, f"{cfg.get('blobs_per_slot', 6)} blobs per slot, "
+                  f"{cfg.get('downlink_mbps', 25):.0f} Mbps downlink, no "
+                  f"adversaries; gather is network time, decode is CPU")
     _readable_log(ax)
     ax.legend()
     return _save(fig, "net_gather_vs_decode.svg")
@@ -917,8 +970,11 @@ def fig_net_peers(runC):
     ax.set_xscale("log", base=2)
     ax.set_xlim(peers[0] * 0.85, peers[-1] * 3.6)
     ax.set_xlabel("peers in the sampled network")
-    ax.set_ylabel("realised erasure fraction")
+    ax.set_ylabel("cells missing at the deadline")
     ax.set_title("Realised erasure rises with peer count, then plateaus")
+    _subtitle(ax, f"custody replication {rep}, drawn without replacement; "
+                  "markers are the exact probability that all custodians "
+                  "of a cell withhold")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     # Below the axes: inside, it landed on the marker row it describes.
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.20))
