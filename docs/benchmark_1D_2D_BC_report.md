@@ -539,6 +539,45 @@ it would also be solvable in O(*e*²) rather than O(*e*³), which would
 remove the compute wall described above. That is the single highest-value
 piece of remaining work on this file.
 
+### An implementation penalty the block-circulant rows carry
+
+One caveat belongs with the decode times above, because it affects the
+comparison between schemes rather than just their absolute values.
+
+Making the block-circulant local code FFT-capable means defining it over
+roots of unity, since that is what an NTT requires. But the evaluation points
+*define the code* — the encoder uses the same ones — so the Vandermonde
+solver ends up working over 255-bit field elements where the earlier version
+used the small integers 1..n&#8320;. In pure-Python modular arithmetic operand
+width is not free, and **this cost is paid whether or not the transform ever
+runs**.
+
+Measured across three versions of the decoder on the same machine, same
+erasure patterns, min of three (2.33× median):
+
+| variant (20% erasure) | small-integer points | roots of unity | penalty |
+|---|---|---|---|
+| BC ω2048 λ2 | 2.27s | 5.33s | 2.34× |
+| BC ω1024 λ2 | 1.20s | 2.74s | 2.28× |
+| BC ω1024 λ3 | 1.50s | 3.54s | 2.37× |
+| BC ω512 λ2 | 0.66s | 1.43s | 2.15× |
+
+The penalty falls **only on the block-circulant rows**. 1D-RS and 2D-RS are
+untouched by it, and so is BC &omega;1024 &lambda;4, whose local length
+5120 = 2<sup>10</sup>&middot;5 does not divide *p*&minus;1 and which therefore
+never moved onto roots of unity.
+
+Two consequences for reading the decode figures. The gap between 1D-RS and
+the block-circulant family is **narrower than it would otherwise be** — about
+three to five times rather than an order of magnitude. And the crossover with
+2D-RS, which the decode-cost figure places near 8% erasure, would sit
+substantially higher without the penalty. Neither changes any tolerance
+result: success rates are identical across all three versions, verified cell
+by cell.
+
+This is a property of this implementation, not of block-circulant codes.
+`decoder_version_benchmark.py` reproduces the measurement.
+
 ## The NTT decoder path
 
 `BCcodeEthereum.py` carries a second decoder for the single-block phase,

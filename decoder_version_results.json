@@ -1,0 +1,113 @@
+{
+  "_what": "Block-circulant decode time across three versions of the decoder, same machine, same erasure patterns, min of 3.",
+  "_why": "The BC decode times in the benchmark report carry an implementation penalty from defining the local code over 255-bit roots of unity rather than small integers. It is paid whether or not the NTT runs, and falls only on the BC rows. This measures its size so the report can state it.",
+  "versions": {
+    "pre-NTT": "8d93ae3",
+    "main": "main",
+    "current": "87e4f22"
+  },
+  "results": {
+    "pre-NTT": {
+      "om2048-L2@0.1": {
+        "t": 1.018,
+        "ok": true
+      },
+      "om2048-L2@0.2": {
+        "t": 2.275,
+        "ok": true
+      },
+      "om1024-L2@0.1": {
+        "t": 0.554,
+        "ok": true
+      },
+      "om1024-L2@0.2": {
+        "t": 1.204,
+        "ok": true
+      },
+      "om1024-L3@0.1": {
+        "t": 0.696,
+        "ok": true
+      },
+      "om1024-L3@0.2": {
+        "t": 1.498,
+        "ok": true
+      },
+      "om512-L2@0.1": {
+        "t": 0.317,
+        "ok": true
+      },
+      "om512-L2@0.2": {
+        "t": 0.664,
+        "ok": true
+      }
+    },
+    "main": {
+      "om2048-L2@0.1": {
+        "t": 3.102,
+        "ok": true
+      },
+      "om2048-L2@0.2": {
+        "t": 6.287,
+        "ok": true
+      },
+      "om1024-L2@0.1": {
+        "t": 1.909,
+        "ok": true
+      },
+      "om1024-L2@0.2": {
+        "t": 3.556,
+        "ok": true
+      },
+      "om1024-L3@0.1": {
+        "t": 2.426,
+        "ok": true
+      },
+      "om1024-L3@0.2": {
+        "t": 4.434,
+        "ok": true
+      },
+      "om512-L2@0.1": {
+        "t": 1.357,
+        "ok": true
+      },
+      "om512-L2@0.2": {
+        "t": 2.176,
+        "ok": true
+      }
+    },
+    "current": {
+      "om2048-L2@0.1": {
+        "t": 2.412,
+        "ok": true
+      },
+      "om2048-L2@0.2": {
+        "t": 5.334,
+        "ok": true
+      },
+      "om1024-L2@0.1": {
+        "t": 1.28,
+        "ok": true
+      },
+      "om1024-L2@0.2": {
+        "t": 2.74,
+        "ok": true
+      },
+      "om1024-L3@0.1": {
+        "t": 1.638,
+        "ok": true
+      },
+      "om1024-L3@0.2": {
+        "t": 3.545,
+        "ok": true
+      },
+      "om512-L2@0.1": {
+        "t": 0.687,
+        "ok": true
+      },
+      "om512-L2@0.2": {
+        "t": 1.426,
+        "ok": true
+      }
+    }
+  }
+}

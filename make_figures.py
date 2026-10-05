@@ -53,6 +53,24 @@ COLOURS = {
 ORDER = ["1D-RS", "2D-RS", "BC-2048-L2", "BC-1024-L2",
          "BC-1024-L3", "BC-1024-L4", "BC-512-L2"]
 
+# What a reader sees. The JSON keys are terse identifiers; the reports write
+# these parameterisations as omega/lambda, and a figure that disagrees with
+# the prose beside it makes the reader stop and translate.
+DISPLAY = {
+    "1D-RS": "1D-RS",
+    "2D-RS": "2D-RS",
+    "BC-2048-L2": "BC \u03c92048 \u03bb2",
+    "BC-1024-L2": "BC \u03c91024 \u03bb2",
+    "BC-1024-L3": "BC \u03c91024 \u03bb3",
+    "BC-1024-L4": "BC \u03c91024 \u03bb4",
+    "BC-512-L2":  "BC \u03c9512 \u03bb2",
+}
+
+
+def disp(name):
+    """Display label for a scheme, falling back to the raw key."""
+    return DISPLAY.get(name, name)
+
 # Deterministic output. Without these two, every regeneration rewrites all
 # 14 files: matplotlib stamps the SVG with the current time and salts its
 # internal clip-path ids randomly. That turns "did the data change?" into an
@@ -161,6 +179,30 @@ def _pct(x, _pos=None):
     return f"{100 * x:.0f}%"
 
 
+def _readable_log(ax, axis="y"):
+    """Put plain numbers on a log axis.
+
+    Matplotlib's default labels a log axis only at decades, so a chart
+    spanning 0.2s to 40s is labelled "10^0, 10^1" and the reader cannot read
+    a value off it. This places 1-2-5 ticks across the range and writes them
+    as ordinary numbers."""
+    a = ax.yaxis if axis == "y" else ax.xaxis
+    lo, hi = (ax.get_ylim() if axis == "y" else ax.get_xlim())
+    ticks, d = [], 1e-6
+    while d <= hi * 10:
+        for m in (1, 2, 5):
+            v = m * d
+            if lo <= v <= hi:
+                ticks.append(v)
+        d *= 10
+    if len(ticks) < 2:
+        return
+    a.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
+    a.set_minor_locator(matplotlib.ticker.NullLocator())
+    a.set_major_formatter(FuncFormatter(
+        lambda v, _p: (f"{v:g}" if v >= 1 else f"{v:.2f}".rstrip("0").rstrip("."))))
+
+
 def _threshold(trials):
     """Erasure rate at which this scheme's success rate crosses 50%.
 
@@ -210,7 +252,7 @@ def fig_success_curves(bench):
             m, ls, ms = STYLE[r["scheme"]]
             ts = sorted(r["trials"], key=lambda t: t["rate"])
             a.plot([t["rate"] for t in ts], [t["success_rate"] for t in ts],
-                   marker=m, ms=ms, lw=1.4, ls=ls, label=r["scheme"],
+                   marker=m, ms=ms, lw=1.4, ls=ls, label=disp(r["scheme"]),
                    color=COLOURS.get(r["scheme"]),
                    mfc="none", mew=1.2)
         a.axhline(0.5, color="#888", lw=0.8, ls=":")
@@ -249,7 +291,7 @@ def fig_success_curves(bench):
                                       key=lambda p_: p_[1])):
         axz.plot([t], [0.5], marker="|", ms=13, mew=1.8,
                  color=COLOURS.get(n))
-        axz.annotate(f"{n}  {t:.3f}", xy=(t, 0.5),
+        axz.annotate(f"{disp(n)}  {t:.3f}", xy=(t, 0.5),
                      xytext=(10, -26 - 17 * k), textcoords="offset points",
                      ha="left", fontsize=8.5, color=COLOURS.get(n),
                      bbox=dict(boxstyle="round,pad=0.2", fc="white",
@@ -302,7 +344,7 @@ def fig_tolerance_vs_guarantee(bench):
                 color="#c1442e",
                 label="rate bound 1$-$R" if i == 0 else None)
     ax.set_xticks(list(x))
-    ax.set_xticklabels(labels, rotation=18, ha="right")
+    ax.set_xticklabels([disp(l) for l in labels], rotation=18, ha="right")
     ax.set_ylabel("erasure rate")
     ax.set_title("Measured tolerance against each code's own worst-case bound")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
@@ -333,7 +375,7 @@ def fig_bc_threshold_prediction(bench):
                 label="prediction 1/(1+$\\lambda$)" if i == 0 else None)
         ax.text(i, t[3] + 0.006, f"{t[3]:.2f}", ha="center", fontsize=7)
     ax.set_xticks(list(x))
-    ax.set_xticklabels([f"{t[0]}\n$\\lambda$={t[1]}" for t in rows], fontsize=8)
+    ax.set_xticklabels([f"{disp(t[0])}" for t in rows], fontsize=8.5)
     ax.set_ylabel("erasure rate")
     ax.set_title("Block-circulant threshold follows $1/(1+\\lambda)$, not $\\mu$ or $\\omega$")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
@@ -353,12 +395,13 @@ def fig_decode_time(bench):
         xs = [t["rate"] for t in ts]
         ys = [t["mean_decode_time_success_only_s"] for t in ts]
         ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
-        series.append((r["scheme"], xs, ys, COLOURS.get(r["scheme"])))
+        series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
     ax.set_xlabel("erasure rate")
     ax.set_ylabel("mean decode time (s), log scale")
     ax.set_title("Decode cost against erasure rate")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _readable_log(ax)
     _label_ends(ax, series)          # named at the line end, not in a legend
     return _save(fig, "bench_decode_time.svg")
 
@@ -433,7 +476,7 @@ def fig_tolerance_vs_cost(bench):
     for name, th, c in pts:
         ax.scatter([th], [c], s=95, color=COLOURS.get(name), zorder=3,
                    edgecolor="white", linewidth=0.8)
-        ax.annotate(name, xy=(th, c), xytext=(7, 4),
+        ax.annotate(disp(name), xy=(th, c), xytext=(7, 4),
                     textcoords="offset points", fontsize=7.6)
 
     # Pareto frontier: nothing tolerates more erasure AND decodes faster.
@@ -449,6 +492,7 @@ def fig_tolerance_vs_cost(bench):
     ax.set_title("Tolerance against the cost of achieving it\n"
                  "lower and further right is better", fontsize=10)
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _readable_log(ax)
     ax.legend(loc="upper left", fontsize=8)
     return _save(fig, "bench_tolerance_vs_cost.svg")
 
@@ -475,9 +519,10 @@ def fig_encode_decode(bench):
            color="#c1442e", label=f"decode at {100 * rate:.0f}%, per node")
     ax.set_yscale("log")
     ax.set_xticks(list(x))
-    ax.set_xticklabels(names, rotation=20, ha="right", fontsize=8)
+    ax.set_xticklabels([disp(n) for n in names], rotation=20, ha="right", fontsize=8)
     ax.set_ylabel("seconds, log scale")
     ax.set_title("Encode is paid once; decode is paid by everyone")
+    _readable_log(ax)
     ax.legend(fontsize=8)
     return _save(fig, "bench_encode_decode.svg")
 
@@ -507,6 +552,7 @@ def fig_cost_per_erasure(bench):
     ax.set_ylabel("decode time per erased symbol (ms)")
     ax.set_title("Cost per erasure repaired, with the workload divided out")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _readable_log(ax)
     _label_ends(ax, series)
     return _save(fig, "bench_cost_per_erasure.svg")
 
@@ -527,7 +573,7 @@ def fig_decode_vs_erasure_count(bench):
                      for t in r["trials"]
                      if t["mean_decode_time_success_only_s"])
         ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", ms=3.5,
-                lw=1.6, label=f"{name}  (n={r['n']})", color=COLOURS[name])
+                lw=1.6, label=f"{disp(name)}  (n={r['n']})", color=COLOURS[name])
     ax.set_xlabel("total erasures in the codeword")
     ax.set_ylabel("mean decode time, successes only (s)")
     ax.set_title("One long division against many short ones")
@@ -604,8 +650,8 @@ def fig_fft_vs_vandermonde(fft):
         top = max(max(r["fft_s"], r["vandermonde_s"]) for r in sub)
         ax.set_ylim(top=top * 3.2)
         ax.set_xticks(list(x))
-        ax.set_xticklabels([s.replace("BC-", "") for s in schemes],
-                           rotation=45, ha="right", fontsize=8.5)
+        ax.set_xticklabels([disp(s) for s in schemes],
+                           rotation=45, ha="right", fontsize=8)
         ax.set_title(f"{100 * rate:.0f}% erased")
     axes[0].set_ylabel("mean decode time (s), log scale")
     # Legend below the panels: inside the first one it covered the bars it
@@ -746,7 +792,7 @@ def fig_net_recovery(runA):
         xs = [r["adversarial"] for r in sub]
         ys = [r["recovered"] / r["trials"] for r in sub]
         ax.plot(xs, ys, marker="o", color=COLOURS[s])
-        series.append((s, xs, ys, COLOURS[s]))
+        series.append((disp(s), xs, ys, COLOURS[s]))
     ax.set_xlabel("fraction of peers withholding")
     ax.set_ylabel("fraction of trials recovered")
     ax.set_title("Recovery against adversarial withholding")
@@ -787,10 +833,11 @@ def fig_net_gather_vs_decode(runB):
             ax.text(i + w / 2, 0.04, "no erasures\nto decode", transform=tr,
                     ha="center", va="bottom", fontsize=6.5, color="#666")
     ax.set_xticks(list(x))
-    ax.set_xticklabels(schemes, rotation=25, ha="right", fontsize=8)
+    ax.set_xticklabels([disp(x) for x in schemes], rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("seconds per slot, log scale")
     ax.set_title(f"Decode dominates gather by orders of magnitude "
                  f"({runB['config'].get('blobs_per_slot', 6)} blobs, no adversary)")
+    _readable_log(ax)
     ax.legend()
     return _save(fig, "net_gather_vs_decode.svg")
 
@@ -813,7 +860,7 @@ def fig_net_throughput(runB):
         xs = [r["adversarial"] for r in sub]
         ys = [r["blobs_per_slot"] for r in sub]
         ax.plot(xs, ys, marker="o", color=COLOURS[s_])
-        series.append((s_, xs, ys, COLOURS[s_]))
+        series.append((disp(s_), xs, ys, COLOURS[s_]))
     ax.axhline(target, color="#444", ls="--", lw=1.1)
     # Labelled on the line: the legend that used to carry this was removed in
     # favour of naming each curve at its end.

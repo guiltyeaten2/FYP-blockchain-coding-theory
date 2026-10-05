@@ -203,6 +203,14 @@ everything else.
   the λ=2 rows, which exceed their worst-case guarantees.
 - **Single-threaded Python.** Relative comparisons hold; absolute seconds
   would not survive an optimised implementation.
+- **The block-circulant rows carry a ~2.3× implementation penalty** that the
+  Reed-Solomon rows do not. Defining the BC local code over roots of unity
+  (to make it FFT-capable) means solving over 255-bit field elements instead
+  of small integers, and that cost is paid even with the transform switched
+  off. Measured in `decoder_version_results.json`. This narrows the apparent
+  1D-RS gap and moves the 2D-RS crossover; it does not touch any tolerance
+  result. Raise it yourself in §B.2 — it is the kind of thing a reader finds
+  and then distrusts everything else.
 - **One blob of application data.** Erasure patterns are reseeded per trial,
   but the payload is fixed.
 - **Block-circulant is measured single-phase.** Phase 2 does not implement
@@ -227,11 +235,11 @@ Three concrete items, each with a named fix:
 
 ## Two things to settle before writing
 
-**The NTT decoder's status.** Whether the roots-of-unity change stays or is
-reverted affects the decode-time numbers by ~2.2×, which touches §B.2, §C.2,
-§C.3 and figures 4–7. Settle it before drafting those sections, and re-run
-the sweep if it changes. The tolerance results are unaffected either way —
-success rates are identical across all three versions.
+**The NTT decoder's status — settled.** The roots-of-unity version stays;
+nothing is being reverted and no re-run is needed. The decode numbers in the
+report are the ones to write about. The ~2.3× penalty this carries for the
+block-circulant rows is measured, stated in the report, and listed under
+threats to validity above — handle it there rather than by adjusting numbers.
 
 **Where the NTT investigation lives.** It is a genuine negative result —
 implemented, measured, 7–23× slower, with the cause identified — but it is
