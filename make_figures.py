@@ -948,6 +948,131 @@ def fig_net_throughput(runB):
     return _save(fig, "net_throughput.svg")
 
 
+def fig_net_bandwidth(runB):
+    """Data actually pulled over the wire, per scheme.
+
+    The bandwidth axis of the research question, measured in the network
+    layer rather than derived from the code's parameters. It is worth having
+    both: the coding benchmark computes how much surviving data a scheme
+    *needs*, while this is how much a node *fetched*, including the
+    over-request margin and whatever it re-requested after a timeout."""
+    rows = runB["rows"]
+    cfg = runB["config"]
+    blobs = cfg.get("blobs_per_slot", 6)
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    series = []
+    for sc in ORDER:
+        sub = sorted((r for r in rows if r["scheme"] == sc),
+                     key=lambda r: r["adversarial"])
+        if not sub:
+            continue
+        pts = [(r["adversarial"], r["mean_kib_fetched"] / 1024) for r in sub
+               if r["mean_kib_fetched"] is not None]          # MiB
+        if not pts:
+            continue
+        xs = [x for x, _ in pts]
+        ys = [y for _, y in pts]
+        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        series.append((disp(sc), xs, ys, COLOURS[sc]))
+    payload = blobs * 124 / 1024          # 124 KiB of usable data per blob
+    ax.axhline(payload, color="#444", ls="--", lw=1.1)
+    ax.annotate(f"the data itself ({blobs} blobs = {payload:.2f} MiB)",
+                xy=(0.0, payload), xytext=(2, 4), textcoords="offset points",
+                fontsize=8.5, color="#444")
+    ax.set_xlabel("fraction of peers refusing to serve")
+    ax.set_ylabel("data fetched per slot (MiB)")
+    ax.set_title("Bandwidth: what each scheme pulls over the wire")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _label_ends(ax, series)
+    _subtitle(ax, f"{blobs} blobs per slot, {cfg.get('downlink_mbps', 25):.0f} "
+                  f"Mbps downlink, {cfg.get('n_peers', 64)} peers. the fall at "
+                  f"high withholding is cells that never arrived, not a saving")
+    return _save(fig, "net_bandwidth.svg")
+
+
+def fig_net_latency(runA):
+    """Gather time against adversarial fraction -- the latency axis.
+
+    Withholding costs the victim time as well as data: the client burns its
+    request timeout before falling back to another custodian, so gather time
+    rises with the adversarial fraction even when every cell is eventually
+    retrieved. That is the propagation-latency behaviour the brief asks for,
+    and it is invisible in a figure measured only at zero adversaries."""
+    rows = runA["rows"]
+    cfg = runA["config"]
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    series = []
+    for sc in ORDER:
+        sub = sorted((r for r in rows if r["scheme"] == sc),
+                     key=lambda r: r["adversarial"])
+        if not sub:
+            continue
+        pts = [(r["adversarial"], r["mean_gather_s"]) for r in sub
+               if r["mean_gather_s"] is not None]
+        if not pts:
+            continue
+        xs = [x for x, _ in pts]
+        ys = [y for _, y in pts]
+        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        series.append((disp(sc), xs, ys, COLOURS[sc]))
+    dl = cfg.get("deadline_s", 4.0)
+    ax.axhline(dl, color="#c1442e", ls="--", lw=1.2)
+    ax.annotate(f"{dl:.0f}s sampling deadline", xy=(0.0, dl),
+                xytext=(2, 4), textcoords="offset points",
+                fontsize=8.5, color="#c1442e")
+    ax.set_xlabel("fraction of peers refusing to serve")
+    ax.set_ylabel("time to gather the cells (s)")
+    ax.set_title("Latency: withholding costs time, not just data")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _label_ends(ax, series)
+    _subtitle(ax, f"{cfg.get('n_peers', 64)} peers, custody replication "
+                  f"{cfg.get('custody_replication', 4)}, one blob per slot; "
+                  f"a withheld request is only abandoned after the client's "
+                  f"timeout expires")
+    return _save(fig, "net_latency.svg")
+
+
+def fig_net_time_budget(runB):
+    """End-to-end time against the slot it has to fit inside.
+
+    The question the network layer exists to answer. A scheme is only usable
+    if gather plus decode finishes inside an Ethereum slot, and most of them
+    do not."""
+    rows = runB["rows"]
+    cfg = runB["config"]
+    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    series = []
+    for sc in ORDER:
+        sub = sorted((r for r in rows if r["scheme"] == sc),
+                     key=lambda r: r["adversarial"])
+        if not sub:
+            continue
+        pts = [(r["adversarial"], r["mean_total_s"]) for r in sub
+               if r["mean_total_s"] is not None]
+        if not pts:
+            continue
+        xs = [x for x, _ in pts]
+        ys = [y for _, y in pts]
+        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        series.append((disp(sc), xs, ys, COLOURS[sc]))
+    for y, lab, col in ((cfg.get("deadline_s", 4.0), "sampling deadline", "#c1442e"),
+                        (12.0, "one Ethereum slot", "#444")):
+        ax.axhline(y, color=col, ls="--", lw=1.2)
+        ax.annotate(f"{lab} ({y:.0f}s)", xy=(0.0, y), xytext=(2, 4),
+                    textcoords="offset points", fontsize=8.5, color=col)
+    ax.set_yscale("log")
+    ax.set_xlabel("fraction of peers refusing to serve")
+    ax.set_ylabel("gather + decode per slot (s)")
+    ax.set_title("Does the whole job fit inside a slot?")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    _readable_log(ax)
+    _label_ends(ax, series)
+    _subtitle(ax, f"{cfg.get('blobs_per_slot', 6)} blobs per slot, "
+                  f"{cfg.get('downlink_mbps', 25):.0f} Mbps; anything above "
+                  f"the 12s line cannot keep up with the chain")
+    return _save(fig, "net_time_budget.svg")
+
+
 def fig_net_peers(runC):
     """Realised erasure against peer count, at two withholding levels.
 
@@ -1013,9 +1138,10 @@ GROUPS = {
               [fig_fft_vs_vandermonde, fig_fft_profile, fig_node_width,
                fig_grs_premise]),
     "netA":  (os.path.join("docs", "runA.json"),
-              [fig_net_erasure, fig_net_recovery]),
+              [fig_net_erasure, fig_net_recovery, fig_net_latency]),
     "netB":  (os.path.join("docs", "runB.json"),
-              [fig_net_gather_vs_decode, fig_net_throughput]),
+              [fig_net_gather_vs_decode, fig_net_throughput,
+               fig_net_bandwidth, fig_net_time_budget]),
     "netC":  (os.path.join("docs", "runC.json"), [fig_net_peers]),
 }
 

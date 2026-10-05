@@ -25,8 +25,12 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 * **01-erasure-vs-adversaries** — Custody replication turns withholding into a much smaller erasure rate (roughly p^4), and all six schemes produce the same curve because this is a property of the network, not the code.
 * **02-recovery-vs-adversaries** — Recovery against adversarial withholding. The schemes fail in the same order the coding benchmark predicted, through a completely different mechanism — the strongest cross-validation in the project.
-* **03-gather-vs-decode** — Gather takes about a second for every scheme; decode spans three orders of magnitude above it and misses the slot deadline. The bottleneck is arithmetic, not bandwidth.
-* **04-scalability-peer-count** — Realised erasure against network size, with the exact hypergeometric prediction computed rather than fitted. What protects a cell is the fraction of the network custodying it.
+* **03-latency-gather-time** — Gather time against adversarial fraction. Withholding costs the victim time as well as data, because the client burns its request timeout before falling back to another custodian. Covers the brief's 'packet propagation latency'.
+* **04-bandwidth-fetched** — Data actually pulled over the wire per slot. Measured rather than derived from code parameters, and it cross-validates the benchmark's surviving-data figure: 1D-RS fetches least, BC w1024 l4 most.
+* **05-throughput-blobs-per-slot** — Blobs reconstructed per slot out of six. The ordering inverts the tolerance ordering: the scheme that survives the most erasure rebuilds the fewest blobs. Covers the brief's 'block processing throughput'.
+* **06-time-budget-vs-slot** — Gather plus decode against the 4s sampling deadline and the 12s slot. Only the two cheapest block-circulant rows fit at zero adversaries, and nothing fits once withholding passes 20%.
+* **07-gather-vs-decode** — Gather takes about a second for every scheme; decode spans three orders of magnitude above it. The bottleneck is arithmetic, not bandwidth.
+* **08-scalability-peer-count** — Realised erasure against network size, with the exact hypergeometric prediction computed rather than fitted. What protects a cell is the fraction of the network custodying it.
 
 ## `03-methodology/` — Methodology and validation
 
@@ -42,5 +46,4 @@ These exist in `docs/figures/` and were left out on purpose:
 * `fft_profile` — same
 * `fft_node_width` — same
 * `fft_grs_premise` — same
-* `net_throughput` — largely restates figure 10 through a different measure; include only if throughput is discussed
 * `rs_decode_vs_erasure_count` — 1D vs 2D only; figure 4 covers it across all seven schemes

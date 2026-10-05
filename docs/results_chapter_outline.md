@@ -76,6 +76,38 @@ pipeline — `benchmark_1D_2D_BC.py` → `benchmark_results.json` →
 
 ---
 
+## Criteria coverage — check this before you write
+
+The research question names six axes, and the Phase 3 brief names three
+things the network layer must capture. Which figure answers which:
+
+| criterion | coding benchmark | network simulation |
+|---|---|---|
+| Fault tolerance | `01`, `02`, `03` | `01`, `02` |
+| Computational complexity | `04`, `05` | `07` |
+| Encoding / decoding efficiency | `04`, `06` | `06`, `07` |
+| Storage overhead | held fixed at ~2× — stated in method, not a figure | — |
+| Bandwidth consumption | `08` (data needed) | `04` (data fetched) |
+| Scalability | — | `08` (peer count) |
+
+| Phase 3 brief asks for | covered by |
+|---|---|
+| Bandwidth saturation | network `04`, at 25 Mbps with six blobs |
+| Packet propagation latency | network `03` (gather time against withholding) |
+| Block processing throughput | network `05` (blobs per slot), `06` (fits in a slot) |
+| Varying adversarial conditions | every network figure sweeps it |
+| **Standard network architectures (plural)** | **not covered — one topology only** |
+
+Two things worth noticing in that table. **Storage overhead has no figure**
+because it is a controlled variable, not a result — say so explicitly in
+§A.1 rather than leaving a reader to wonder where it went. And **bandwidth
+is measured twice by independent means**: the benchmark computes what a
+scheme needs from its parameters, the simulation measures what a node
+actually pulled. They agree on the ordering, which is worth one sentence in
+§C — two methods agreeing is evidence, not repetition.
+
+---
+
 ## Chapter B — Results
 
 One section per axis from the research question. Report numbers; save
@@ -118,18 +150,32 @@ than defending it later.
 Surviving data needed to rebuild one blob, as a multiple of blob size:
 1D-RS 0.99× (the floor), everything else 1.24–1.58×.
 
-### B.4 Network behaviour — **figures 9, 10**
+### B.4 Network behaviour — **network figures 01–08**
 
 The simulation's distinguishing feature: in the benchmark the erasure mask is
 an *input you invent*; here it is an *output* — whatever failed to arrive
 before the deadline. Make that the opening sentence of the section.
 
-- Realised erasure ≈ p⁴ under custody replication 4 (figure 9), identical
-  across all six schemes.
-- Schemes fail in the same order as the coding benchmark predicted (figure
-  10), via an entirely different mechanism. **This is the most valuable
+- Realised erasure ≈ p⁴ under custody replication 4 (network `01`),
+  identical across all six schemes.
+- Schemes fail in the same order as the coding benchmark predicted (network
+  `02`), via an entirely different mechanism. **This is the most valuable
   result in the project** — two independent methods agreeing is far stronger
   evidence than either alone. Do not bury it.
+- **Latency** (network `03`): withholding costs time, not just data, because
+  the client must burn its request timeout before falling back. The scheme
+  needing the most cells hits the deadline first — BC ω1024 λ4 at 50%
+  withholding, against 80% for 1D-RS.
+- **Bandwidth** (network `04`): 1.04 MiB fetched by 1D-RS against 1.54 MiB
+  by BC ω1024 λ4, for 0.73 MiB of payload. Same ordering as the benchmark's
+  surviving-data figure, arrived at independently.
+- **Throughput** (network `05`): blobs reconstructed per slot inverts the
+  tolerance ordering — the scheme surviving the most erasure rebuilds the
+  fewest blobs.
+- **Does it fit in a slot?** (network `06`): at six blobs and no adversaries
+  only BC ω1024 λ3 and λ4 finish inside twelve seconds; past about 20%
+  withholding nothing does. 1D-RS takes 354 s — roughly thirty slots of work
+  for one slot of data.
 
 ### B.5 Scalability — **figure 12**
 

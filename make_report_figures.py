@@ -85,22 +85,42 @@ SELECTION = [
 
     # -------------------------------------------------------- 02-network-sim
     (1, M.fig_net_erasure, "netA", "erasure-vs-adversaries", "net",
-     "Results — network layer",
+     "Results — network layer: fault tolerance",
      "Custody replication turns withholding into a much smaller erasure rate "
      "(roughly p^4), and all six schemes produce the same curve because this "
      "is a property of the network, not the code."),
     (2, M.fig_net_recovery, "netA", "recovery-vs-adversaries", "net",
-     "Results — network layer",
+     "Results — network layer: fault tolerance",
      "Recovery against adversarial withholding. The schemes fail in the same "
      "order the coding benchmark predicted, through a completely different "
      "mechanism — the strongest cross-validation in the project."),
-    (3, M.fig_net_gather_vs_decode, "netB", "gather-vs-decode", "net",
+    (3, M.fig_net_latency, "netA", "latency-gather-time", "net",
+     "Results — network layer: latency",
+     "Gather time against adversarial fraction. Withholding costs the victim "
+     "time as well as data, because the client burns its request timeout "
+     "before falling back to another custodian. Covers the brief's 'packet "
+     "propagation latency'."),
+    (4, M.fig_net_bandwidth, "netB", "bandwidth-fetched", "net",
+     "Results — network layer: bandwidth",
+     "Data actually pulled over the wire per slot. Measured rather than "
+     "derived from code parameters, and it cross-validates the benchmark's "
+     "surviving-data figure: 1D-RS fetches least, BC w1024 l4 most."),
+    (5, M.fig_net_throughput, "netB", "throughput-blobs-per-slot", "net",
+     "Results — network layer: throughput",
+     "Blobs reconstructed per slot out of six. The ordering inverts the "
+     "tolerance ordering: the scheme that survives the most erasure rebuilds "
+     "the fewest blobs. Covers the brief's 'block processing throughput'."),
+    (6, M.fig_net_time_budget, "netB", "time-budget-vs-slot", "net",
+     "Discussion — can any of this keep up?",
+     "Gather plus decode against the 4s sampling deadline and the 12s slot. "
+     "Only the two cheapest block-circulant rows fit at zero adversaries, "
+     "and nothing fits once withholding passes 20%."),
+    (7, M.fig_net_gather_vs_decode, "netB", "gather-vs-decode", "net",
      "Discussion — the real bottleneck",
      "Gather takes about a second for every scheme; decode spans three orders "
-     "of magnitude above it and misses the slot deadline. The bottleneck is "
-     "arithmetic, not bandwidth."),
-    (4, M.fig_net_peers, "netC", "scalability-peer-count", "net",
-     "Results — scalability",
+     "of magnitude above it. The bottleneck is arithmetic, not bandwidth."),
+    (8, M.fig_net_peers, "netC", "scalability-peer-count", "net",
+     "Results — network layer: scalability",
      "Realised erasure against network size, with the exact hypergeometric "
      "prediction computed rather than fitted. What protects a cell is the "
      "fraction of the network custodying it."),
@@ -121,8 +141,6 @@ OMITTED = {
     "fft_profile": "same",
     "fft_node_width": "same",
     "fft_grs_premise": "same",
-    "net_throughput": "largely restates figure 10 through a different "
-                      "measure; include only if throughput is discussed",
     "rs_decode_vs_erasure_count": "1D vs 2D only; figure 4 covers it across "
                                   "all seven schemes",
 }

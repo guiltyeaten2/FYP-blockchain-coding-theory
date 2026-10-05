@@ -147,6 +147,11 @@ what production arithmetic would look like.
 <figcaption><b>The benchmark's tolerance ordering reappears through a completely different mechanism.</b> No erasure rate is injected here — losses come from peers refusing to answer. Yet the schemes fail in exactly the order the coding benchmark predicted, and at the adversarial rates that produce their measured erasure thresholds. BC ω1024 λ4 breaks first (tolerance 0.20, and 70% withholding yields 0.233 erasure); 2D-RS and the λ2 rows hold until 80% withholding drives erasure to 0.400; 1D-RS, tolerating 0.50, never fails anywhere in this sweep. 30 trials per point.</figcaption>
 </figure>
 
+<figure>
+<img src="figures/net_latency.svg" alt="Time to gather the cells against the fraction of peers refusing to serve, with the sampling deadline marked.">
+<figcaption><b>Withholding costs the victim time, not only data.</b> A peer that never answers is not free to route around: the client has to burn its request timeout before it can fall back to another custodian, so gather time climbs with the adversarial fraction even at rates where every cell is eventually retrieved. This is the propagation-latency axis the brief asks for, and it is invisible in any figure measured only at zero adversaries. The schemes separate by how many cells they need: BC &omega;1024 &lambda;4 tolerates the least erasure, so it must fetch the most, so it is the first to hit the four-second deadline &mdash; at 50% withholding, against 80% for 1D-RS.</figcaption>
+</figure>
+
 ### One blob per slot, 50 Mbps (selected rates; full sweep in runA.json)
 
 | scheme | adversarial | recovered | erasure | KiB | gather | decode | total | blobs/slot |
@@ -225,6 +230,16 @@ what production arithmetic would look like.
 <figure>
 <img src="figures/net_gather_vs_decode.svg" alt="Gather time and decode time per scheme on a logarithmic axis, six blobs, with the four second slot deadline marked.">
 <figcaption><b>Where the time goes, six blobs, no adversaries, log scale.</b> Gather and decode are drawn as separate bars rather than stacked, because stacking on a log axis would misrepresent the sum. Every scheme gathers in about one second; decode spans three orders of magnitude above that. This is the central result of the network layer: at every setting tried, arithmetic rather than bandwidth or latency decides whether a scheme fits the slot. BC ω1024 λ4 shows no decode bar because it has the weakest decoder and therefore fetches the most (80% of the codeword); with nothing missing there is nothing to reconstruct. It buys its speed with bandwidth.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/net_bandwidth.svg" alt="Data fetched per slot in MiB against the fraction of peers refusing to serve, per scheme.">
+<figcaption><b>Bandwidth, measured rather than derived.</b> The coding benchmark computes how much surviving data each scheme <em>needs</em>; this is how much a node actually <em>pulled</em>, including the over-request margin and anything re-requested after a timeout. The two agree: 1D-RS fetches least (1.04&nbsp;MiB for six blobs, against 0.73&nbsp;MiB of actual payload) and BC &omega;1024 &lambda;4 most at 1.54&nbsp;MiB, the same ordering the surviving-data figure gives. Read the fall at high withholding carefully &mdash; it is cells that never arrived, not a saving.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/net_time_budget.svg" alt="Gather plus decode time per slot against the sampling deadline and the twelve second slot.">
+<figcaption><b>The question the whole network layer exists to answer.</b> A scheme is only usable if gather plus decode finishes inside an Ethereum slot. At six blobs and zero adversaries only BC &omega;1024 &lambda;3 and &lambda;4 are under twelve seconds, and once withholding passes about 20% nothing is. 1D-RS is not close at any setting &mdash; 354&nbsp;s at zero adversaries, roughly thirty slots' worth of work for one slot's data. This is the figure that reframes the comparison: erasure tolerance is not the binding constraint, decode throughput is.</figcaption>
 </figure>
 
 <figure>
