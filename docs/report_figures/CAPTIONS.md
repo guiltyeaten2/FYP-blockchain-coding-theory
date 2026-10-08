@@ -20,7 +20,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{01-fault-tolerance}
+  \includegraphics[width=\columnwidth]{figures/01-fault-tolerance}
   \caption{Every scheme holds, then collapses within a few percent.}
   \label{fig:01-fault-tolerance}
 \end{figure}
@@ -28,15 +28,15 @@ bar: all trials recovered → none did.  tick: 50% threshold
 
 ### 02-fault-tolerance-compact
 
-**Short.** 
+**Short.** Erasure tolerance by scheme, with the transition range
 
-**Full.** . One row per scheme, sorted by threshold. The bar spans the last rate at which every trial recovered to the first at which none did; the tick is the 50% threshold. Bar: last rate at which every trial recovered, to the first at which none did. tick: 50% threshold. 520 trials..
+**Full.** Erasure tolerance by scheme, with the transition range. Horizontal bars, one per scheme, sorted by threshold. Bar length is the 50% success threshold; the whisker spans the last rate at which every trial recovered to the first at which none did. The whisker is a measured range, not a confidence interval. 520 trials over one EIP-4844 blob; a trial counts as recovered only if the bytes match the original exactly.
 
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{02-fault-tolerance-compact}
-  \caption{.}
+  \includegraphics[width=\columnwidth]{figures/02-fault-tolerance-compact}
+  \caption{Erasure tolerance by scheme, with the transition range.}
   \label{fig:02-fault-tolerance-compact}
 \end{figure}
 ```
@@ -50,7 +50,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{03-bc-threshold-vs-theory}
+  \includegraphics[width=\columnwidth]{figures/03-bc-threshold-vs-theory}
   \caption{Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$.}
   \label{fig:03-bc-threshold-vs-theory}
 \end{figure}
@@ -65,7 +65,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{04-tolerance-vs-guarantee}
+  \includegraphics[width=\columnwidth]{figures/04-tolerance-vs-guarantee}
   \caption{Measured tolerance against each code's own worst-case bound.}
   \label{fig:04-tolerance-vs-guarantee}
 \end{figure}
@@ -80,7 +80,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{05-decode-cost}
+  \includegraphics[width=\columnwidth]{figures/05-decode-cost}
   \caption{Decode cost against erasure rate.}
   \label{fig:05-decode-cost}
 \end{figure}
@@ -95,7 +95,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{06-cost-per-erasure}
+  \includegraphics[width=\columnwidth]{figures/06-cost-per-erasure}
   \caption{Cost per erasure repaired, with the workload divided out.}
   \label{fig:06-cost-per-erasure}
 \end{figure}
@@ -110,7 +110,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{07-encode-vs-decode}
+  \includegraphics[width=\columnwidth]{figures/07-encode-vs-decode}
   \caption{Encode is paid once; decode is paid by everyone.}
   \label{fig:07-encode-vs-decode}
 \end{figure}
@@ -125,7 +125,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{08-pareto-tolerance-vs-cost}
+  \includegraphics[width=\columnwidth]{figures/08-pareto-tolerance-vs-cost}
   \caption{Tolerance against the cost of achieving it lower and further right is better.}
   \label{fig:08-pareto-tolerance-vs-cost}
 \end{figure}
@@ -140,7 +140,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{09-data-needed-per-blob}
+  \includegraphics[width=\columnwidth]{figures/09-data-needed-per-blob}
   \caption{What a node must actually fetch to rebuild one blob.}
   \label{fig:09-data-needed-per-blob}
 \end{figure}
@@ -157,7 +157,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{01-erasure-vs-adversaries}
+  \includegraphics[width=\columnwidth]{figures/01-erasure-vs-adversaries}
   \caption{Custody replication turns withholding into a much smaller erasure rate — and the code carried makes no difference.}
   \label{fig:01-erasure-vs-adversaries}
 \end{figure}
@@ -172,7 +172,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{02-recovery-vs-adversaries}
+  \includegraphics[width=\columnwidth]{figures/02-recovery-vs-adversaries}
   \caption{Recovery against adversarial withholding.}
   \label{fig:02-recovery-vs-adversaries}
 \end{figure}
@@ -187,7 +187,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{03-latency-gather-time}
+  \includegraphics[width=\columnwidth]{figures/03-latency-gather-time}
   \caption{Latency: withholding costs time, not just data.}
   \label{fig:03-latency-gather-time}
 \end{figure}
@@ -202,7 +202,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{04-bandwidth-fetched}
+  \includegraphics[width=\columnwidth]{figures/04-bandwidth-fetched}
   \caption{Bandwidth: what each scheme pulls over the wire.}
   \label{fig:04-bandwidth-fetched}
 \end{figure}
@@ -217,7 +217,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{05-throughput-blobs-per-slot}
+  \includegraphics[width=\columnwidth]{figures/05-throughput-blobs-per-slot}
   \caption{Throughput inverts the tolerance ordering.}
   \label{fig:05-throughput-blobs-per-slot}
 \end{figure}
@@ -232,7 +232,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{06-time-budget-vs-slot}
+  \includegraphics[width=\columnwidth]{figures/06-time-budget-vs-slot}
   \caption{Does the whole job fit inside a slot?.}
   \label{fig:06-time-budget-vs-slot}
 \end{figure}
@@ -247,7 +247,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{07-gather-vs-decode}
+  \includegraphics[width=\columnwidth]{figures/07-gather-vs-decode}
   \caption{Decode dominates gather by orders of magnitude.}
   \label{fig:07-gather-vs-decode}
 \end{figure}
@@ -262,7 +262,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{08-scalability-peer-count}
+  \includegraphics[width=\columnwidth]{figures/08-scalability-peer-count}
   \caption{Realised erasure rises with peer count, then plateaus.}
   \label{fig:08-scalability-peer-count}
 \end{figure}
@@ -279,7 +279,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 ```latex
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{01-decoder-correctness-fix}
+  \includegraphics[width=\columnwidth]{figures/01-decoder-correctness-fix}
   \caption{The decoder fix: silent corruption eliminated, correct recoveries up.}
   \label{fig:01-decoder-correctness-fix}
 \end{figure}

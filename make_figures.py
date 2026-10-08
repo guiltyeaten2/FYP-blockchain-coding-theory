@@ -132,6 +132,9 @@ def style_of(name):
 FS_LABEL = 7.0      # direct line labels, value annotations
 FS_SMALL = 6.0      # notes, secondary text
 FS_PANEL = 8.0      # panel letters
+FS_KEY = 5.8        # in-figure keys. Deliberately NOT FS_SMALL: the IEEE
+                    # harvester strips FS_SMALL text as a methods note, and a
+                    # key explaining an encoding has to survive into the paper.
 
 plt.rcParams.update({
     # Deterministic output. matplotlib salts its internal clip-path ids
@@ -445,15 +448,17 @@ def fig_success_curves(bench):
 
 
 def fig_threshold_bands(bench):
-    """Panel (b) of the fault-tolerance figure, standalone.
+    """Erasure tolerance per scheme, as a bar chart with error bars.
 
-    The two-panel version earns its space in a document with room for it:
-    the curves justify summarising each scheme by one number, the bands
-    deliver the comparison. Where space is tight this is the half to keep.
-    It is the one that answers the question, it is legible at a glance where
-    seven overlapping curves are not, and the band width still shows that
-    the collapse is abrupt -- so little of the upper panel's argument is
-    actually lost."""
+    This is panel (b) of the fault-tolerance figure, standalone, for use
+    where there is no room for both panels.
+
+    An earlier version drew the transition as a translucent band with a tick
+    at the threshold. It was compact but bespoke: a reader has no prior for
+    what a band and a tick mean, so the figure could not be understood
+    without its caption. A bar with an error bar is read correctly on sight
+    -- length is the value, whisker is the range -- which is what a figure
+    should manage on its own."""
     rows = []
     for r in bench["results"]:
         th = _threshold(r["trials"])
@@ -463,24 +468,38 @@ def fig_threshold_bands(bench):
         rows.append((r["scheme"], th, lo, hi))
     rows.sort(key=lambda t: t[1])
 
-    fig, ax = plt.subplots(figsize=(COL1, 2.2))
-    for i, (name, th, lo, hi) in enumerate(rows):
-        col = COLOURS.get(name)
-        ax.plot([lo, hi], [i, i], lw=5, ls="-", color=col, alpha=0.30,
-                solid_capstyle="butt")
-        ax.plot([th], [i], marker="|", ls="none", ms=10, mew=1.6, color=col)
-        ax.annotate(f"{th:.3f}", xy=(hi, i), xytext=(5, 0),
+    fig, ax = plt.subplots(figsize=(COL1, 2.4))
+    y = range(len(rows))
+    ax.barh(list(y), [t[1] for t in rows], height=0.62,
+            color=[COLOURS.get(t[0]) for t in rows],
+            edgecolor="#333", linewidth=0.4, zorder=2)
+    # Asymmetric error bar: the band runs from the last rate at which every
+    # trial recovered to the first at which none did.
+    ax.errorbar([t[1] for t in rows], list(y),
+                xerr=[[t[1] - t[2] for t in rows], [t[3] - t[1] for t in rows]],
+                fmt="none", ecolor="#333", elinewidth=0.8, capsize=2.5,
+                capthick=0.8, zorder=3)
+    for i_, t in enumerate(rows):
+        ax.annotate(f"{t[1]:.3f}", xy=(t[3], i_), xytext=(6, 0),
                     textcoords="offset points", va="center",
-                    fontsize=FS_LABEL, color=col)
-    ax.set_yticks(range(len(rows)))
+                    fontsize=FS_LABEL, color="#333", zorder=4)
+    ax.set_yticks(list(y))
     ax.set_yticklabels([disp(n) for n, *_ in rows], fontsize=FS_LABEL)
-    ax.set_ylim(-0.7, len(rows) - 0.3)
-    ax.set_xlim(0.13, 0.62)
-    ax.set_xlabel("erasure rate")
+    ax.set_ylim(-0.6, len(rows) - 0.4)
+    ax.set_xlim(0, 0.63)
+    ax.set_xlabel("erasure rate tolerated")
+    ax.set_title("Erasure tolerance by scheme, with the transition range")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.grid(axis="y", alpha=0)
-    _subtitle(ax, "bar: last rate at which every trial recovered, to the "
-                  "first at which none did. tick: 50% threshold. 520 trials.")
+    ax.grid(axis="x", alpha=0.3)
+    # A key, so the encoding does not depend on the caption being read.
+    ax.annotate("bar: 50% success threshold\nwhisker: 100% to 0% recovery",
+                xy=(0.985, 0.06), xycoords="axes fraction", ha="right",
+                va="bottom", fontsize=FS_KEY, color="#444",
+                bbox=dict(boxstyle="round,pad=0.3", fc="white",
+                          ec="#bbb", lw=0.4))
+    _subtitle(ax, "520 trials over one EIP-4844 blob; a trial counts as "
+                  "recovered only if the bytes match the original exactly.")
     return _save(fig, "bench_threshold_bands.svg")
 
 

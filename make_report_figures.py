@@ -78,17 +78,20 @@ SELECTION = [
                "those points?",
       data="The same erasure sweep as figure 01: 520 trials, 7 schemes, 18 "
            "rates. benchmark_results.json.",
-      reading="One row per scheme, sorted by threshold. The bar spans the "
+      reading="Horizontal bars, one per scheme, sorted by threshold. Bar "
+              "length is the 50% success threshold; the whisker spans the "
               "last rate at which every trial recovered to the first at "
-              "which none did; the tick is the 50% threshold.",
+              "which none did. The whisker is a measured range, not a "
+              "confidence interval.",
       shows="The three lambda=2 rows cluster at 0.340, 0.341 and 0.350 "
             "across a factor of four in block size. The bar width also shows "
             "what a bare threshold hides: lambda=4 collapses over a much "
             "wider range of erasure rates than the lambda=2 rows do.",
-      caveat="This is panel (b) of figure 01 on its own, at single-column "
-             "width. Use it instead of 01 where space is tight: it carries "
-             "the comparison, and the bar width preserves most of what the "
-             "curves were there to show. Do not use both.")),
+      caveat="A standalone, single-column alternative to figure 01. Use one "
+             "or the other, not both: they are the same data. This one "
+             "carries the comparison and is readable without its caption; "
+             "figure 01 adds the shape of each transition, which matters "
+             "only if the prose leans on it.")),
 
     (3, M.fig_bc_threshold_prediction, "bench", "bc-threshold-vs-theory",
      "bench", "Results — fault tolerance", dict(
@@ -406,9 +409,11 @@ def main():
             if M.IEEE:
                 M._harvest_and_strip(fig, fig_name)
                 fig.tight_layout()
-            for ext in ("svg", "png"):
+            for ext in ("pdf", "svg", "png"):
                 path = os.path.join(OUT, _s, f"{_n}.{ext}")
-                kw = {"dpi": 300} if ext == "png" else {"metadata": {"Date": None}}
+                kw = ({"dpi": 300} if ext == "png"
+                      else {"metadata": {"Date": None}} if ext == "svg"
+                      else {})
                 fig.savefig(path, format=ext, bbox_inches="tight", **kw)
                 _saved[ext] = path
             plt.close(fig)
@@ -527,14 +532,16 @@ def main():
             for n, name, section, m in byfolder[sub]:
                 h = m.get("_harvested") or {}
                 short = (h.get("title") or "").replace("\n", " ").strip()
+                if not short:        # no title to harvest; fall back to the
+                    short = m["shows"].split(".")[0].strip()   # first finding
                 note = (h.get("note") or "").strip()
                 panels = [p for p in h.get("panel_titles", []) if p]
                 f.write(f"\n### {name}\n\n")
                 f.write(f"**Short.** {short}\n\n")
-                full = m["reading"]
+                full = m["reading"].rstrip(".") + "."
                 if note:
-                    full += f" {note[0].upper()}{note[1:]}."
-                f.write(f"**Full.** {short}. {full}\n\n")
+                    full += f" {note[0].upper()}{note[1:].rstrip('.')}."
+                f.write(f"**Full.** {short.rstrip('.')}. {full}\n\n")
                 if len(panels) > 1:
                     f.write("**Panels.** "
                             + "; ".join(f"({chr(97+i)}) {t}"
@@ -542,9 +549,9 @@ def main():
                             + "\n\n")
                 f.write("```latex\n")
                 f.write("\\begin{figure}[t]\n  \\centering\n")
-                f.write(f"  \\includegraphics[width=\\linewidth]"
-                        f"{{{name}}}\n")
-                f.write(f"  \\caption{{{short}.}}\n")
+                f.write(f"  \\includegraphics[width=\\columnwidth]"
+                        f"{{figures/{name}}}\n")
+                f.write(f"  \\caption{{{short.rstrip('.')}.}}\n")
                 f.write(f"  \\label{{fig:{name}}}\n")
                 f.write("\\end{figure}\n```\n")
     print(f"  docs/report_figures/CAPTIONS.md")
