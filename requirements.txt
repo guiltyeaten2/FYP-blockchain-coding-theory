@@ -5,6 +5,8 @@
 # numpy is galois's backing store and the erasure-mask RNG.
 # simpy is the discrete-event clock behind network_sim.py only.
 # matplotlib draws every figure in docs/figures/.
+# SciencePlots supplies the IEEE style sheets the report figures are built
+# on (science + ieee + no-latex). Without it make_figures.py will not import.
 # markdown converts the reports for make_docs.py, which then needs Chrome or
 # Chromium installed to print them to PDF (not a pip dependency).
 
@@ -12,4 +14,5 @@ galois>=0.3.0
 numpy>=1.24
 simpy>=4.0
 matplotlib>=3.7
+SciencePlots>=2.1
 markdown>=3.4

@@ -30,17 +30,51 @@ import json
 import os
 
 import matplotlib
-matplotlib.use("Agg")           # no display in this environment; file output only
+matplotlib.use("Agg")           # no display here; file output only
 import matplotlib.pyplot as plt
+import scienceplots            # noqa: F401 -- registers the style sheets
 from matplotlib.ticker import FuncFormatter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DOCS = os.path.join(HERE, "docs")
 FIGDIR = os.path.join(DOCS, "figures")
 
+# ---------------------------------------------------------------- IEEE style
+#
+# scienceplots' "science" + "ieee" sheets between them give the conventions an
+# IEEE figure is expected to follow: Times serif at 8 pt, 0.5 pt axis lines,
+# tick marks pointing inward on all four sides, minor ticks shown, a frameless
+# legend and a tight bounding box.
+#
+# "no-latex" is required because this machine has no LaTeX install and the
+# science sheet sets text.usetex. mathtext renders the Greek and the
+# superscripts acceptably.
+#
+# Two deliberate departures from the ieee sheet, both noted because a marker
+# would otherwise reasonably ask why:
+#
+#   Colour. The sheet's cycle is four colours (k, r, b, g) paired with line
+#   styles, which is a monochrome-print convention. Seven schemes do not fit
+#   in four, and colour figures are in scope here, so the project palette is
+#   kept. Every line chart still carries a distinct marker AND dash pattern
+#   per scheme, so the figures survive greyscale reproduction anyway.
+#
+#   Size. The sheet defaults to 3.3 in, one IEEE column. Several of these
+#   figures carry seven series or two panels and are illegible at that width,
+#   so they are drawn at the full 7.16 in text width instead. Figures that fit
+#   a single column are drawn at 3.5 in. Nothing is drawn at a size it will
+#   then be scaled away from.
+plt.style.use(["science", "ieee", "no-latex"])
+
+COL1 = 3.5          # IEEE single column, 88.9 mm
+COL2 = 7.16         # IEEE double column / full text width, 181 mm
+FIGW = COL2         # default for the dense figures
+
+IEEE = False        # set True by make_report_figures.py; see _harvest_and_strip
+CAPTION_TEXT = {}
+
 # One colour per scheme, used everywhere, so a reader who learns the palette
-# in one figure keeps it in the next. Blues for the block-circulant family,
-# distinct hues for the two Reed-Solomon baselines.
+# in one figure keeps it in the next.
 COLOURS = {
     "1D-RS":      "#c1442e",
     "2D-RS":      "#d98c1f",
@@ -67,60 +101,73 @@ DISPLAY = {
 }
 
 
+# One line style per scheme as well as one colour, fixed across every figure.
+# The ieee style sheet cycles styles by plot order, which would give the same
+# scheme different dashes in different figures and defeat the purpose. Fixing
+# them here also makes the line charts readable in greyscale.
+LINESTYLE = {
+    "1D-RS": "-", "2D-RS": "--",
+    "BC-2048-L2": ":", "BC-1024-L2": "-.",
+    "BC-1024-L3": "-", "BC-1024-L4": "--", "BC-512-L2": ":",
+}
+MARKER = {
+    "1D-RS": "o", "2D-RS": "s",
+    "BC-2048-L2": "^", "BC-1024-L2": "v",
+    "BC-1024-L3": "D", "BC-1024-L4": "P", "BC-512-L2": "X",
+}
+
+
 def disp(name):
     """Display label for a scheme, falling back to the raw key."""
     return DISPLAY.get(name, name)
 
-# Deterministic output. Without these two, every regeneration rewrites all
-# 14 files: matplotlib stamps the SVG with the current time and salts its
-# internal clip-path ids randomly. That turns "did the data change?" into an
-# unanswerable question in a diff, so both are pinned and the date is
-# dropped at save time below.
-plt.rcParams["svg.hashsalt"] = "fyp-blockchain-coding-theory"
 
-# Page geometry, because a figure that is wider than the text column gets
-# scaled down by the browser and every font size in it shrinks with it. The
-# reports are A4 with 16mm side margins, so the text column is 178mm =
-# 7.01in. Nothing here is drawn wider than that, and the two-panel figures
-# use exactly it rather than sprawling and being shrunk to fit.
-FIGW = 7.0
-HALF = 3.4          # one panel of a two-panel figure
+def style_of(name):
+    """(colour, linestyle, marker) for a scheme — fixed across all figures."""
+    return (COLOURS.get(name), LINESTYLE.get(name, "-"), MARKER.get(name, "o"))
+
+
+# Type sizes, relative to the 8 pt body the ieee sheet sets. Annotations and
+# in-plot labels sit below it so they read as subordinate.
+FS_LABEL = 7.0      # direct line labels, value annotations
+FS_SMALL = 6.0      # notes, secondary text
+FS_PANEL = 8.0      # panel letters
 
 plt.rcParams.update({
-    "figure.dpi": 110,
-    "savefig.bbox": "tight",
-    # Sized against 10.5pt body text. The previous 9pt base put legends at
-    # 8pt and tick labels lower still, which is not comfortably readable on
-    # paper once a figure is placed in the column.
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
+    # Deterministic output. matplotlib salts its internal clip-path ids
+    # randomly and stamps the SVG with the current time, so without these
+    # every regeneration rewrites all 22 files whether or not any number
+    # moved. (The date is dropped at save time.)
+    "svg.hashsalt": "fyp-blockchain-coding-theory",
+    # IEEE asks for Times. The ieee sheet requests it but matplotlib falls
+    # back to its own serif unless the family list is set explicitly.
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "Times", "STIXGeneral", "DejaVu Serif"],
+    "mathtext.fontset": "stix",      # Times-compatible maths for the Greek
+    "figure.dpi": 300,
+    "savefig.dpi": 300,
     "axes.grid": True,
-    "grid.alpha": 0.25,
-    "grid.linewidth": 0.6,
-    "legend.frameon": False,
-    "legend.fontsize": 9,
-    "lines.linewidth": 1.8,
-    "lines.markersize": 4,
+    "grid.alpha": 0.3,
+    "grid.linewidth": 0.4,
+    "legend.fontsize": 6.5,
+    "legend.handlelength": 2.2,
+    "lines.markersize": 3,
 })
 
 
-def _label_ends(ax, series, fontsize=9):
+def _label_ends(ax, series, fontsize=FS_LABEL):
     """Label each line at its right-hand end instead of in a legend.
 
     A seven-entry legend makes the reader hold seven colour-to-name pairings
     in their head and then find each one in a thicket of overlapping curves.
-    Putting the name where the line ends removes that lookup entirely. Labels
-    are pushed apart vertically when they would collide, so the nudged ones
-    no longer sit exactly on their line -- which is why each is drawn in its
+    Putting the name where the line ends removes that lookup. Labels are
+    pushed apart vertically when they would collide, so a nudged one no
+    longer sits exactly on its line -- which is why each is drawn in its
     line's own colour.
 
     `series` is [(name, xs, ys, colour)]; lines must already be plotted.
     """
+    import math
     ends = sorted(((ys[-1], xs[-1], name, colour)
                    for name, xs, ys, colour in series if xs),
                   key=lambda t: t[0])
@@ -128,18 +175,16 @@ def _label_ends(ax, series, fontsize=9):
         return
     y0, y1 = ax.get_ylim()
     log = ax.get_yscale() == "log"
-    import math
     to = (lambda v: math.log10(v)) if log else (lambda v: v)
     fro = (lambda v: 10 ** v) if log else (lambda v: v)
     lo, hi = to(y0), to(y1)
-    gap = (hi - lo) * 0.062          # minimum spacing in axis units
+    gap = (hi - lo) * 0.062
     placed = []
     for yv, xv, name, colour in ends:
         t = to(yv)
         if placed and t - placed[-1][0] < gap:
             t = placed[-1][0] + gap
         placed.append((t, xv, name, colour))
-    # If the stack overflowed the top, slide the whole run back down.
     over = placed[-1][0] - hi
     if over > 0:
         placed = [(t - over, xv, n, c) for t, xv, n, c in placed]
@@ -147,19 +192,67 @@ def _label_ends(ax, series, fontsize=9):
     for t, xv, name, colour in placed:
         # Series end at different x, so a label can land on a NEIGHBOUR's
         # curve even after vertical de-collision. The white backing keeps it
-        # legible wherever it lands, which is cheaper than solving the
-        # general label-placement problem.
-        ax.annotate(name, xy=(xv, fro(t)), xytext=(7, 0),
+        # legible wherever it lands.
+        ax.annotate(name, xy=(xv, fro(t)), xytext=(4, 0),
                     textcoords="offset points",
                     ha="left", va="center", fontsize=fontsize, color=colour,
-                    bbox=dict(boxstyle="round,pad=0.18", fc="white",
+                    bbox=dict(boxstyle="round,pad=0.12", fc="white",
                               ec="none", alpha=0.85))
-    # Room on the right for the labels to live in.
-    ax.set_xlim(xr[0], xr[1] + (xr[1] - xr[0]) * 0.22)
+    ax.set_xlim(xr[0], xr[1] + (xr[1] - xr[0]) * 0.26)
+
+
+def _harvest_and_strip(fig, name):
+    """In IEEE mode, lift titles and the foot note out of the figure.
+
+    IEEE figures carry no title: the numbered caption below the figure does
+    the describing, and a title duplicates it. The same applies to the
+    methods note this module puts under each figure -- right for an internal
+    report where figures are read loose, wrong in a paper.
+
+    Returns {title, panel_titles, note, n_panels} and clears them from the
+    artwork, so one code path produces both the self-describing internal
+    figure and the caption-described paper figure.
+    """
+    out = {"title": None, "panel_titles": [], "note": None}
+    sup = getattr(fig, "_suptitle", None)
+    if sup is not None and sup.get_text():
+        out["title"] = sup.get_text()
+        sup.set_text("")
+    for ax in fig.axes:
+        t = ax.get_title()
+        if t:
+            out["panel_titles"].append(t)
+            ax.set_title("")
+    # The methods note is an axes annotation (it is positioned in points
+    # relative to the axes so it behaves on short figures), so both the
+    # figure-level and axes-level text lists have to be searched. Scanning
+    # only fig.texts silently left the note in the artwork.
+    for holder in [fig] + list(fig.axes):
+        for txt in list(getattr(holder, "texts", [])):
+            fs = txt.get_fontsize()
+            if fs and abs(fs - FS_SMALL) < 0.01:
+                out["note"] = txt.get_text().replace("\n", " ")
+                txt.set_text("")
+    if out["title"] is None and out["panel_titles"]:
+        out["title"] = out["panel_titles"][0]
+    # IEEE labels multi-panel figures (a), (b), … and the caption refers to
+    # them by letter. Only axes with content count as panels.
+    panels = [ax for ax in fig.axes if ax.has_data()]
+    if len(panels) > 1:
+        for i, ax in enumerate(panels):
+            ax.text(-0.01, 1.03, f"({chr(97 + i)})", transform=ax.transAxes,
+                    ha="right", va="bottom", fontsize=FS_PANEL,
+                    fontweight="bold")
+    out["n_panels"] = len(panels)
+    CAPTION_TEXT[name] = out
+    return out
 
 
 def _save(fig, name):
     os.makedirs(FIGDIR, exist_ok=True)
+    if IEEE:
+        _harvest_and_strip(fig, name)
+        fig.tight_layout()
     path = os.path.join(FIGDIR, name)
     fig.savefig(path, format="svg", metadata={"Date": None})
     plt.close(fig)
@@ -193,10 +286,15 @@ def _subtitle(ax, text, width=95):
     cost against erasure rate" says whether the cost is a mean or a median,
     over which trials, at what size. That belongs here."""
     import textwrap
-    fig = ax.get_figure()
     wrapped = "\n".join(textwrap.wrap(text, width))
-    fig.text(0.5, -0.015, wrapped, ha="center", va="top",
-             fontsize=8.2, color="#555", linespacing=1.35)
+    # Offset in POINTS below the axes, not as a fraction of figure height.
+    # A fraction behaves differently on a 2.2 in figure than on a 5 in one,
+    # and on the short ones it crowded the axis label. 26 pt clears the tick
+    # labels and the x label at any figure height.
+    ax.annotate(wrapped, xy=(0.5, 0), xycoords="axes fraction",
+                xytext=(0, -26), textcoords="offset points",
+                ha="center", va="top", fontsize=FS_SMALL, color="#555",
+                linespacing=1.4, annotation_clip=False)
 
 
 def _readable_log(ax, axis="y"):
@@ -275,7 +373,7 @@ def fig_success_curves(bench):
         "BC-512-L2": ("X", ":"),
     }
     fig, (ax, axb) = plt.subplots(
-        2, 1, figsize=(FIGW, 7.0),
+        2, 1, figsize=(COL2, 5.0),
         gridspec_kw={"height_ratios": [1.25, 1]})
     fig.subplots_adjust(hspace=0.45)
 
@@ -309,7 +407,7 @@ def fig_success_curves(bench):
     # ten percentage points, so the labels collided with each other and with
     # the curves they named. The schemes are also listed down the y axis of
     # the panel below, which doubles as a key.
-    ax.legend(loc="lower left", ncol=2, fontsize=8.5,
+    ax.legend(loc="lower left", ncol=2, fontsize=6.5,
               handlelength=2.6, columnspacing=1.2, labelspacing=0.35)
 
     # ------------------------------------------------------ transition bands
@@ -324,12 +422,12 @@ def fig_success_curves(bench):
 
     for i, (name, th, lo, hi) in enumerate(rows):
         col = COLOURS.get(name)
-        axb.plot([lo, hi], [i, i], lw=7, color=col, alpha=0.30,
+        axb.plot([lo, hi], [i, i], lw=7, ls="-", color=col, alpha=0.30,
                  solid_capstyle="butt")
         axb.plot([th], [i], marker="|", ms=20, mew=2.6, color=col)
         axb.annotate(f"{th:.3f}", xy=(hi, i), xytext=(10, 0),
                      textcoords="offset points", va="center",
-                     fontsize=9, color=col)
+                     fontsize=7, color=col)
     axb.set_yticks(range(len(rows)))
     axb.set_yticklabels([disp(n) for n, *_ in rows])
     axb.set_ylim(-0.7, len(rows) - 0.3)
@@ -337,13 +435,53 @@ def fig_success_curves(bench):
     axb.set_xlabel("erasure rate")
     axb.set_title("Where each scheme falls over\n"
                   "bar: all trials recovered → none did.  tick: 50% threshold",
-                  fontsize=10)
+                  fontsize=8)
     axb.xaxis.set_major_formatter(FuncFormatter(_pct))
     axb.grid(axis="y", alpha=0)
 
     _subtitle(axb, "520 trials over one EIP-4844 blob; a trial counts as "
                    "recovered only if the bytes match the original exactly")
     return _save(fig, "bench_success_curves.svg")
+
+
+def fig_threshold_bands(bench):
+    """Panel (b) of the fault-tolerance figure, standalone.
+
+    The two-panel version earns its space in a document with room for it:
+    the curves justify summarising each scheme by one number, the bands
+    deliver the comparison. Where space is tight this is the half to keep.
+    It is the one that answers the question, it is legible at a glance where
+    seven overlapping curves are not, and the band width still shows that
+    the collapse is abrupt -- so little of the upper panel's argument is
+    actually lost."""
+    rows = []
+    for r in bench["results"]:
+        th = _threshold(r["trials"])
+        if th is None:
+            continue
+        lo, hi = _transition_band(r["trials"])
+        rows.append((r["scheme"], th, lo, hi))
+    rows.sort(key=lambda t: t[1])
+
+    fig, ax = plt.subplots(figsize=(COL1, 2.2))
+    for i, (name, th, lo, hi) in enumerate(rows):
+        col = COLOURS.get(name)
+        ax.plot([lo, hi], [i, i], lw=5, ls="-", color=col, alpha=0.30,
+                solid_capstyle="butt")
+        ax.plot([th], [i], marker="|", ls="none", ms=10, mew=1.6, color=col)
+        ax.annotate(f"{th:.3f}", xy=(hi, i), xytext=(5, 0),
+                    textcoords="offset points", va="center",
+                    fontsize=FS_LABEL, color=col)
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels([disp(n) for n, *_ in rows], fontsize=FS_LABEL)
+    ax.set_ylim(-0.7, len(rows) - 0.3)
+    ax.set_xlim(0.13, 0.62)
+    ax.set_xlabel("erasure rate")
+    ax.xaxis.set_major_formatter(FuncFormatter(_pct))
+    ax.grid(axis="y", alpha=0)
+    _subtitle(ax, "bar: last rate at which every trial recovered, to the "
+                  "first at which none did. tick: 50% threshold. 520 trials.")
+    return _save(fig, "bench_threshold_bands.svg")
 
 
 def fig_tolerance_vs_guarantee(bench):
@@ -366,7 +504,7 @@ def fig_tolerance_vs_guarantee(bench):
         meas.append(th)
         guar.append(r["params"]["worst_case_tolerance"])
     x = range(len(labels))
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.8))
     w = 0.38
     # One colour, not the per-scheme palette: a multi-coloured bar series
     # gives the legend a single swatch, which reads as "measured means 1D-RS".
@@ -409,19 +547,20 @@ def fig_bc_threshold_prediction(bench):
             rows.append((r["scheme"], r["params"]["lambda"],
                          r["params"]["predicted_local_reach"], th))
     rows.sort(key=lambda t: (t[1], t[0]))
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL1, 2.5))
     x = range(len(rows))
     ax.bar(x, [t[3] for t in rows], 0.52,
            color=[COLOURS[t[0]] for t in rows], label="measured threshold")
     for i, t in enumerate(rows):
-        ax.plot([i - 0.32, i + 0.32], [t[2], t[2]], color="#c1442e", lw=1.8,
-                solid_capstyle="butt",
+        ax.plot([i - 0.32, i + 0.32], [t[2], t[2]], color="#c1442e", lw=1.4,
+                ls="-", solid_capstyle="butt",
                 label="prediction 1/(1+$\\lambda$)" if i == 0 else None)
         ax.text(i, t[3] + 0.006, f"{t[3]:.2f}", ha="center", fontsize=7)
     ax.set_xticks(list(x))
-    ax.set_xticklabels([f"{disp(t[0])}" for t in rows], fontsize=8.5)
+    ax.set_xticklabels([f"{disp(t[0])}" for t in rows], fontsize=6.5)
     ax.set_ylabel("erasure rate tolerated")
     ax.set_title("Block-circulant threshold follows $1/(1+\\lambda)$, not $\\mu$ or $\\omega$")
+    ax.set_ylim(0, max(t[3] for t in rows) * 1.22)
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     _subtitle(ax, "bars: erasure rate at 50% success. rules: the local code's "
                   "stopping rate $S_0=\\rho/n_0=1/(1+\\lambda)$")
@@ -431,7 +570,7 @@ def fig_bc_threshold_prediction(bench):
 
 def fig_decode_time(bench):
     """Decode cost against erasure rate, successes only, log axis."""
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     series = []
     for r in bench["results"]:
         ts = [t for t in sorted(r["trials"], key=lambda t: t["rate"])
@@ -440,7 +579,8 @@ def fig_decode_time(bench):
             continue
         xs = [t["rate"] for t in ts]
         ys = [t["mean_decode_time_success_only_s"] for t in ts]
-        ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
+        c_, ls_, mk_ = style_of(r["scheme"])
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
     ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
@@ -471,21 +611,21 @@ def fig_data_needed(bench):
             continue
         labels.append(name)
         mult.append(r["n"] * (1.0 - th) / r["k"])
-    fig, ax = plt.subplots(figsize=(FIGW, 3.8))
+    fig, ax = plt.subplots(figsize=(COL1, 2.5))
     bars = ax.bar(range(len(labels)), mult, 0.55,
                   color=[COLOURS[l] for l in labels])
     ax.axhline(1.0, color="#c1442e", ls="--", lw=1.2,
                label="theoretical floor (1 blob)")
     for b_, m in zip(bars, mult):
         ax.text(b_.get_x() + b_.get_width() / 2, m + 0.015, f"{m:.2f}x",
-                ha="center", fontsize=7.5)
+                ha="center", fontsize=6)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=18, ha="right")
     ax.set_ylabel("surviving data needed (blobs)")
     ax.set_title("What a node must actually fetch to rebuild one blob")
     _subtitle(ax, "n(1-tolerance)/k: surviving symbols required, as a "
                   "multiple of one blob")
-    ax.set_ylim(0, max(mult) * 1.18)
+    ax.set_ylim(0, max(mult) * 1.22)
     ax.legend(loc="upper left")
     return _save(fig, "bench_data_needed.svg")
 
@@ -522,12 +662,12 @@ def fig_tolerance_vs_cost(bench):
         if th and c:
             pts.append((r["scheme"], th, c))
 
-    fig, ax = plt.subplots(figsize=(FIGW, 4.4))
+    fig, ax = plt.subplots(figsize=(COL2, 3.1))
     for name, th, c in pts:
         ax.scatter([th], [c], s=95, color=COLOURS.get(name), zorder=3,
                    edgecolor="white", linewidth=0.8)
         ax.annotate(disp(name), xy=(th, c), xytext=(7, 4),
-                    textcoords="offset points", fontsize=7.6)
+                    textcoords="offset points", fontsize=6)
 
     # Pareto frontier: nothing tolerates more erasure AND decodes faster.
     front = sorted((p for p in pts
@@ -540,7 +680,7 @@ def fig_tolerance_vs_cost(bench):
     ax.set_xlabel("erasure tolerated (rate at 50% success)")
     ax.set_ylabel(f"decode time at {100 * rate:.0f}% erasure (s), log scale")
     ax.set_title("Tolerance against the cost of achieving it\n"
-                 "lower and further right is better", fontsize=10)
+                 "lower and further right is better", fontsize=8)
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
     ax.legend(loc="upper left", fontsize=8)
@@ -560,7 +700,7 @@ def fig_encode_decode(bench):
     names = [s for s in ORDER if any(r["scheme"] == s
                                      for r in bench["results"])]
     enc = {r["scheme"]: r["encode_time_s"] for r in bench["results"]}
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     x = range(len(names))
     w = 0.38
     ax.bar([i - w / 2 for i in x], [enc[n] for n in names], w,
@@ -587,7 +727,7 @@ def fig_cost_per_erasure(bench):
     symbols actually erased removes that and leaves the algorithmic
     difference: a flat line is linear work per erasure, a rising one is
     superlinear."""
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     series = []
     for r in bench["results"]:
         xs, ys = [], []
@@ -597,8 +737,9 @@ def fig_cost_per_erasure(bench):
                 xs.append(t["rate"])
                 ys.append(1e3 * c / e)          # milliseconds per erasure
         if xs:
-            ax.plot(xs, ys, marker="o", color=COLOURS.get(r["scheme"]))
-            series.append((r["scheme"], xs, ys, COLOURS.get(r["scheme"])))
+            c_, ls_, mk_ = style_of(r["scheme"])
+            ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
+            series.append((disp(r["scheme"]), xs, ys, c_))
     ax.set_yscale("log")
     ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
     ax.set_ylabel("decode time per erased symbol (ms)")
@@ -618,7 +759,7 @@ def fig_decode_vs_erasure_count(bench):
     have different lengths (8192 against 8448), so the same rate is not the
     same amount of repair work. This is the figure in the 1D-vs-2D
     comparison document, regenerated from the current sweep."""
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL1, 2.5))
     for name in ("1D-RS", "2D-RS"):
         r = next((x for x in bench["results"] if x["scheme"] == name), None)
         if not r:
@@ -645,7 +786,7 @@ def fig_decoder_fix(data):
     cats = ["correct recovery", "silent corruption", "honest failure"]
     keys = ["correct", "silent_corruption", "honest_failure"]
     cols = ["#1a7f37", "#c1442e", "#999999"]
-    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
+    fig, ax = plt.subplots(figsize=(COL1, 2.4))
     x = range(len(cats))
     w = 0.38
     for off, phase, shade in ((-w / 2, "before", 0.45), (w / 2, "after", 1.0)):
@@ -660,7 +801,7 @@ def fig_decoder_fix(data):
     ax.set_ylabel(f"trials (of {data['trials']})")
     ax.set_xlabel("outcome")
     ax.set_title("The decoder fix: silent corruption eliminated,\n"
-                 "correct recoveries up", fontsize=11)
+                 "correct recoveries up", fontsize=8)
     _subtitle(ax, f"the same {data['trials']} trials at "
                   f"{data['parameterisation']}, spanning "
                   f"{100 * min(data['rates']):.0f}-"
@@ -684,7 +825,7 @@ def fig_fft_vs_vandermonde(fft):
     rows = fft["ab"]
     rates = sorted({r["rate"] for r in rows})
     schemes = [s for s in ORDER if any(r["scheme"] == s for r in rows)]
-    fig, axes = plt.subplots(1, len(rates), figsize=(FIGW, 4.4),
+    fig, axes = plt.subplots(1, len(rates), figsize=(COL2, 2.9),
                              sharey=True)
     axes = [axes] if len(rates) == 1 else list(axes)
     for ax, rate in zip(axes, rates):
@@ -729,7 +870,7 @@ def fig_fft_profile(fft):
              "erasure locator build", "everything else"]
     items = [(k, b[k]) for k in order if k in b]
     total = fft["profile"]["total_s"]
-    fig, ax = plt.subplots(figsize=(FIGW, 2.3))
+    fig, ax = plt.subplots(figsize=(COL2, 1.6))
     left = 0.0
     shades = {"polynomial division": "#c1442e", "NTT / inverse NTT": "#2e75b6",
               "erasure locator build": "#9dc3e6", "everything else": "#cccccc"}
@@ -738,7 +879,7 @@ def fig_fft_profile(fft):
                 label=f"{k} — {100 * v / total:.0f}%")
         if v / total > 0.06:
             ax.text(left + v / 2, 0, f"{100 * v / total:.0f}%", ha="center",
-                    va="center", fontsize=8,
+                    va="center", fontsize=6.5,
                     color="white" if k != "everything else" else "#444")
         left += v
     ax.set_xlim(0, total)
@@ -755,7 +896,7 @@ def fig_node_width(fft):
     """The cost of defining the code over roots of unity at all."""
     n = fft["nodes"]
     keys = ["small integers", "roots of unity"]
-    fig, ax = plt.subplots(figsize=(5.0, 3.4))
+    fig, ax = plt.subplots(figsize=(COL1, 2.4))
     bars = ax.bar(keys, [n[k] for k in keys], 0.5,
                   color=["#2e75b6", "#c1442e"])
     for b_, k in zip(bars, keys):
@@ -763,7 +904,7 @@ def fig_node_width(fft):
                 f"{n[k]:.3f}s", ha="center", fontsize=8)
     ax.set_ylabel(f"vandermonde_solve, {n['n_nodes']} nodes (s)")
     ax.set_title(f"Evaluation-point width costs {n['ratio']:.1f}x\n"
-                 "— paid even when the NTT never runs", fontsize=9)
+                 "— paid even when the NTT never runs", fontsize=7)
     ax.set_ylim(0, max(n[k] for k in keys) * 1.25)
     return _save(fig, "fft_node_width.svg")
 
@@ -780,7 +921,7 @@ def fig_grs_premise(fft):
     s_ = fft["structure"]
     panels = [("Phase 1 — single local block", s_["phase1"], "#1a7f37"),
               ("Phase 2 — union of two blocks", s_["phase2"], "#c1442e")]
-    fig, axes = plt.subplots(1, 2, figsize=(FIGW, 3.7))
+    fig, axes = plt.subplots(1, 2, figsize=(COL2, 2.6))
     for ax, (title, d, fixed_colour) in zip(axes, panels):
         bars = ax.bar(["as received", "after undoing\nGRS multipliers"],
                       [d["raw"], d["fixed"]], 0.55,
@@ -788,19 +929,19 @@ def fig_grs_premise(fft):
         top = max(d["raw"], d["fixed"], 1)
         for b_, v in zip(bars, [d["raw"], d["fixed"]]):
             ax.text(b_.get_x() + b_.get_width() / 2, v + top * 0.04, str(v),
-                    ha="center", fontsize=9,
+                    ha="center", fontsize=7,
                     fontweight="bold" if v == 0 else "normal",
                     color="#1a7f37" if v == 0 else "#333")
         ax.set_ylim(0, top * 1.35)
         ax.set_title(f"{title}\nn={d['n']}, {d['tail_len']} coefficients "
-                     f"must vanish", fontsize=8.5)
+                     f"must vanish", fontsize=6.5)
     axes[0].set_ylabel("nonzero tail coefficients")
     verdict = ("premise HOLDS — this is a GRS code"
                if s_["phase1"]["fixed"] == 0 else "premise fails")
     axes[0].text(0.5, 0.93, verdict, transform=axes[0].transAxes,
-                 ha="center", fontsize=8, color="#1a7f37")
+                 ha="center", fontsize=6.5, color="#1a7f37")
     axes[1].text(0.5, 0.93, "premise FAILS — no multiplier fixes it",
-                 transform=axes[1].transAxes, ha="center", fontsize=8,
+                 transform=axes[1].transAxes, ha="center", fontsize=6.5,
                  color="#c1442e")
     return _save(fig, "fft_grs_premise.svg")
 
@@ -813,7 +954,7 @@ def _net_series(rows, scheme, xkey, ykey):
 
 
 def fig_net_erasure(runA):
-    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
+    fig, ax = plt.subplots(figsize=(COL2, 2.8))
     rows = runA["rows"]
     # Every scheme produces the SAME curve here -- the erasure rate is set by
     # the network and custody, not by the code. Six legend entries would
@@ -822,8 +963,9 @@ def fig_net_erasure(runA):
     names = [s for s in ORDER if any(r["scheme"] == s for r in rows)]
     for s in names:
         x, y = _net_series(rows, s, "adversarial", "mean_erasure_fraction")
-        ax.plot(x, y, marker="o", lw=1.4, color="#2e75b6", alpha=0.55)
-    ax.plot([], [], marker="o", lw=1.4, color="#2e75b6", alpha=0.55,
+        ax.plot(x, y, marker="o", ls="-", lw=1.2, color="#2e75b6",
+                alpha=0.55)
+    ax.plot([], [], marker="o", ls="-", lw=1.2, color="#2e75b6", alpha=0.55,
             label=f"all {len(names)} schemes (curves coincide)")
     rep = runA["config"].get("custody_replication", 4)
     xs = [i / 20 for i in range(17)]
@@ -833,7 +975,7 @@ def fig_net_erasure(runA):
     ax.set_ylabel("cells missing at the deadline")
     ax.set_title("Custody replication turns withholding into a much smaller\n"
                  "erasure rate — and the code carried makes no difference",
-                 fontsize=11)
+                 fontsize=8)
     cfg = runA["config"]
     _subtitle(ax, f"{cfg['n_peers']} peers, custody replication "
                   f"{cfg.get('custody_replication', 4)}, "
@@ -846,7 +988,7 @@ def fig_net_erasure(runA):
 
 
 def fig_net_recovery(runA):
-    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
+    fig, ax = plt.subplots(figsize=(COL2, 2.8))
     rows = runA["rows"]
     series = []
     for s in ORDER:
@@ -856,7 +998,8 @@ def fig_net_recovery(runA):
             continue
         xs = [r["adversarial"] for r in sub]
         ys = [r["recovered"] / r["trials"] for r in sub]
-        ax.plot(xs, ys, marker="o", color=COLOURS[s])
+        c_, ls_, mk_ = style_of(s)
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(s), xs, ys, COLOURS[s]))
     ax.set_xlabel("fraction of peers refusing to serve")
     ax.set_ylabel("trials recovered byte-exact")
@@ -885,7 +1028,7 @@ def fig_net_gather_vs_decode(runB):
          for s in schemes]
     x = range(len(schemes))
     w = 0.38
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     ax.bar([i - w / 2 for i in x], g, w, color="#2e75b6", label="gather (network)")
     ax.bar([i + w / 2 for i in x], d, w, color="#c1442e", label="decode (CPU)")
     deadline = runB["config"].get("deadline_s")
@@ -923,7 +1066,7 @@ def fig_net_throughput(runB):
     because its decode is too slow to fit the slot."""
     rows = runB["rows"]
     target = runB["config"].get("blobs_per_slot", 6)
-    fig, ax = plt.subplots(figsize=(FIGW, 3.9))
+    fig, ax = plt.subplots(figsize=(COL2, 2.8))
     series = []
     for s_ in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == s_),
@@ -932,14 +1075,15 @@ def fig_net_throughput(runB):
             continue
         xs = [r["adversarial"] for r in sub]
         ys = [r["blobs_per_slot"] for r in sub]
-        ax.plot(xs, ys, marker="o", color=COLOURS[s_])
+        c_, ls_, mk_ = style_of(s_)
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(s_), xs, ys, COLOURS[s_]))
     ax.axhline(target, color="#444", ls="--", lw=1.1)
     # Labelled on the line: the legend that used to carry this was removed in
     # favour of naming each curve at its end.
     ax.annotate(f"blobs attempted ({target:.0f})", xy=(0.0, target),
                 xytext=(2, 4), textcoords="offset points",
-                fontsize=8.5, color="#444")
+                fontsize=6.5, color="#444")
     ax.set_xlabel("fraction of peers withholding")
     ax.set_ylabel("blobs reconstructed per slot")
     ax.set_title("Throughput inverts the tolerance ordering")
@@ -959,7 +1103,7 @@ def fig_net_bandwidth(runB):
     rows = runB["rows"]
     cfg = runB["config"]
     blobs = cfg.get("blobs_per_slot", 6)
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     series = []
     for sc in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == sc),
@@ -972,13 +1116,14 @@ def fig_net_bandwidth(runB):
             continue
         xs = [x for x, _ in pts]
         ys = [y for _, y in pts]
-        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        c_, ls_, mk_ = style_of(sc)
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(sc), xs, ys, COLOURS[sc]))
     payload = blobs * 124 / 1024          # 124 KiB of usable data per blob
     ax.axhline(payload, color="#444", ls="--", lw=1.1)
     ax.annotate(f"the data itself ({blobs} blobs = {payload:.2f} MiB)",
                 xy=(0.0, payload), xytext=(2, 4), textcoords="offset points",
-                fontsize=8.5, color="#444")
+                fontsize=6.5, color="#444")
     ax.set_xlabel("fraction of peers refusing to serve")
     ax.set_ylabel("data fetched per slot (MiB)")
     ax.set_title("Bandwidth: what each scheme pulls over the wire")
@@ -1000,7 +1145,7 @@ def fig_net_latency(runA):
     and it is invisible in a figure measured only at zero adversaries."""
     rows = runA["rows"]
     cfg = runA["config"]
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     series = []
     for sc in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == sc),
@@ -1013,13 +1158,14 @@ def fig_net_latency(runA):
             continue
         xs = [x for x, _ in pts]
         ys = [y for _, y in pts]
-        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        c_, ls_, mk_ = style_of(sc)
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(sc), xs, ys, COLOURS[sc]))
     dl = cfg.get("deadline_s", 4.0)
     ax.axhline(dl, color="#c1442e", ls="--", lw=1.2)
     ax.annotate(f"{dl:.0f}s sampling deadline", xy=(0.0, dl),
                 xytext=(2, 4), textcoords="offset points",
-                fontsize=8.5, color="#c1442e")
+                fontsize=6.5, color="#c1442e")
     ax.set_xlabel("fraction of peers refusing to serve")
     ax.set_ylabel("time to gather the cells (s)")
     ax.set_title("Latency: withholding costs time, not just data")
@@ -1040,7 +1186,7 @@ def fig_net_time_budget(runB):
     do not."""
     rows = runB["rows"]
     cfg = runB["config"]
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.9))
     series = []
     for sc in ORDER:
         sub = sorted((r for r in rows if r["scheme"] == sc),
@@ -1053,13 +1199,14 @@ def fig_net_time_budget(runB):
             continue
         xs = [x for x, _ in pts]
         ys = [y for _, y in pts]
-        ax.plot(xs, ys, marker="o", color=COLOURS[sc])
+        c_, ls_, mk_ = style_of(sc)
+        ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(sc), xs, ys, COLOURS[sc]))
     for y, lab, col in ((cfg.get("deadline_s", 4.0), "sampling deadline", "#c1442e"),
                         (12.0, "one Ethereum slot", "#444")):
         ax.axhline(y, color=col, ls="--", lw=1.2)
         ax.annotate(f"{lab} ({y:.0f}s)", xy=(0.0, y), xytext=(2, 4),
-                    textcoords="offset points", fontsize=8.5, color=col)
+                    textcoords="offset points", fontsize=6.5, color=col)
     ax.set_yscale("log")
     ax.set_xlabel("fraction of peers refusing to serve")
     ax.set_ylabel("gather + decode per slot (s)")
@@ -1088,7 +1235,7 @@ def fig_net_peers(runC):
     levels = sorted({r["adversarial"] for r in rows})
     shade = {levels[0]: "#9dc3e6", levels[-1]: "#1f4e79"}
 
-    fig, ax = plt.subplots(figsize=(FIGW, 4.0))
+    fig, ax = plt.subplots(figsize=(COL2, 2.8))
     for adv in levels:
         col = shade.get(adv, "#2e75b6")
         for sc in sorted({r["scheme"] for r in rows}):
@@ -1098,7 +1245,7 @@ def fig_net_peers(runC):
             if sub:
                 ax.plot([r["peers"] for r in sub],
                         [r["mean_erasure_fraction"] for r in sub],
-                        marker="o", lw=1.6, color=col, alpha=0.85)
+                        marker="o", ls="-", lw=1.4, color=col, alpha=0.85)
         hyp = [comb(round(adv * n), rep) / comb(n, rep) if n >= rep else 0.0
                for n in peers]
         ax.plot(peers, hyp, ls="none", marker="o", ms=9, mfc="none",
@@ -1111,7 +1258,7 @@ def fig_net_peers(runC):
                     f"$p^{{{rep}}}$ limit {adv ** rep:.3f}",
                     xy=(peers[-1], hyp[-1]), xytext=(9, 0),
                     textcoords="offset points", va="center",
-                    fontsize=8.5, color=col)
+                    fontsize=6.5, color=col)
     ax.set_xscale("log", base=2)
     ax.set_xlim(peers[0] * 0.85, peers[-1] * 3.6)
     ax.set_xlabel("peers in the sampled network")
@@ -1130,7 +1277,8 @@ def fig_net_peers(runC):
 GROUPS = {
     "bench": ("benchmark_results.json",
               [fig_success_curves, fig_tolerance_vs_guarantee,
-               fig_bc_threshold_prediction, fig_decode_time,
+               fig_threshold_bands, fig_bc_threshold_prediction,
+               fig_decode_time,
                fig_data_needed, fig_tolerance_vs_cost, fig_encode_decode,
                fig_cost_per_erasure, fig_decode_vs_erasure_count]),
     "fix":   ("decoder_fix_results.json", [fig_decoder_fix]),
