@@ -20,7 +20,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same run. No erasure rate is injected here - losses are whatever failed to arrive before the 4 s deadline.
 
-**Shows.** They fail in exactly the order the coding benchmark predicted, and at the withholding rates that produce their measured thresholds. BC omega1024 lambda4 breaks first (8/30 at 70% withholding, which yields 0.233 erasure against its 0.210 threshold); 1D-RS is still at 30/30 when 80% of peers refuse.
+**Shows.** They fail in exactly the order the coding benchmark predicted, and at the withholding rates that produce their measured thresholds. BC omega1024 lambda4 breaks first (8/30 at 70% withholding, which yields 0.233 erasure against its 0.202 threshold); 1D-RS is still at 30/30 when 80% of peers refuse.
 
 ## 03-latency-gather-time
 

@@ -12,18 +12,19 @@ below assumes it.
 
 | | n | k | rate | measured tolerance |
 |---|---|---|---|---|
-| 1D-RS | 8192 | 4096 | 0.500 | 0.505 |
-| 2D-RS (88×96 grid) | 8448 | 4096 | 0.485 | 0.397 |
-| BC ω2048 λ2 | 8192 | 4096 | 0.500 | 0.340 |
-| BC ω1024 λ2 | 8192 | 4096 | 0.500 | 0.341 |
-| BC ω1024 λ3 | 8192 | 4096 | 0.500 | 0.275 |
-| BC ω1024 λ4 | 8192 | 4096 | 0.500 | 0.210 |
-| BC ω512 λ2 | 8192 | 4096 | 0.500 | 0.350 |
+| 1D-RS | 8192 | 4096 | 0.500 | 0.500 |
+| 2D-RS (88×96 grid) | 8448 | 4096 | 0.485 | 0.401 |
+| BC ω2048 λ2 | 8192 | 4096 | 0.500 | 0.337 |
+| BC ω1024 λ2 | 8192 | 4096 | 0.500 | 0.342 |
+| BC ω1024 λ3 | 8192 | 4096 | 0.500 | 0.255 |
+| BC ω1024 λ4 | 8192 | 4096 | 0.500 | 0.202 |
+| BC ω512 λ2 | 8192 | 4096 | 0.500 | 0.349 |
 
-Tolerance is the erasure rate at which the success rate crosses 50%,
-interpolated between swept points. Storage overhead is held at ~2× across
-every row so the comparison is about what each scheme buys for the same
-price.
+Tolerance is the erasure probability at which a scheme recovers half the
+time, from a maximum-likelihood logistic fit to 1,184 dense trials across
+each scheme's transition band (`threshold_refinement.py`); 95% intervals
+are about ±0.002. 1D-RS checks the method: an MDS code with n = 2k has an
+exact threshold of 0.50006, and it measures 0.4996.
 
 ## Install and run
 
@@ -35,6 +36,7 @@ python3 benchmark_1D_2D_BC.py --quick   # smoke test, not a result            (m
 python3 network_sim.py              # P2P simulation                          (seconds)
 python3 fft_benchmark.py            # NTT decoder measurements                (10-20 min)
 python3 test_bc_fft.py              # structural checks on the BC decoder
+python3 threshold_refinement.py     # dense trials for thresholds          (~3 h)
 
 python3 make_figures.py             # every figure from committed JSON        (~3 s)
 python3 make_docs.py                # every report to PDF
@@ -57,6 +59,7 @@ moved, not that the clock did.
 | `BCcodeEthereum.py` | block-circulant encoder and decoder |
 | `benchmark_1D_2D_BC.py` | the seven-scheme erasure sweep |
 | `network_sim.py` | SimPy peer-to-peer layer |
+| `threshold_refinement.py`, `thresholds.py` | threshold measurement and estimation |
 | `fft_benchmark.py`, `test_bc_fft.py` | NTT decoder measurement and checks |
 | `make_figures.py`, `make_docs.py` | figures and PDFs |
 | `RScode.py`, `2DRScode.py`, `BCcode.py` | earlier prototypes, kept for reference; not used by the benchmark |
@@ -74,10 +77,12 @@ moved, not that the clock did.
 
 ## Known gaps
 
-* **Block-circulant phase 2** does not implement the source paper's auxiliary
-  GRS construction. It stacks two blocks' parity checks instead, which is a
-  weaker system solved at cubic cost. All five BC rows are therefore measured
-  as single-phase decoders.
+* **Block-circulant phase 2 does not apply to the benchmark's codes.** It
+  implements the paper's auxiliary construction (Algorithm 1), which needs
+  the paper's evaluation-point layout; the benchmark uses a shared layout so
+  that all five rows stay comparable. Phase 2 engaged on 1% of refinement
+  trials and moves no threshold by more than 0.003, so all five BC rows are
+  measured as effectively single-phase decoders.
 * **The NTT decoder path is slower than the solver it replaces**, by 7–23×.
   The transform is ~12% of the work; ~80% is a polynomial division
   implemented as a scalar loop. Replacing it with Newton iteration is the

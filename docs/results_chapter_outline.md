@@ -62,10 +62,20 @@ justifies the expense of byte-level checking.
 - Trial counts vary by scheme and rate — more near a transition where
   outcomes genuinely vary, fewer where they do not. Give the rule, and note
   that 95% Wilson intervals are in the JSON.
-- **Define the threshold explicitly**: the erasure rate at which the success
-  rate crosses 50%, linearly interpolated between the two swept rates that
-  bracket it. Every tolerance number in the report depends on this
-  definition, so it must be stated once, early, and not changed.
+- **Define the threshold explicitly**: the erasure probability ε at which
+  a scheme recovers half the time, on the binary erasure channel BEC(ε).
+  It is estimated by a maximum-likelihood logistic fit to the dense
+  refinement trials, with a 95% bootstrap interval — not read off the
+  coarse sweep. Every tolerance number depends on this, so state it once,
+  early, and do not change it.
+- **Say why the refinement exists — it is a strength, not an admission.**
+  The coarse sweep runs as few as three trials near a threshold, and
+  reading thresholds off it gave 1D-RS = 0.505, above what an MDS code with
+  n = 2k can sustain. The decoder was right (every trial obeyed the n − k
+  rule); three trials just cannot place a threshold to three decimals. The
+  refinement's 1,184 trials and the exact MDS check (0.4996 measured,
+  0.50006 exact) show the method is sound. Catching and correcting this is
+  exactly what a careful methodology section should show.
 
 ### A.5 Reproducibility
 
@@ -115,25 +125,34 @@ interpretation for Chapter C (or the paired subsection, if combining).
 
 ### B.1 Fault tolerance — **figures 1, 2**
 
-| scheme | measured threshold |
-|---|---|
-| 1D-RS | 0.505 |
-| 2D-RS | 0.397 |
-| BC ω512 λ2 | 0.350 |
-| BC ω1024 λ2 | 0.341 |
-| BC ω2048 λ2 | 0.340 |
-| BC ω1024 λ3 | 0.275 |
-| BC ω1024 λ4 | 0.210 |
+| scheme | threshold | 95% CI |
+|---|---|---|
+| 1D-RS | 0.500 | 0.498–0.501 |
+| 2D-RS | 0.401 | 0.399–0.404 |
+| BC ω512 λ2 | 0.349 | 0.348–0.351 |
+| BC ω1024 λ2 | 0.342 | 0.340–0.344 |
+| BC ω2048 λ2 | 0.337 | 0.335–0.338 |
+| BC ω1024 λ3 | 0.255 | 0.253–0.257 |
+| BC ω1024 λ4 | 0.202 | 0.200–0.203 |
 
 Two findings:
 
-- **1D-RS reaches 0.505 against a theoretical maximum of 0.50** — what being
-  MDS means, and a sanity check that the harness is sound.
-- **The block-circulant threshold is set by λ alone.** The three λ=2 rows
-  land at 0.340, 0.341 and 0.350 while μ ranges over 2, 4, 8 and ω over 512
-  to 2048. Against the 1/(1+λ) prediction of 0.333, 0.250, 0.200, the
-  measurements are 0.34, 0.28, 0.21. Figure 2 is theory and experiment
-  agreeing — lead with it.
+- **1D-RS reaches 0.500, its exact theoretical value** (0.50006 for an MDS
+  code with n = 2k on an erasure channel) — what being MDS means, and the
+  check that the harness is sound. Its measured points sit on the exact
+  curve in figure 1(a).
+- **λ sets the block-circulant threshold; μ refines it.** Holding μ = 4,
+  raising λ from 2 to 3 to 4 takes it from 0.342 to 0.255 to 0.202, against
+  predictions of 0.333, 0.250, 0.200. Every measurement sits just *above*
+  its prediction — the prediction is one block's repair limit, and the
+  cascade across blocks can only add to it. At fixed λ = 2 the three rows
+  rise slightly with μ (0.337, 0.342, 0.349 for μ = 2, 4, 8), a real effect
+  since the intervals do not overlap, with the same cause. Figure 2 is
+  theory and experiment agreeing — lead with it.
+- **Do not write that μ "does not matter".** An earlier draft said the λ=2
+  rows land at the same threshold. At the refined resolution they do not;
+  they differ by just over a point, ordered by μ. The honest claim is that
+  λ dominates and μ is second-order.
 
 ### B.2 Computational cost — **figures 4, 6**
 
@@ -148,7 +167,9 @@ than defending it later.
 ### B.3 Bandwidth — **figure 8**
 
 Surviving data needed to rebuild one blob, as a multiple of blob size:
-1D-RS 0.99× (the floor), everything else 1.24–1.58×.
+1D-RS 1.00× (exactly the floor — nothing rebuilds k symbols from fewer than
+k), everything else 1.23–1.60×. An earlier figure of 0.99× was below the
+floor, and was the same threshold error propagating.
 
 ### B.4 Network behaviour — **network figures 01–08**
 
@@ -190,7 +211,7 @@ custodying it, so peer count cannot be varied without specifying replication.
 
 ### C.1 Guarantees versus behaviour — **figure 3**
 
-2D-RS tolerates 0.397 against a worst-case guarantee of 0.098 — four times
+2D-RS tolerates 0.401 against a worst-case guarantee of 0.098 — four times
 its own bound. Not a contradiction: a minimum-distance guarantee holds
 against *every* pattern including the adversarial worst case, while these
 trials draw patterns at random.
@@ -259,9 +280,14 @@ everything else.
   and then distrusts everything else.
 - **One blob of application data.** Erasure patterns are reseeded per trial,
   but the payload is fixed.
-- **Block-circulant is measured single-phase.** Phase 2 does not implement
-  the paper's auxiliary construction, so BC thresholds are what phase 1
-  alone achieves — a limit of this implementation, not of the code. Say which.
+- **Block-circulant is measured effectively single-phase.** Phase 2
+  implements the paper's auxiliary construction, but that needs the paper's
+  evaluation-point layout and the benchmark uses a shared one for
+  comparability. Phase 2 engaged on 12 of 1,184 refinement trials (1%);
+  counting all 12 as failures moves ω2048 λ2 from 0.337 to 0.334 and leaves
+  the rest within 0.001. So BC thresholds are what phase 1 achieves — a
+  limit of this implementation and its layout choice, not of the code. Say
+  which, and quote the bound.
 - **One network topology**, where the brief asks for several.
 - **Simulated network.** Latency and bandwidth are modelled, not measured on
   real hardware.

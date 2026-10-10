@@ -633,6 +633,7 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
         decode_times = []
         success_times = []      # decode times of byte-exact trials only
         n_erased_list = []
+        success_list = []       # per-trial outcome, aligned with n_erased_list
         for trial_idx in range(n_trials):
             if shared_masks_by_rate is not None:
                 mask = shared_masks_by_rate[rate][trial_idx]
@@ -649,6 +650,7 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
             claimed_ok += ok
             silent_corruption += (ok and not exact)
             successes += exact
+            success_list.append(bool(exact))
         mean_t = sum(decode_times) / len(decode_times)
         # A decode that bails out on the budget check costs ~0.0003s while a
         # real decode costs ~40s, so a mean across both describes no actual
@@ -674,6 +676,12 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
             "mean_decode_time_success_only_s": (round(mean_ok_t, 4)
                                                 if mean_ok_t is not None else None),
             "decode_times_s": [round(t, 4) for t in decode_times],
+            # Per-trial outcome, aligned with n_erased_per_trial. The count
+            # alone is not enough: for the non-MDS codes recovery depends on
+            # where the erasures fall, not just how many there are, so the
+            # outcome of an individual trial cannot be inferred from its
+            # erasure count.
+            "success_per_trial": success_list,
         })
     return {
         "scheme": adapter.name, "k": adapter.k, "n": adapter.n,

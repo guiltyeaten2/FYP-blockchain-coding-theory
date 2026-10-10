@@ -8,9 +8,9 @@ Seven schemes over the same blob, same erasure positions, at matched storage cos
 
 **Question.** How much of the codeword can each scheme lose and still rebuild the blob exactly?
 
-**Data.** The erasure sweep: 520 trials over one real EIP-4844 blob, 7 schemes x 18 erasure rates from 2% to 55%, fixed seed 20260827. benchmark_results.json.
+**Data.** Two experiments. The coarse sweep: 520 trials over one real EIP-4844 blob, 7 schemes x 18 erasure rates from 2% to 55% (benchmark_results.json). The threshold refinement: 1,184 further trials on a fine grid across each scheme's own transition band (threshold_results.json). Panel (a) draws both combined.
 
-**Shows.** Every scheme holds at 100% then collapses within a few percent, which is what makes a single threshold a fair summary. The three lambda=2 rows land at 0.340, 0.341 and 0.350 despite mu ranging 2 to 8 and omega 512 to 2048 - a factor of four in block size moving the threshold by nothing.
+**Shows.** Every scheme holds at 100% then collapses within a few percent, which is what makes a single threshold a fair summary. 1D-RS sits on its exact MDS curve, at 0.500. The three lambda=2 rows land within 0.013 of each other (0.337, 0.342, 0.349), far closer to one another than to lambda=3 (0.255) or lambda=4 (0.202): lambda sets the reach. Their intervals do not overlap, though, and they rise with mu - so mu has a small, real effect.
 
 ## 02-fault-tolerance-compact
 
@@ -18,9 +18,9 @@ Seven schemes over the same blob, same erasure positions, at matched storage cos
 
 **Question.** Where does each scheme fall over, and how close together are those points?
 
-**Data.** The same erasure sweep as figure 01: 520 trials, 7 schemes, 18 rates. benchmark_results.json.
+**Data.** The threshold refinement: 1,184 trials on a fine grid across each scheme's transition band, 12-20 per rate (threshold_results.json).
 
-**Shows.** The three lambda=2 rows cluster at 0.340, 0.341 and 0.350 across a factor of four in block size. The bar width also shows what a bare threshold hides: lambda=4 collapses over a much wider range of erasure rates than the lambda=2 rows do.
+**Shows.** 1D-RS reaches 0.500, the most an MDS code with n = 2k can sustain. The three lambda=2 rows sit within 0.013 of each other (0.337, 0.342, 0.349) while lambda=3 and lambda=4 fall to 0.255 and 0.202. Intervals are about +/-0.002 throughout, so every difference shown is resolved.
 
 ## 03-bc-threshold-vs-theory
 
@@ -28,9 +28,9 @@ Seven schemes over the same blob, same erasure positions, at matched storage cos
 
 **Question.** Does the block-circulant decoder behave as the source paper predicts?
 
-**Data.** Same sweep. Thresholds derived from the success curves; the prediction is the local code's stopping rate from Sasidharan, Viterbo & Feist (ePrint 2026/708).
+**Data.** Thresholds from the refinement experiment, with 95% intervals; the prediction is the local code's stopping rate from Sasidharan, Viterbo & Feist (ePrint 2026/708).
 
-**Shows.** Reach is set by lambda alone. Predicted 0.333/0.250/0.200 for lambda = 2/3/4 against measured 0.34/0.28/0.21. Theory and experiment agree at every point, and mu and omega do not enter.
+**Shows.** Lambda sets the reach. Predicted 0.333/0.250/0.200 for lambda = 2/3/4 against measured 0.337-0.349, 0.255 and 0.202. Every measurement sits just above its prediction, as it should: the local stopping rate is what one block can repair alone, and the cascade across blocks can only add to it. At fixed lambda=2 the threshold also rises with mu (0.337, 0.342, 0.349 for mu = 2, 4, 8) - more blocks give that cascade more to work with.
 
 ## 04-tolerance-vs-guarantee
 
@@ -40,7 +40,7 @@ Seven schemes over the same blob, same erasure positions, at matched storage cos
 
 **Data.** Same sweep for the measured bars; guarantees computed from each code's d_min, and the rate bound from 1 - R.
 
-**Shows.** 1D-RS sits on its bound (0.505 against 0.500), which is what being MDS means and a useful check that the harness is sound. 2D-RS reaches 0.397 against a guarantee of 0.098 - four times its own bound.
+**Shows.** 1D-RS sits on its bound at 0.500, which is what being MDS means and a useful check that the harness is sound. 2D-RS reaches 0.401 against a guarantee of 0.098 - four times its own bound.
 
 ## 05-decode-cost
 
@@ -90,5 +90,5 @@ Seven schemes over the same blob, same erasure positions, at matched storage cos
 
 **Data.** Derived from each scheme's measured threshold as n(1-threshold)/k, expressed as a multiple of one blob.
 
-**Shows.** 1D-RS needs essentially the floor at 0.99x. Everything else needs 1.24x to 1.58x. A scheme tolerating a lower erasure rate at the same storage cost necessarily needs more.
+**Shows.** 1D-RS needs exactly the floor, 1.00x. Everything else needs 1.23x to 1.60x. A scheme tolerating a lower erasure rate at the same storage cost necessarily needs more.
 

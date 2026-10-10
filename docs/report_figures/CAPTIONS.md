@@ -12,31 +12,30 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 **Short.** Every scheme holds, then collapses within a few percent
 
-**Full.** Every scheme holds, then collapses within a few percent. Top: fraction of trials recovered against erasure rate, one line per scheme, markers drawn only where a curve is partway down. Bottom: one row per scheme, the bar spanning the last rate where every trial recovered to the first where none did, with the 50% threshold ticked on it. 520 trials over one EIP-4844 blob; a trial counts as recovered only if the bytes match the original exactly.
+**Full.** Every scheme holds, then collapses within a few percent. (a) Fraction of trials recovered against erasure probability, one line per scheme; the pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted. (b) Each scheme's threshold -- the erasure probability at which it recovers half the time -- with its 95% bootstrap confidence interval, from a maximum-likelihood logistic fit. (a) the 520-trial coarse sweep. (b) thresholds from a logistic fit to dense trials across each transition band. A trial counts as recovered only if the bytes match exactly.
 
-**Panels.** (a) Every scheme holds, then collapses within a few percent; (b) Where each scheme falls over
-bar: all trials recovered → none did.  tick: 50% threshold
+**Panels.** (a) Every scheme holds, then collapses within a few percent; (b) Threshold with 95% confidence interval
 
 ```latex
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/01-fault-tolerance}
-  \caption{Every scheme holds, then collapses within a few percent.}
+  \includegraphics[width=\textwidth]{figures/01-fault-tolerance}
+  \caption{Every scheme holds, then collapses within a few percent. (a) Every scheme holds, then collapses within a few percent. (b) Threshold with 95% confidence interval.}
   \label{fig:01-fault-tolerance}
-\end{figure}
+\end{figure*}
 ```
 
 ### 02-fault-tolerance-compact
 
-**Short.** Erasure tolerance by scheme, with the transition range
+**Short.** Erasure tolerance by scheme, with 95% confidence intervals
 
-**Full.** Erasure tolerance by scheme, with the transition range. Horizontal bars, one per scheme, sorted by threshold. Bar length is the 50% success threshold; the whisker spans the last rate at which every trial recovered to the first at which none did. The whisker is a measured range, not a confidence interval. 520 trials over one EIP-4844 blob; a trial counts as recovered only if the bytes match the original exactly.
+**Full.** Erasure tolerance by scheme, with 95% confidence intervals. Horizontal bars, one per scheme, sorted by threshold. Bar length is the erasure probability at which the scheme recovers half the time, from a maximum-likelihood logistic fit; the whisker is its 95% bootstrap confidence interval. Thresholds from a logistic fit to dense trials across each scheme's transition band; 95% bootstrap intervals. A trial counts as recovered only if the bytes match exactly.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/02-fault-tolerance-compact}
-  \caption{Erasure tolerance by scheme, with the transition range.}
+  \caption{Erasure tolerance by scheme, with 95% confidence intervals.}
   \label{fig:02-fault-tolerance-compact}
 \end{figure}
 ```
@@ -45,7 +44,7 @@ bar: all trials recovered → none did.  tick: 50% threshold
 
 **Short.** Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$
 
-**Full.** Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$. Bars are measured thresholds, one per parameterisation, sorted by lambda. Red rules are the predicted stopping rate S0 = rho/n0 = 1/(1+lambda). Bars: erasure rate at 50% success. rules: the local code's stopping rate $S_0=\rho/n_0=1/(1+\lambda)$.
+**Full.** Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$. Bars are measured thresholds with 95% confidence intervals, ordered by lambda and then by mu. Red rules are the predicted local stopping rate S0 = rho/n0 = 1/(1+lambda). Bars: erasure rate at 50% success. rules: the local code's stopping rate $S_0=\rho/n_0=1/(1+\lambda)$.
 
 ```latex
 \begin{figure}[t]
@@ -272,15 +271,15 @@ bar: all trials recovered → none did.  tick: 50% threshold
 
 ### 01-decoder-correctness-fix
 
-**Short.** The decoder fix: silent corruption eliminated, correct recoveries up
+**Short.** Decoder fix: silent corruption eliminated, correct recoveries up
 
-**Full.** The decoder fix: silent corruption eliminated, correct recoveries up. Outcome counts for the same 40 trials, before the fix in pale and after in solid. Three outcomes: correct recovery, silent corruption, honest failure. The same 40 trials at omega = rho = lambda = 2, mu = 2048, spanning 5-45% erasure, re-run through both decoders.
+**Full.** Decoder fix: silent corruption eliminated, correct recoveries up. Outcome counts for the same 40 trials, before the fix in pale and after in solid. Three outcomes: correct recovery, silent corruption, honest failure. The same 40 trials at omega = rho = lambda = 2, mu = 2048, spanning 5-45% erasure, re-run through both decoders.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/01-decoder-correctness-fix}
-  \caption{The decoder fix: silent corruption eliminated, correct recoveries up.}
+  \caption{Decoder fix: silent corruption eliminated, correct recoveries up.}
   \label{fig:01-decoder-correctness-fix}
 \end{figure}
 ```

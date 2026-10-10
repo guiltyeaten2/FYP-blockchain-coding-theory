@@ -204,16 +204,23 @@ also what lets the network simulator reuse the identical code.
 
 <figure>
 <img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme, with a zoom on the transition band.">
-<figcaption>Every scheme holds at 100% and then falls off a cliff, so a single threshold number fairly summarises each one. The lower panel zooms on the cluster: the three &lambda;=2 block-circulant rows land at 0.340, 0.341 and 0.350 despite &mu; ranging over 2, 4 and 8 and &omega; over 512 to 2048. A factor of four in block size moves the threshold by nothing, which is the sweep's clearest single result.</figcaption>
+<figcaption>Every scheme holds at 100% and then falls off a cliff, so a single threshold number fairly summarises each one. (a) Recovery against erasure probability; the pale band is the exact curve for 1D-RS, which the measured points sit on. (b) Thresholds with 95% confidence intervals: 1D-RS at 0.500, and the three &lambda;=2 rows within 0.013 of one another, rising slightly with &mu;.</figcaption>
 </figure>
 
-Measured thresholds: **1D-RS 0.51** (its theoretical maximum, as an MDS code
-should), **2D-RS 0.40**, **BC λ=2 ≈ 0.34**, **λ=3 0.28**, **λ=4 0.21**.
+Measured thresholds: **1D-RS 0.500** (its theoretical maximum, exactly as an
+MDS code should — the exact value is 0.50006), **2D-RS 0.401**, the three
+**λ=2 rows 0.337–0.349**, **λ=3 0.255**, **λ=4 0.202**. Each comes from a
+logistic fit to dense trials across that scheme's transition band, with a
+95% confidence interval of about ±0.002.
 
 The block-circulant numbers track the 1/(1+λ) prediction closely — 0.333,
-0.250, 0.200 predicted against 0.34, 0.28, 0.21 measured. The theory holds.
+0.250, 0.200 predicted against 0.337–0.349, 0.255, 0.202 measured — and
+each sits just *above* its prediction, which is the right side: the
+prediction is what one block repairs alone, and the cascade across blocks
+can only add to it. At fixed λ=2 the threshold also rises slightly with μ,
+for the same reason.
 
-Note that 2D-RS at 0.40 sits **four times above** its own worst-case
+Note that 2D-RS at 0.401 sits **four times above** its own worst-case
 guarantee of 0.10. That is not a contradiction: a minimum-distance guarantee
 holds against every pattern including the adversarial worst case, while
 these trials draw patterns at random. It is a useful reminder that a
@@ -325,15 +332,18 @@ it — they come from the same file.
 
 Three things are genuinely incomplete, and it is worth knowing them.
 
-**Block-circulant phase 2 is not implemented as the paper describes.** The
-decoder's second phase should build an auxiliary code over the union of two
-adjacent blocks. What it actually does is stack the two blocks' parity checks
-and solve that, which is a weaker system — it cannot handle every case the
-paper's construction can, and it needs full Gaussian elimination at cubic
-cost rather than a fast solver. Consequently **all five BC rows are measured
-as single-phase decoders**, and their thresholds are what phase 1 alone
-achieves. Implementing the paper's Algorithm 1 would fix the correction
-radius and the cost together, and is the highest-value piece of work left.
+**Block-circulant phase 2 does not apply to the benchmark's codes.** The
+decoder's second phase builds the paper's auxiliary code over the union of
+two adjacent blocks (Algorithm 1). But that construction needs the paper's
+own layout of evaluation points, and the benchmark encodes every
+parameterisation with a simpler shared layout so that all five rows stay
+comparable. On those codes phase 2 has almost nothing to work with: it
+engaged on 1% of the threshold-refinement trials, and even counting every
+one of those as a failure moves no threshold by more than 0.003.
+Consequently **all five BC rows are measured as effectively single-phase
+decoders**, and their thresholds are what phase 1 achieves. Making phase 2
+genuinely extend the reach — on a layout that also keeps the comparison
+fair — is the highest-value piece of work left.
 
 **The NTT decoder is correct but slower than the thing it replaces.** A
 transform-based decoder was added for the block-circulant local phase, on the
@@ -360,7 +370,7 @@ requirement not met.
 * **1D-RS** is optimal on tolerance and expensive to decode. **2D-RS** is
   cheap to decode and has a weak worst-case guarantee it comfortably beats
   in practice. **Block-circulant** buys repair locality, and its reach is
-  set by λ — measured at 0.34, 0.28 and 0.21 for λ = 2, 3, 4, against a
+  set by λ — measured at 0.34, 0.255 and 0.202 for λ = 2, 3, 4, against a
   1/(1+λ) prediction of 0.333, 0.250, 0.200.
 * Held at equal storage cost, only three of the seven schemes are on the
   cost-versus-tolerance frontier.

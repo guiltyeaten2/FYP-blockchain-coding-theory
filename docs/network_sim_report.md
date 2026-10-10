@@ -110,11 +110,19 @@ tolerance:
 
 > symbols needed = *n* × (1 − tolerance)
 
-| | tolerance | must fetch | of |
+| | tolerance used | must fetch | of |
 |---|---|---|---|
 | 1D-RS | 0.50 | 4096 | 8192 |
 | 2D-RS | 0.35 | 5492 | 8448 |
 | BC ω1024 λ2 | 0.33 | 5489 | 8192 |
+
+The tolerance here is deliberately **conservative**: the highest swept rate
+at which *every* trial recovered, not the 50% threshold the benchmark
+report quotes. A node sizing its download wants to recover reliably, not
+half the time, so it plans against the point where recovery is certain.
+That is why these sit below the thresholds of 0.500, 0.401 and 0.342 — the
+two are different quantities answering different questions, and both are
+correct.
 
 So a weaker decoder forces a **larger download at identical storage cost**.
 This is the benchmark report's "surviving data needed" figure, no longer

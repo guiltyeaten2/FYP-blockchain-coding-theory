@@ -324,20 +324,89 @@ def _readable_log(ax, axis="y"):
         lambda v, _p: (f"{v:g}" if v >= 1 else f"{v:.2f}".rstrip("0").rstrip("."))))
 
 
-def _threshold(trials):
-    """Erasure rate at which this scheme's success rate crosses 50%.
+# --------------------------------------------------------------- thresholds
+#
+# Thresholds come from threshold_refinement.py: dense trials across each
+# scheme's own transition band, fitted by maximum-likelihood logistic
+# regression with a bootstrap 95% interval (see thresholds.py).
+#
+# They used to come from linear interpolation between the two coarse-sweep
+# rates bracketing the 50% crossing. The coarse sweep runs as few as three
+# trials near a threshold, and that produced 1D-RS = 0.505 -- above the 0.5 an
+# MDS code with n = 2k can sustain -- plus two intervals of width zero that
+# reflected perfect separation in the data, not real precision. The decoder
+# was never at fault; the estimate was.
+import thresholds as _T
 
-    Linear interpolation between the two swept rates that bracket the
-    crossing. The sweep is fine-grained through the transition band, so this
-    is a reasonable reading of the threshold rather than a fitted model --
-    and it is stated here rather than eyeballed off a chart."""
-    pts = sorted((t["rate"], t["success_rate"]) for t in trials)
-    for (r0, s0), (r1, s1) in zip(pts, pts[1:]):
-        if s0 >= 0.5 > s1:
-            if s0 == s1:
-                return r0
-            return r0 + (s0 - 0.5) * (r1 - r0) / (s0 - s1)
-    return None
+_REFINED = None
+
+
+def _refined():
+    global _REFINED
+    if _REFINED is None:
+        path = os.path.join(HERE, "threshold_results.json")
+        _REFINED = {}
+        if os.path.exists(path):
+            with open(path) as f:
+                d = json.load(f)
+            if not d.get("quick"):                 # never trust a smoke test
+                for name, e in d.get("schemes", {}).items():
+                    if e.get("estimate"):
+                        _REFINED[name] = e["estimate"]
+    return _REFINED
+
+
+def _merged_trials(trials):
+    """Coarse-sweep records for one scheme, merged with its refinement trials.
+
+    The coarse sweep covers 2-55% but runs as few as three trials near a
+    threshold; the refinement runs 12-20 per rate across the transition band
+    only. Drawn from the coarse sweep alone, 1D-RS showed 67% recovery at
+    epsilon = 0.50 against an exact 50%, because three trials happened to give
+    two successes -- so the curve visibly missed the theory it should match.
+    Merging puts the dense samples exactly where the shape is decided.
+
+    Counts at a rate present in both are summed, not averaged, so each trial
+    carries equal weight.
+    """
+    if not trials:
+        return trials
+    name = trials[0].get("scheme")
+    path = os.path.join(HERE, "threshold_results.json")
+    extra = []
+    if os.path.exists(path):
+        with open(path) as f:
+            d = json.load(f)
+        if not d.get("quick"):
+            extra = d.get("schemes", {}).get(name, {}).get("trials", [])
+    pool = {}
+    for t in list(trials) + list(extra):
+        r = round(t["rate"], 4)
+        k, n = pool.get(r, (0, 0))
+        pool[r] = (k + t["successes"], n + t["trials"])
+    return [{"scheme": name, "rate": r, "successes": k, "trials": n,
+             "success_rate": k / n} for r, (k, n) in sorted(pool.items())]
+
+
+def _estimate(trials):
+    """Refined estimate for this scheme if available, else a logistic fit to
+    the trials supplied. Returns the estimate dict or None."""
+    name = trials[0].get("scheme") if trials else None
+    if name in _refined():
+        return _refined()[name]
+    return _T.estimate_threshold(_T.points_from_trials(trials))
+
+
+def _threshold(trials):
+    """Erasure probability at which this scheme recovers half the time."""
+    e = _estimate(trials)
+    return e["threshold"] if e else None
+
+
+def _threshold_ci(trials):
+    """95% interval on _threshold, as (low, high)."""
+    e = _estimate(trials)
+    return (e["ci_low"], e["ci_high"]) if e else (None, None)
 
 
 # --------------------------------------------------------------- benchmark
@@ -384,7 +453,7 @@ def fig_success_curves(bench):
     series = []
     for r in bench["results"]:
         m, ls = STYLE.get(r["scheme"], ("o", "-"))
-        ts = sorted(r["trials"], key=lambda t: t["rate"])
+        ts = sorted(_merged_trials(r["trials"]), key=lambda t: t["rate"])
         xs = [t["rate"] for t in ts]
         ys = [t["success_rate"] for t in ts]
         # Markers only where the curve is actually doing something. On the
@@ -399,8 +468,18 @@ def fig_success_curves(bench):
         series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
 
     ax.axhline(0.5, color="#888", lw=0.9, ls=":")
-    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
-    ax.set_ylabel("trials recovered byte-exact")
+    # Exact recovery probability of 1D-RS, which is MDS: it recovers iff at
+    # most n - k symbols are erased, and on BEC(eps) the erasure count is
+    # Binomial(n, eps). Computed, not fitted -- if the measured 1D-RS points
+    # did not sit on this, the harness would be wrong.
+    r1 = next((x for x in bench["results"] if x["scheme"] == "1D-RS"), None)
+    if r1:
+        es = [0.44 + i * 0.0005 for i in range(241)]
+        ax.plot(es, [_T.mds_success_probability(e, r1["n"], r1["k"]) for e in es],
+                ls="-", lw=3.2, color=COLOURS["1D-RS"], alpha=0.18, zorder=1,
+                label="1D-RS exact (MDS)")
+    ax.set_xlabel("Erasure rate (%)")
+    ax.set_ylabel("Trials recovered (%)")
     ax.set_title("Every scheme holds, then collapses within a few percent")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
@@ -419,31 +498,30 @@ def fig_success_curves(bench):
         th = _threshold(r["trials"])
         if th is None:
             continue
-        lo, hi = _transition_band(r["trials"])
+        lo, hi = _threshold_ci(r["trials"])
         rows.append((r["scheme"], th, lo, hi))
     rows.sort(key=lambda t: t[1])
 
     for i, (name, th, lo, hi) in enumerate(rows):
         col = COLOURS.get(name)
-        axb.plot([lo, hi], [i, i], lw=7, ls="-", color=col, alpha=0.30,
-                 solid_capstyle="butt")
-        axb.plot([th], [i], marker="|", ms=20, mew=2.6, color=col)
-        axb.annotate(f"{th:.3f}", xy=(hi, i), xytext=(10, 0),
+        axb.errorbar([th], [i], xerr=[[th - lo], [hi - th]], fmt="o",
+                     ms=4, color=col, ecolor=col, elinewidth=1.2,
+                     capsize=3, capthick=1.0, ls="none")
+        axb.annotate(f"{th:.3f}", xy=(hi, i), xytext=(6, 0),
                      textcoords="offset points", va="center",
                      fontsize=7, color=col)
     axb.set_yticks(range(len(rows)))
     axb.set_yticklabels([disp(n) for n, *_ in rows])
     axb.set_ylim(-0.7, len(rows) - 0.3)
     axb.set_xlim(0.15, 0.60)
-    axb.set_xlabel("erasure rate")
-    axb.set_title("Where each scheme falls over\n"
-                  "bar: all trials recovered → none did.  tick: 50% threshold",
-                  fontsize=8)
+    axb.set_xlabel("Erasure rate (%)")
+    axb.set_title("Threshold with 95% confidence interval", fontsize=8)
     axb.xaxis.set_major_formatter(FuncFormatter(_pct))
     axb.grid(axis="y", alpha=0)
 
-    _subtitle(axb, "520 trials over one EIP-4844 blob; a trial counts as "
-                   "recovered only if the bytes match the original exactly")
+    _subtitle(axb, "(a) the 520-trial coarse sweep. (b) thresholds from a "
+                   "logistic fit to dense trials across each transition band. "
+                   "A trial counts as recovered only if the bytes match exactly")
     return _save(fig, "bench_success_curves.svg")
 
 
@@ -464,7 +542,7 @@ def fig_threshold_bands(bench):
         th = _threshold(r["trials"])
         if th is None:
             continue
-        lo, hi = _transition_band(r["trials"])
+        lo, hi = _threshold_ci(r["trials"])
         rows.append((r["scheme"], th, lo, hi))
     rows.sort(key=lambda t: t[1])
 
@@ -473,8 +551,8 @@ def fig_threshold_bands(bench):
     ax.barh(list(y), [t[1] for t in rows], height=0.62,
             color=[COLOURS.get(t[0]) for t in rows],
             edgecolor="#333", linewidth=0.4, zorder=2)
-    # Asymmetric error bar: the band runs from the last rate at which every
-    # trial recovered to the first at which none did.
+    # Error bar is the 95% bootstrap confidence interval on the threshold --
+    # the conventional meaning of an error bar, so no special key is needed.
     ax.errorbar([t[1] for t in rows], list(y),
                 xerr=[[t[1] - t[2] for t in rows], [t[3] - t[1] for t in rows]],
                 fmt="none", ecolor="#333", elinewidth=0.8, capsize=2.5,
@@ -487,19 +565,19 @@ def fig_threshold_bands(bench):
     ax.set_yticklabels([disp(n) for n, *_ in rows], fontsize=FS_LABEL)
     ax.set_ylim(-0.6, len(rows) - 0.4)
     ax.set_xlim(0, 0.63)
-    ax.set_xlabel("erasure rate tolerated")
-    ax.set_title("Erasure tolerance by scheme, with the transition range")
+    ax.set_xlabel("Erasure rate tolerated (%)")
+    ax.set_title("Erasure tolerance by scheme, with 95% confidence intervals")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     ax.grid(axis="y", alpha=0)
     ax.grid(axis="x", alpha=0.3)
-    # A key, so the encoding does not depend on the caption being read.
-    ax.annotate("bar: 50% success threshold\nwhisker: 100% to 0% recovery",
+    ax.annotate("bar: 50% recovery threshold\nwhisker: 95% confidence interval",
                 xy=(0.985, 0.06), xycoords="axes fraction", ha="right",
                 va="bottom", fontsize=FS_KEY, color="#444",
                 bbox=dict(boxstyle="round,pad=0.3", fc="white",
                           ec="#bbb", lw=0.4))
-    _subtitle(ax, "520 trials over one EIP-4844 blob; a trial counts as "
-                  "recovered only if the bytes match the original exactly.")
+    _subtitle(ax, "thresholds from a logistic fit to dense trials across each "
+                  "scheme's transition band; 95% bootstrap intervals. A trial "
+                  "counts as recovered only if the bytes match exactly.")
     return _save(fig, "bench_threshold_bands.svg")
 
 
@@ -544,7 +622,7 @@ def fig_tolerance_vs_guarantee(bench):
                 label="rate bound 1$-$R" if i == 0 else None)
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(l) for l in labels], rotation=18, ha="right")
-    ax.set_ylabel("erasure rate tolerated")
+    ax.set_ylabel("Erasure rate tolerated (%)")
     ax.set_title("Measured tolerance against each code's own worst-case bound")
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     _subtitle(ax, "storage matched at ~2x across every scheme; guarantee is "
@@ -565,7 +643,11 @@ def fig_bc_threshold_prediction(bench):
         if th is not None:
             rows.append((r["scheme"], r["params"]["lambda"],
                          r["params"]["predicted_local_reach"], th))
-    rows.sort(key=lambda t: (t[1], t[0]))
+    # By lambda, then by mu ascending. The refined thresholds resolve a small
+    # but real rise with mu at fixed lambda=2, and it only reads as a trend
+    # if the bars are in mu order.
+    mu_of = {r["scheme"]: r["params"].get("mu", 0) for r in bench["results"]}
+    rows.sort(key=lambda t: (t[1], mu_of.get(t[0], 0)))
     fig, ax = plt.subplots(figsize=(COL1, 2.5))
     x = range(len(rows))
     ax.bar(x, [t[3] for t in rows], 0.52,
@@ -574,10 +656,16 @@ def fig_bc_threshold_prediction(bench):
         ax.plot([i - 0.32, i + 0.32], [t[2], t[2]], color="#c1442e", lw=1.4,
                 ls="-", solid_capstyle="butt",
                 label="prediction 1/(1+$\\lambda$)" if i == 0 else None)
-        ax.text(i, t[3] + 0.006, f"{t[3]:.2f}", ha="center", fontsize=7)
+        lo, hi = _threshold_ci(next(r for r in bench["results"]
+                                    if r["scheme"] == t[0])["trials"])
+        ax.errorbar([i], [t[3]], yerr=[[t[3] - lo], [hi - t[3]]], fmt="none",
+                    ecolor="#333", elinewidth=0.8, capsize=2.5, capthick=0.8,
+                    zorder=4)
+        ax.text(i, hi + 0.005, f"{t[3]:.3f}", ha="center", fontsize=6.5)
     ax.set_xticks(list(x))
-    ax.set_xticklabels([f"{disp(t[0])}" for t in rows], fontsize=6.5)
-    ax.set_ylabel("erasure rate tolerated")
+    ax.set_xticklabels([f"{disp(t[0])}\n\u03bc={mu_of.get(t[0], '?')}"
+                        for t in rows], fontsize=6.0)
+    ax.set_ylabel("Erasure rate tolerated (%)")
     ax.set_title("Block-circulant threshold follows $1/(1+\\lambda)$, not $\\mu$ or $\\omega$")
     ax.set_ylim(0, max(t[3] for t in rows) * 1.22)
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
@@ -602,8 +690,8 @@ def fig_decode_time(bench):
         ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(r["scheme"]), xs, ys, COLOURS.get(r["scheme"])))
     ax.set_yscale("log")
-    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
-    ax.set_ylabel("mean decode time (s)")
+    ax.set_xlabel("Erasure rate (%)")
+    ax.set_ylabel("Mean decode time (s)")
     ax.set_title("Decode cost against erasure rate")
     _subtitle(ax, "mean over the trials that recovered; n$\\approx$8192, "
                   "k=4096, single-threaded Python over galois")
@@ -640,7 +728,7 @@ def fig_data_needed(bench):
                 ha="center", fontsize=6)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=18, ha="right")
-    ax.set_ylabel("surviving data needed (blobs)")
+    ax.set_ylabel("Surviving data needed (blobs)")
     ax.set_title("What a node must actually fetch to rebuild one blob")
     _subtitle(ax, "n(1-tolerance)/k: surviving symbols required, as a "
                   "multiple of one blob")
@@ -696,8 +784,8 @@ def fig_tolerance_vs_cost(bench):
             color="#444", zorder=2,
             label=f"frontier — not beaten on both counts ({len(front)} schemes)")
     ax.set_yscale("log")
-    ax.set_xlabel("erasure tolerated (rate at 50% success)")
-    ax.set_ylabel(f"decode time at {100 * rate:.0f}% erasure (s), log scale")
+    ax.set_xlabel("Erasure rate tolerated (%)")
+    ax.set_ylabel(f"Decode time at {100 * rate:.0f}% erasure (s)")
     ax.set_title("Tolerance against the cost of achieving it\n"
                  "lower and further right is better", fontsize=8)
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
@@ -729,7 +817,7 @@ def fig_encode_decode(bench):
     ax.set_yscale("log")
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(n) for n in names], rotation=20, ha="right", fontsize=8)
-    ax.set_ylabel("time for one blob (s)")
+    ax.set_ylabel("Time for one blob (s)")
     ax.set_title("Encode is paid once; decode is paid by everyone")
     _subtitle(ax, "one 128 KiB blob; decode measured at the highest rate "
                   "every scheme still recovers")
@@ -760,8 +848,8 @@ def fig_cost_per_erasure(bench):
             ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
             series.append((disp(r["scheme"]), xs, ys, c_))
     ax.set_yscale("log")
-    ax.set_xlabel("erasure rate (fraction of codeword symbols erased)")
-    ax.set_ylabel("decode time per erased symbol (ms)")
+    ax.set_xlabel("Erasure rate (%)")
+    ax.set_ylabel("Decode time per erased symbol (ms)")
     ax.set_title("Cost per erasure repaired, with the workload divided out")
     _subtitle(ax, "decode time divided by the number of symbols actually "
                   "erased in that trial")
@@ -788,8 +876,8 @@ def fig_decode_vs_erasure_count(bench):
                      if t["mean_decode_time_success_only_s"])
         ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", ms=3.5,
                 lw=1.6, label=f"{disp(name)}  (n={r['n']})", color=COLOURS[name])
-    ax.set_xlabel("total erasures in the codeword")
-    ax.set_ylabel("mean decode time, successes only (s)")
+    ax.set_xlabel("Erasures in the codeword (symbols)")
+    ax.set_ylabel("Mean decode time (s)")
     ax.set_title("One long division against many short ones")
     ax.legend()
     return _save(fig, "rs_decode_vs_erasure_count.svg")
@@ -817,9 +905,9 @@ def fig_decoder_fix(data):
             ax.text(i + off, v + 0.6, str(v), ha="center", fontsize=8)
     ax.set_xticks(list(x))
     ax.set_xticklabels(cats)
-    ax.set_ylabel(f"trials (of {data['trials']})")
-    ax.set_xlabel("outcome")
-    ax.set_title("The decoder fix: silent corruption eliminated,\n"
+    ax.set_ylabel(f"Trials (of {data['trials']})")
+    ax.set_xlabel("Outcome")
+    ax.set_title("Decoder fix: silent corruption eliminated,\n"
                  "correct recoveries up", fontsize=8)
     _subtitle(ax, f"the same {data['trials']} trials at "
                   f"{data['parameterisation']}, spanning "
@@ -873,12 +961,12 @@ def fig_fft_vs_vandermonde(fft):
         ax.set_xticklabels([disp(s) for s in schemes],
                            rotation=45, ha="right", fontsize=8)
         ax.set_title(f"{100 * rate:.0f}% erased")
-    axes[0].set_ylabel("mean decode time (s), log scale")
+    axes[0].set_ylabel("Mean decode time (s)")
     # Legend below the panels: inside the first one it covered the bars it
     # was labelling.
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.06))
-    fig.suptitle("The NTT decoder is slower than the path it replaces", y=1.0)
+    fig.suptitle("NTT decoder is slower than the path it replaces", y=1.0)
     return _save(fig, "fft_vs_vandermonde.svg")
 
 
@@ -904,8 +992,8 @@ def fig_fft_profile(fft):
     ax.set_xlim(0, total)
     ax.set_ylim(-0.5, 0.5)
     ax.set_yticks([])
-    ax.set_xlabel(f"seconds in one local-block decode (n$_0$={fft['profile']['n0']})")
-    ax.set_title("The NTT is not what the NTT decoder spends its time on")
+    ax.set_xlabel(f"Time in one local-block decode (s), n$_0$={fft['profile']['n0']}")
+    ax.set_title("Where the NTT decoder spends its time")
     ax.grid(False)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.55), ncol=2)
     return _save(fig, "fft_profile.svg")
@@ -921,7 +1009,7 @@ def fig_node_width(fft):
     for b_, k in zip(bars, keys):
         ax.text(b_.get_x() + b_.get_width() / 2, n[k] * 1.02,
                 f"{n[k]:.3f}s", ha="center", fontsize=8)
-    ax.set_ylabel(f"vandermonde_solve, {n['n_nodes']} nodes (s)")
+    ax.set_ylabel(f"Solve time, {n['n_nodes']} nodes (s)")
     ax.set_title(f"Evaluation-point width costs {n['ratio']:.1f}x\n"
                  "— paid even when the NTT never runs", fontsize=7)
     ax.set_ylim(0, max(n[k] for k in keys) * 1.25)
@@ -954,7 +1042,7 @@ def fig_grs_premise(fft):
         ax.set_ylim(0, top * 1.35)
         ax.set_title(f"{title}\nn={d['n']}, {d['tail_len']} coefficients "
                      f"must vanish", fontsize=6.5)
-    axes[0].set_ylabel("nonzero tail coefficients")
+    axes[0].set_ylabel("Nonzero tail coefficients (count)")
     verdict = ("premise HOLDS — this is a GRS code"
                if s_["phase1"]["fixed"] == 0 else "premise fails")
     axes[0].text(0.5, 0.93, verdict, transform=axes[0].transAxes,
@@ -990,8 +1078,8 @@ def fig_net_erasure(runA):
     xs = [i / 20 for i in range(17)]
     ax.plot(xs, [p ** rep for p in xs], ls="--", lw=1.6, color="#c1442e",
             label=f"$p^{{{rep}}}$ prediction (custody replication {rep})")
-    ax.set_xlabel("fraction of peers refusing to serve")
-    ax.set_ylabel("cells missing at the deadline")
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Cells missing at deadline (%)")
     ax.set_title("Custody replication turns withholding into a much smaller\n"
                  "erasure rate — and the code carried makes no difference",
                  fontsize=8)
@@ -1020,8 +1108,8 @@ def fig_net_recovery(runA):
         c_, ls_, mk_ = style_of(s)
         ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(s), xs, ys, COLOURS[s]))
-    ax.set_xlabel("fraction of peers refusing to serve")
-    ax.set_ylabel("trials recovered byte-exact")
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Trials recovered (%)")
     ax.set_title("Recovery against adversarial withholding")
     cfg = runA["config"]
     _subtitle(ax, f"{cfg['n_peers']} peers, replication "
@@ -1066,7 +1154,7 @@ def fig_net_gather_vs_decode(runB):
                     ha="center", va="bottom", fontsize=6.5, color="#666")
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(x) for x in schemes], rotation=25, ha="right", fontsize=8)
-    ax.set_ylabel("seconds per slot")
+    ax.set_ylabel("Time per slot (s)")
     cfg = runB["config"]
     ax.set_title("Decode dominates gather by orders of magnitude")
     _subtitle(ax, f"{cfg.get('blobs_per_slot', 6)} blobs per slot, "
@@ -1103,8 +1191,8 @@ def fig_net_throughput(runB):
     ax.annotate(f"blobs attempted ({target:.0f})", xy=(0.0, target),
                 xytext=(2, 4), textcoords="offset points",
                 fontsize=6.5, color="#444")
-    ax.set_xlabel("fraction of peers withholding")
-    ax.set_ylabel("blobs reconstructed per slot")
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Blobs reconstructed per slot (count)")
     ax.set_title("Throughput inverts the tolerance ordering")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _label_ends(ax, series)
@@ -1143,8 +1231,8 @@ def fig_net_bandwidth(runB):
     ax.annotate(f"the data itself ({blobs} blobs = {payload:.2f} MiB)",
                 xy=(0.0, payload), xytext=(2, 4), textcoords="offset points",
                 fontsize=6.5, color="#444")
-    ax.set_xlabel("fraction of peers refusing to serve")
-    ax.set_ylabel("data fetched per slot (MiB)")
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Data fetched per slot (MiB)")
     ax.set_title("Bandwidth: what each scheme pulls over the wire")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _label_ends(ax, series)
@@ -1182,11 +1270,15 @@ def fig_net_latency(runA):
         series.append((disp(sc), xs, ys, COLOURS[sc]))
     dl = cfg.get("deadline_s", 4.0)
     ax.axhline(dl, color="#c1442e", ls="--", lw=1.2)
-    ax.annotate(f"{dl:.0f}s sampling deadline", xy=(0.0, dl),
-                xytext=(2, 4), textcoords="offset points",
-                fontsize=6.5, color="#c1442e")
-    ax.set_xlabel("fraction of peers refusing to serve")
-    ax.set_ylabel("time to gather the cells (s)")
+    # Label BELOW the rule, with headroom above it. Several curves saturate
+    # at the deadline, so with the rule at the top of the axes both this
+    # label and the end-of-line scheme names were clipped by the frame.
+    ax.annotate(f"{dl:.0f} s sampling deadline", xy=(0.01, dl),
+                xytext=(0, -3), textcoords="offset points",
+                va="top", ha="left", fontsize=FS_KEY, color="#c1442e")
+    ax.set_ylim(0, dl * 1.16)
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Time to gather cells (s)")
     ax.set_title("Latency: withholding costs time, not just data")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _label_ends(ax, series)
@@ -1227,8 +1319,8 @@ def fig_net_time_budget(runB):
         ax.annotate(f"{lab} ({y:.0f}s)", xy=(0.0, y), xytext=(2, 4),
                     textcoords="offset points", fontsize=6.5, color=col)
     ax.set_yscale("log")
-    ax.set_xlabel("fraction of peers refusing to serve")
-    ax.set_ylabel("gather + decode per slot (s)")
+    ax.set_xlabel("Peers refusing to serve (%)")
+    ax.set_ylabel("Gather + decode per slot (s)")
     ax.set_title("Does the whole job fit inside a slot?")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
@@ -1280,8 +1372,8 @@ def fig_net_peers(runC):
                     fontsize=6.5, color=col)
     ax.set_xscale("log", base=2)
     ax.set_xlim(peers[0] * 0.85, peers[-1] * 3.6)
-    ax.set_xlabel("peers in the sampled network")
-    ax.set_ylabel("cells missing at the deadline")
+    ax.set_xlabel("Network size (peers)")
+    ax.set_ylabel("Cells missing at deadline (%)")
     ax.set_title("Realised erasure rises with peer count, then plateaus")
     _subtitle(ax, f"custody replication {rep}, drawn without replacement; "
                   "markers are the exact probability that all custodians "

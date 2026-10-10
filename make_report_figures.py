@@ -56,19 +56,25 @@ SELECTION = [
      "Results — fault tolerance", dict(
       question="How much of the codeword can each scheme lose and still "
                "rebuild the blob exactly?",
-      data="The erasure sweep: 520 trials over one real EIP-4844 blob, 7 "
-           "schemes x 18 erasure rates from 2% to 55%, fixed seed 20260827. "
-           "benchmark_results.json.",
-      reading="Top: fraction of trials recovered against erasure rate, one "
-              "line per scheme, markers drawn only where a curve is partway "
-              "down. Bottom: one row per scheme, the bar spanning the last "
-              "rate where every trial recovered to the first where none did, "
-              "with the 50% threshold ticked on it.",
+      data="Two experiments. The coarse sweep: 520 trials over one real "
+           "EIP-4844 blob, 7 schemes x 18 erasure rates from 2% to 55% "
+           "(benchmark_results.json). The threshold refinement: 1,184 further "
+           "trials on a fine grid across each scheme's own transition band "
+           "(threshold_results.json). Panel (a) draws both combined.",
+      reading="(a) Fraction of trials recovered against erasure probability, "
+              "one line per scheme; the pale band is the exact recovery "
+              "probability of 1D-RS, computed from the MDS property rather "
+              "than fitted. (b) Each scheme's threshold -- the erasure "
+              "probability at which it recovers half the time -- with its 95% "
+              "bootstrap confidence interval, from a maximum-likelihood "
+              "logistic fit.",
       shows="Every scheme holds at 100% then collapses within a few percent, "
-            "which is what makes a single threshold a fair summary. The "
-            "three lambda=2 rows land at 0.340, 0.341 and 0.350 despite mu "
-            "ranging 2 to 8 and omega 512 to 2048 - a factor of four in "
-            "block size moving the threshold by nothing.",
+            "which is what makes a single threshold a fair summary. 1D-RS "
+            "sits on its exact MDS curve, at 0.500. The three lambda=2 rows "
+            "land within 0.013 of each other (0.337, 0.342, 0.349), far "
+            "closer to one another than to lambda=3 (0.255) or lambda=4 "
+            "(0.202): lambda sets the reach. Their intervals do not overlap, "
+            "though, and they rise with mu - so mu has a small, real effect.",
       caveat="Erasures are drawn i.i.d., so these are upper bounds on "
              "performance against an adversary choosing the worst pattern.")),
 
@@ -76,17 +82,18 @@ SELECTION = [
      "Results — fault tolerance (space-saving alternative to 01)", dict(
       question="Where does each scheme fall over, and how close together are "
                "those points?",
-      data="The same erasure sweep as figure 01: 520 trials, 7 schemes, 18 "
-           "rates. benchmark_results.json.",
+      data="The threshold refinement: 1,184 trials on a fine grid across "
+           "each scheme's transition band, 12-20 per rate "
+           "(threshold_results.json).",
       reading="Horizontal bars, one per scheme, sorted by threshold. Bar "
-              "length is the 50% success threshold; the whisker spans the "
-              "last rate at which every trial recovered to the first at "
-              "which none did. The whisker is a measured range, not a "
-              "confidence interval.",
-      shows="The three lambda=2 rows cluster at 0.340, 0.341 and 0.350 "
-            "across a factor of four in block size. The bar width also shows "
-            "what a bare threshold hides: lambda=4 collapses over a much "
-            "wider range of erasure rates than the lambda=2 rows do.",
+              "length is the erasure probability at which the scheme "
+              "recovers half the time, from a maximum-likelihood logistic "
+              "fit; the whisker is its 95% bootstrap confidence interval.",
+      shows="1D-RS reaches 0.500, the most an MDS code with n = 2k can "
+            "sustain. The three lambda=2 rows sit within 0.013 of each "
+            "other (0.337, 0.342, 0.349) while lambda=3 and lambda=4 fall to "
+            "0.255 and 0.202. Intervals are about +/-0.002 throughout, so "
+            "every difference shown is resolved.",
       caveat="A standalone, single-column alternative to figure 01. Use one "
              "or the other, not both: they are the same data. This one "
              "carries the comparison and is readable without its caption; "
@@ -97,16 +104,23 @@ SELECTION = [
      "bench", "Results — fault tolerance", dict(
       question="Does the block-circulant decoder behave as the source paper "
                "predicts?",
-      data="Same sweep. Thresholds derived from the success curves; the "
-           "prediction is the local code's stopping rate from Sasidharan, "
-           "Viterbo & Feist (ePrint 2026/708).",
-      reading="Bars are measured thresholds, one per parameterisation, "
-              "sorted by lambda. Red rules are the predicted stopping rate "
-              "S0 = rho/n0 = 1/(1+lambda).",
-      shows="Reach is set by lambda alone. Predicted 0.333/0.250/0.200 for "
-            "lambda = 2/3/4 against measured 0.34/0.28/0.21. Theory and "
-            "experiment agree at every point, and mu and omega do not enter.",
-      caveat=None)),
+      data="Thresholds from the refinement experiment, with 95% intervals; "
+           "the prediction is the local code's stopping rate from "
+           "Sasidharan, Viterbo & Feist (ePrint 2026/708).",
+      reading="Bars are measured thresholds with 95% confidence intervals, "
+              "ordered by lambda and then by mu. Red rules are the predicted "
+              "local stopping rate S0 = rho/n0 = 1/(1+lambda).",
+      shows="Lambda sets the reach. Predicted 0.333/0.250/0.200 for lambda "
+            "= 2/3/4 against measured 0.337-0.349, 0.255 and 0.202. Every "
+            "measurement sits just above its prediction, as it should: the "
+            "local stopping rate is what one block can repair alone, and "
+            "the cascade across blocks can only add to it. At fixed "
+            "lambda=2 the threshold also rises with mu (0.337, 0.342, 0.349 "
+            "for mu = 2, 4, 8) - more blocks give that cascade more to work "
+            "with.",
+      caveat="An earlier estimate put lambda=3 at 0.275. It was the midpoint "
+             "of a gap between two coarse grid points with no trial inside "
+             "it; the refinement places it at 0.255, on the prediction.")),
 
     (4, M.fig_tolerance_vs_guarantee, "bench", "tolerance-vs-guarantee",
      "bench", "Discussion — guarantees versus behaviour", dict(
@@ -117,10 +131,10 @@ SELECTION = [
       reading="Blue is the measured 50% threshold, grey the worst-case "
               "guarantee from minimum distance, dashed red the rate bound "
               "1-R that no code of that rate can beat.",
-      shows="1D-RS sits on its bound (0.505 against 0.500), which is what "
-            "being MDS means and a useful check that the harness is sound. "
-            "2D-RS reaches 0.397 against a guarantee of 0.098 - four times "
-            "its own bound.",
+      shows="1D-RS sits on its bound at 0.500, which is what being MDS "
+            "means and a useful check that the harness is sound. 2D-RS "
+            "reaches 0.401 against a guarantee of 0.098 - four times its own "
+            "bound.",
       caveat="Not a contradiction. A minimum-distance guarantee holds "
              "against every pattern including the adversarial worst case; "
              "these trials draw patterns at random.")),
@@ -201,8 +215,8 @@ SELECTION = [
            "n(1-threshold)/k, expressed as a multiple of one blob.",
       reading="Bars per scheme against a dashed line at 1.0, the theoretical "
               "floor - nothing rebuilds 124 KiB from less than 124 KiB.",
-      shows="1D-RS needs essentially the floor at 0.99x. Everything else "
-            "needs 1.24x to 1.58x. A scheme tolerating a lower erasure rate "
+      shows="1D-RS needs exactly the floor, 1.00x. Everything else "
+            "needs 1.23x to 1.60x. A scheme tolerating a lower erasure rate "
             "at the same storage cost necessarily needs more.",
       caveat="Computed from code parameters. Network figure 04 measures the "
              "same quantity independently and agrees on the ordering.")),
@@ -237,7 +251,7 @@ SELECTION = [
       shows="They fail in exactly the order the coding benchmark predicted, "
             "and at the withholding rates that produce their measured "
             "thresholds. BC omega1024 lambda4 breaks first (8/30 at 70% "
-            "withholding, which yields 0.233 erasure against its 0.210 "
+            "withholding, which yields 0.233 erasure against its 0.202 "
             "threshold); 1D-RS is still at 30/30 when 80% of peers refuse.",
       caveat="This is the project's strongest evidence: two independent "
              "methods agreeing is far better than either alone.")),
@@ -547,13 +561,25 @@ def main():
                             + "; ".join(f"({chr(97+i)}) {t}"
                                         for i, t in enumerate(panels))
                             + "\n\n")
+                # IEEE: one unified caption explains every sub-panel, each
+                # of which is labelled (a), (b) ... inside the artwork.
+                cap_body = short.rstrip(".") + "."
+                if len(panels) > 1:
+                    parts = " ".join(
+                        f"({chr(97+i)}) {t.replace(chr(10), ' ').rstrip('.')}."
+                        for i, t in enumerate(panels))
+                    cap_body += " " + parts
+                # Wide figures go in figure*, which spans both columns.
+                wide = h.get("n_panels", 1) > 1 or "net_" in name or len(panels) > 1
+                env = "figure*" if wide else "figure"
+                width = "\\textwidth" if wide else "\\columnwidth"
                 f.write("```latex\n")
-                f.write("\\begin{figure}[t]\n  \\centering\n")
-                f.write(f"  \\includegraphics[width=\\columnwidth]"
+                f.write(f"\\begin{{{env}}}[t]\n  \\centering\n")
+                f.write(f"  \\includegraphics[width={width}]"
                         f"{{figures/{name}}}\n")
-                f.write(f"  \\caption{{{short.rstrip('.')}.}}\n")
+                f.write(f"  \\caption{{{cap_body}}}\n")
                 f.write(f"  \\label{{fig:{name}}}\n")
-                f.write("\\end{figure}\n```\n")
+                f.write(f"\\end{{{env}}}\n```\n")
     print(f"  docs/report_figures/CAPTIONS.md")
 
     for sub, items in byfolder.items():

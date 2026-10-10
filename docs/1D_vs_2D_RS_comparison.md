@@ -19,15 +19,16 @@
 > still holds. Everything about *numbers* does not. Specifically superseded:
 > every "4× overhead", every "16384", every "128×128", the per-line erasure
 > budget (now 32 of 96 along a row and 24 of 88 down a column), and the
-> measured tolerance (2D-RS now recovers to 35% and fails from 45%, with
-> the transition straddling 38–40%).
+> measured tolerance (2D-RS recovers every trial to 38% and none from 42%,
+> with a 50% threshold of 0.401 — 95% CI 0.399–0.404, from the dense
+> threshold refinement described in the benchmark report).
 >
 > One further correction to the framing below. This document, and the first
 > revision of the benchmark report, judged 2D-RS against the rate bound
 > 1−*R*. That is the bound for an *MDS* code, and a product code is never
 > MDS: its minimum distance is the product of its component distances,
 > 33 × 25 = 825, so its actual guarantee is (*d*−1)/*n* = 0.098. The
-> measured 0.42 is more than four times that — the cross-axis cascade
+> measured 0.401 is four times that — the cross-axis cascade
 > genuinely outperforms the worst-case guarantee on random erasure
 > patterns, which is the interesting result and is not visible if the only
 > reference point is 1−*R*. For current measurements see

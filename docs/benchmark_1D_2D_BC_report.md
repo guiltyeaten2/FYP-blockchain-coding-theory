@@ -232,6 +232,48 @@ draw to draw and needs several. Trials are therefore concentrated around
 each scheme's own transition — which is not the same rate for all of them.
 Each success rate carries a 95% Wilson confidence interval.
 
+### How thresholds are estimated
+
+A scheme's **threshold** is the erasure probability at which it recovers
+the blob half the time. The erasure probability is the per-symbol
+parameter ε of a binary erasure channel BEC(ε) — the target rate the sweep
+feeds to its random mask — which is the standard axis for this in coding
+theory. The fraction of symbols actually erased in a given trial is a
+random variable around ε, not a better axis: a threshold is a property of
+the channel a code can survive.
+
+Thresholds are **not** read off the sweep above. That sweep spends its
+trials across 18 rates to show each scheme's whole curve, and near a
+threshold it runs as few as three — not enough to place a threshold to two
+decimal places, let alone three. An earlier version of this report did
+read them off it, by interpolating between the two rates bracketing the
+50% crossing, and it showed:
+
+* **1D-RS came out at 0.505**, above the 0.5 that an MDS code with n = 2k
+  can sustain. The decoder was not at fault — of the three trials at
+  ε = 0.50, the two that recovered had 4058 and 4087 erasures and the one
+  that failed had 4130, exactly the n − k = 4096 rule. But the true
+  recovery probability at ε = 0.50 is 0.504, and three trials returned two
+  successes, which happens about half the time. Interpolation turned that
+  into a third decimal place.
+* **λ=3 came out at 0.275.** Its data jumped from 8/8 at 25% straight to
+  0/8 at 30%, with no trial in between, so the estimate was simply the
+  midpoint of a five-point gap. The refined value is 0.255.
+
+So thresholds come from a separate **refinement experiment**
+(`threshold_refinement.py`): 1,184 further trials on a fine grid — steps
+of 0.005 or 0.01 — across each scheme's own transition band, with 12–20
+trials per rate. Each threshold is then a **maximum-likelihood logistic
+fit** to every one of those trials, so a lucky rate is weighed against the
+rest rather than defining the answer, with a **95% bootstrap confidence
+interval** (`thresholds.py`). The intervals come out at about ±0.002.
+
+1D-RS is a check on the whole procedure, because its answer is known
+exactly: an MDS code recovers if and only if at most n − k symbols are
+erased, and on BEC(ε) that count is Binomial(n, ε). The refinement
+measures 0.4996 (CI 0.4979–0.5012) against an exact 0.50006, and every
+one of its 84 trials obeys the n − k rule.
+
 ## Code parameters and storage cost
 
 All of them carry the same 124 KiB blob payload; they differ in how much
@@ -298,21 +340,23 @@ times depend on it.
 Across all 520 trials, no scheme returned corrupted data while reporting
 success: silent corruption was zero everywhere (0/28 for 1D-RS, 0/60 for
 2D-RS, and 0/88, 0/88, 0/88, 0/84, 0/84 across the five BC rows). Before
-the decoder fix described below, BC's figure was 31 of 40.
+the decoder fix described below, BC's figure was 31 of 40. The threshold
+refinement added 1,184 further trials and none of them did either, so the
+figure stands at zero across all 1,704 coding trials.
 
 <figure>
 <img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme.">
-<figcaption>The table above, drawn. <b>Top:</b> every scheme holds at 100% and then falls off a cliff rather than degrading gradually &mdash; the collapse spans a few percent of erasure rate, which is what makes a single threshold number a fair summary. Markers are drawn only where a curve is partway down, because on the flat runs at 100% and 0% all seven schemes sit on the same line and stacked markers read as one smeared band. <b>Bottom:</b> one row per scheme, showing the band from the last rate at which every trial recovered to the first at which none did, with the 50% threshold ticked on it. That the three &lambda;=2 rows land at 0.340, 0.341 and 0.350 &mdash; across &mu; from 2 to 8 and &omega; from 512 to 2048 &mdash; is the central result of the parameter sweep, and this panel exists so it can be read directly rather than inferred from four curves crossing inside a ten-point window.</figcaption>
+<figcaption>Fault tolerance of all seven schemes. <b>(a)</b> Fraction of trials recovered against erasure probability, drawn from the 520-trial sweep combined with the 1,184-trial threshold refinement, which samples each scheme's transition band densely. Every scheme holds at 100% and then collapses within a few percent, which is what makes a single threshold a fair summary. The pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted; the measured points sit on it. <b>(b)</b> Each threshold &mdash; the erasure probability at which a scheme recovers half the time &mdash; with its 95% bootstrap confidence interval. The three &lambda;=2 rows land within 0.013 of one another (0.337, 0.342, 0.349), far closer than to &lambda;=3 or &lambda;=4, so &lambda; sets the reach; but their intervals do not overlap and they rise with &mu;, so &mu; has a small, real effect of its own.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_tolerance_vs_guarantee.svg" alt="Measured tolerance for each scheme beside its own minimum-distance guarantee and the rate bound.">
-<figcaption>What each scheme actually tolerated (blue), beside its own minimum-distance guarantee (grey) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed red). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands on its bound &mdash; 0.51 measured against 0.50, inside one step of the sweep &mdash; which is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at more than four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Each blue bar is the erasure rate at which that scheme's success rate crosses 50%, linearly interpolated between the two swept rates that bracket the crossing (<code>_threshold</code> in <code>make_figures.py</code>).</figcaption>
+<figcaption>What each scheme actually tolerated (blue), beside its own minimum-distance guarantee (grey) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed red). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands on its bound &mdash; 0.500 measured, against an exact 0.50006 for an MDS code on an erasure channel &mdash; which is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Each blue bar is the erasure probability at which the scheme recovers half the time, from a maximum-likelihood logistic fit to the threshold refinement (<code>thresholds.py</code>).</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_bc_threshold.svg" alt="Block-circulant decoder threshold against the prediction one over one plus lambda.">
-<figcaption>The block-circulant parameter sweep, and the clearest single result here. The decoder's reach is set by &lambda; alone: all three &lambda;=2 rows land together at 0.34&ndash;0.35 despite &mu; ranging over 2, 4, 8 and &omega; over 2048, 1024, 512 &mdash; a factor of four in block size that moves the threshold by nothing. Raising &lambda; to 3 drops it to 0.28, and to 4 drops it to 0.21. The red rules are the prediction S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;), which is the local code's stopping rate in the source paper's own notation; the bars are what was measured, and the two agree at every point.</figcaption>
+<figcaption>The block-circulant parameter sweep against the source paper's prediction. Bars are measured thresholds with 95% confidence intervals, ordered by &lambda; and then by &mu;; the red rules are the local stopping rate S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;). &lambda; dominates: holding &mu;=4 fixed, raising &lambda; from 2 to 3 to 4 takes the threshold from 0.342 to 0.255 to 0.202. Every measurement sits just above its prediction, which is the expected direction &mdash; S&#8320; is what one block can repair alone, and the cascade across blocks can only add to it. That also explains the smaller effect at fixed &lambda;=2: the threshold rises from 0.337 to 0.342 to 0.349 as &mu; goes from 2 to 4 to 8, because more blocks give the cascade more to work with.</figcaption>
 </figure>
 
 <figure>
@@ -342,22 +386,23 @@ the decoder fix described below, BC's figure was 31 of 40.
 
 ## What the results show
 
-**1D-RS behaves exactly as Reed-Solomon theory says it must.** It
-recovers everything up to 48% and nothing from 50% upward.
-The invariant is exact rather than approximate: across every 1D-RS trial
-in the sweep, recovery succeeded if and only if the drawn erasure count
-was at most n&minus;k = 4096, with no exceptions. The partial results at the
+**1D-RS behaves exactly as Reed-Solomon theory says it must.** Its
+threshold is **0.500** (95% CI 0.498–0.501), against an exact 0.50006 for
+an MDS code with n = 2k on an erasure channel. It recovers every trial up
+to 49% erasure, about half at 50%, and none from 51%. The invariant
+underneath is exact rather than approximate: across all 84 refinement
+trials, recovery succeeded if and only if the drawn erasure count was at
+most n&minus;k = 4096, with no exceptions. The partial results at the
 threshold are not the decoder being unreliable — they are the random mask
-landing on either side of a hard line. Being MDS, 1D-RS extracts
-essentially all of its theoretical budget.
+landing on either side of a hard line. Being MDS, 1D-RS extracts all of
+its theoretical budget.
 
-**2D-RS comes second, and beats its own guarantee by a wide margin.** It
-holds to 35% and fails from 45%, with the transition straddling 38–40%
-(5/5 at 38%, 2/5 at 40%, 0/5 at 45%) — call it 0.42. Two reference points
-matter and they are very far apart. Its rate would permit 0.515; its
-*minimum distance* only guarantees 0.098, because a product code's
-distance is the product of its component distances, 33 × 25 = 825. The
-measured 0.42 is more than four times that guarantee.
+**2D-RS comes second, and beats its own guarantee by a wide margin.** Its
+threshold is **0.401** (95% CI 0.399–0.404). Two reference points matter
+and they are very far apart. Its rate would permit 0.515; its *minimum
+distance* only guarantees 0.098, because a product code's distance is the
+product of its component distances, 33 × 25 = 825. The measured 0.401 is
+four times that guarantee.
 
 That gap is the cross-axis cascade doing real work. A guarantee has to
 hold against the worst pattern in existence — for a product code, an
@@ -367,34 +412,41 @@ individually over budget keep getting rescued once their partner axis
 repairs enough neighbours. The honest summary is that 2D-RS's *typical*
 behaviour is far better than its *guaranteed* behaviour, and which of the
 two matters depends entirely on whether the erasures are adversarial.
-Against the 1−*R* bound it reaches 82%; against its own distance it is at
-430%.
+Against the 1−*R* bound it reaches 78%; against its own distance it is at
+412%.
 
 **The Block-Circulant rows separate the code from the decoder, and λ is
 what moves the decoder.** This is the clearest result in the sweep:
 
-- **ω2048 λ2** (μ=2, MDS, *d*=4097): recovers to 33%, fails from 35%; predicted S₀ = 0.333.
-- **ω1024 λ2** (μ=4, *d*=2049): recovers to 33%, fails from 38%; predicted S₀ = 0.333.
-- **ω512 λ2** (μ=8, *d*=1025): recovers to 33%, fails from 38%; predicted S₀ = 0.333.
-- **ω1024 λ3** (μ=4, *d*=3073): recovers to 25%, fails from 30%; predicted S₀ = 0.250.
-- **ω1024 λ4** (μ=4, MDS, *d*=4097): recovers to 15%, fails from 25%; predicted S₀ = 0.200.
+| row | μ | *d* | threshold | 95% CI | predicted S₀ |
+|---|---|---|---|---|---|
+| ω2048 λ2 | 2 | 4097 (MDS) | **0.337** | 0.335–0.338 | 0.333 |
+| ω1024 λ2 | 4 | 2049 | **0.342** | 0.340–0.344 | 0.333 |
+| ω512 λ2 | 8 | 1025 | **0.349** | 0.348–0.351 | 0.333 |
+| ω1024 λ3 | 4 | 3073 | **0.255** | 0.253–0.257 | 0.250 |
+| ω1024 λ4 | 4 | 4097 (MDS) | **0.202** | 0.200–0.203 | 0.200 |
 
-Two things fall out of that list. First, **the prediction is right every
-time** — S₀ = ρ/N₀ = 1/(1+λ), the source paper's local stopping rate,
-lands inside the measured transition band for all five rows. The limit is
-not mysterious; it is arithmetic about how many erasures fit inside one
-local support.
+Two things fall out of that table. First, **the prediction holds every
+time, from just below.** S₀ = ρ/N₀ = 1/(1+λ), the source paper's local
+stopping rate, sits under the measured threshold for all five rows, by
+between 0.002 and 0.016. That is the right side to be on: S₀ is what one
+block can repair on its own, and the cascade across blocks can only add to
+it. The limit is not mysterious; it is arithmetic about how many erasures
+fit inside one local support.
 
-Second, **λ is the only parameter that moves it.** The three λ=2 rows all
-land at 0.34–0.35 while μ ranges over 2, 4, 8 and ω over 2048, 1024, 512 —
-a factor of four in block size that changes the threshold by nothing at
-all. Raising λ to 3 costs 7 points, and to 4 costs 14. This is the direct
-answer to "which knob should we turn": not ω, not μ, but λ, and downward.
+Second, **λ is the parameter that moves it, and μ moves it slightly.**
+Holding μ = 4 fixed, raising λ from 2 to 3 costs 9 points and to 4 costs
+14. Holding λ = 2 fixed, quadrupling μ from 2 to 8 *gains* just over a
+point — 0.337, 0.342, 0.349 — a small effect but a real one, since
+the three intervals do not overlap. It has the same cause as the gap
+above S₀: more blocks give the cross-block cascade more to work with. The
+answer to "which knob should we turn" is still λ, and downward; μ is a
+second-order refinement.
 
 Third, and most useful for the construction's prospects, **two of these
 rows decode past their own worst-case guarantee.** ω1024 λ2 is guaranteed
-only 0.250 and reaches 0.35; ω512 λ2 is guaranteed 0.125 and also reaches
-0.35, nearly three times its bound. These are *not* MDS codes and cannot
+only 0.250 and reaches 0.342; ω512 λ2 is guaranteed 0.125 and reaches
+0.349, nearly three times its bound. These are *not* MDS codes and cannot
 claim to be; against a worst-case adversary they would fail where the
 table says they fail. But under random erasure — which is what a sampling
 network actually produces absent a targeted attack — they perform like
@@ -458,16 +510,37 @@ assign different evaluation points to the same shared columns — so it
 cannot use the fast solver and needs full elimination, at cubic cost.
 
 Phase 2 only runs when phase 1 has stalled, which happens only once a
-local support carries more than ρ erasures. Every row swept here has
-ρ ≥ 256, so every pair that could possibly help carries more than 256
-unknowns. The sweep applies a stated compute budget of 256 unknowns per
-pairwise system, identically to all five rows, and above that budget a
-pair is skipped, counted, and its positions left honestly flagged.
+local support carries more than ρ erasures. The sweep applies a stated
+compute budget of 256 unknowns per pairwise system, identically to all
+five rows, and above that budget a pair is skipped, counted, and its
+positions left honestly flagged. Every row here has ρ ≥ 512, so a pair
+facing the *full* erasure load is always over budget.
 
-The consequence is that **all five rows are measured as single-phase
-decoders**, and this is a limit of affordable computation rather than of
-the code. The cost was measured directly on the 512-equation systems that
-ω=ρ=256 produces:
+What that misses is the residual. Once phase 1 has resolved some blocks, a
+pair can be left with few enough unknowns to fall under the budget, and
+then phase 2 does run. In the threshold refinement this happened on
+**12 of 1,184 trials (1%)**, all in the two largest-block λ=2 rows
+(ω2048 λ2 ten times, ω1024 λ2 twice), all just below threshold, and each
+cost 10–17 minutes where a normal decode takes 5–12 seconds. All 12
+recovered.
+
+Whether phase 2 rescued those trials or merely spent the time before phase
+1 finished on a later pass is not recoverable from the data, so the effect
+is bounded instead: refitting with all 12 counted as failures — the case
+least favourable to a single-phase reading — moves ω2048 λ2 from 0.3367 to
+0.3341 and ω1024 λ2 from 0.3417 to 0.3412. Both stay above their 1/3
+prediction, and the μ ordering is unchanged. So **all five rows are
+measured as effectively single-phase decoders**, to within 0.003, and this
+is a limit of affordable computation rather than of the code.
+
+Since the decoder was revised, phase 2 is the paper's Algorithm 1
+auxiliary construction only; the earlier Gaussian-elimination fallback on
+the stacked parity checks was removed. Algorithm 1 needs the paper's
+evaluation-point layout, which the benchmark's encoder does not use, so on
+these rows phase 2 has little to work with — consistent with how rarely it
+mattered. The cost of the earlier approach, measured directly on the
+512-equation systems that ω=ρ=256 produces, shows why phase 2 was never
+affordable at full load:
 
 | unknowns in the pair | erasure rate it corresponds to | per pair | per decoding round (16 pairs) |
 |---|---|---|---|
