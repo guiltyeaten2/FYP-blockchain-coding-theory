@@ -242,37 +242,40 @@ theory. The fraction of symbols actually erased in a given trial is a
 random variable around ε, not a better axis: a threshold is a property of
 the channel a code can survive.
 
-Thresholds are **not** read off the sweep above. That sweep spends its
-trials across 18 rates to show each scheme's whole curve, and near a
-threshold it runs as few as three — not enough to place a threshold to two
-decimal places, let alone three. An earlier version of this report did
-read them off it, by interpolating between the two rates bracketing the
-50% crossing, and it showed:
+**The sweep samples each threshold densely.** It covers 2% to 55% erasure
+to show every scheme's whole curve, and merges in a fine grid — steps of
+0.005, or 0.01 where a transition is gentler — across each scheme's own
+transition band, with 12–20 trials per rate inside that band and one or two
+outside it, where the outcome is certain either way. Because there is one
+grid for every scheme, the n = 8192 schemes are corrupted at literally the
+same positions at every rate, thresholds included.
+
+An earlier version of this report spread its trials evenly and ran as few
+as three near a threshold. That is enough to show a curve's shape but not
+to place a threshold to two decimal places, and it showed:
 
 * **1D-RS came out at 0.505**, above the 0.5 that an MDS code with n = 2k
   can sustain. The decoder was not at fault — of the three trials at
   ε = 0.50, the two that recovered had 4058 and 4087 erasures and the one
   that failed had 4130, exactly the n − k = 4096 rule. But the true
   recovery probability at ε = 0.50 is 0.504, and three trials returned two
-  successes, which happens about half the time. Interpolation turned that
-  into a third decimal place.
+  successes, which happens about half the time. Interpolating between two
+  grid points turned that into a third decimal place.
 * **λ=3 came out at 0.275.** Its data jumped from 8/8 at 25% straight to
   0/8 at 30%, with no trial in between, so the estimate was simply the
-  midpoint of a five-point gap. The refined value is 0.255.
+  midpoint of a five-point gap.
 
-So thresholds come from a separate **refinement experiment**
-(`threshold_refinement.py`): 1,184 further trials on a fine grid — steps
-of 0.005 or 0.01 — across each scheme's own transition band, with 12–20
-trials per rate. Each threshold is then a **maximum-likelihood logistic
-fit** to every one of those trials, so a lucky rate is weighed against the
-rest rather than defining the answer, with a **95% bootstrap confidence
-interval** (`thresholds.py`). The intervals come out at about ±0.002.
+Each threshold is a **maximum-likelihood logistic fit** to every trial in
+that scheme's sweep, so a lucky rate is weighed against the rest rather
+than defining the answer, with a **95% bootstrap confidence interval**
+(`thresholds.py`). This replaces interpolation between the two rates
+bracketing 50%, which rests on just two points and gives no interval.
 
 1D-RS is a check on the whole procedure, because its answer is known
 exactly: an MDS code recovers if and only if at most n − k symbols are
-erased, and on BEC(ε) that count is Binomial(n, ε). The refinement
-measures 0.4996 (CI 0.4979–0.5012) against an exact 0.50006, and every
-one of its 84 trials obeys the n − k rule.
+erased, and on BEC(ε) that count is Binomial(n, ε). The sweep measures
+0.499 (CI 0.497–0.501) against an exact 0.50006, and every one of
+its 132 trials obeys the n − k rule.
 
 ## Code parameters and storage cost
 
@@ -293,14 +296,14 @@ bound its construction cannot reach.
 
 |  | 1D-RS | 2D-RS | BC ω2048 λ2 | BC ω1024 λ2 | BC ω512 λ2 | BC ω1024 λ3 | BC ω1024 λ4 |
 |---|---|---|---|---|---|---|---|
-| Encode | 0.23s | 1.37s | 15.73s | 6.86s | 3.32s | 7.67s | 4.57s |
-| Decode @ 2% | 2.63s | 1.29s | 0.53s | 0.29s | 0.17s | 0.38s | 0.20s |
-| Decode @ 5% | 5.69s | 1.62s | 1.22s | 0.65s | 0.36s | 0.84s | 0.44s |
-| Decode @ 10% | 10.69s | 1.78s | 2.52s | 1.28s | 0.71s | 1.67s | 0.88s |
-| Decode @ 20% | 20.42s | 2.68s | 5.48s | 2.78s | 1.47s | 3.57s | 1.85s |
-| Decode @ 30% | 29.89s | 2.32s | 8.86s | 4.47s | 2.35s | &mdash; | &mdash; |
-| Decode @ 35% | 33.33s | 3.03s | &mdash; | 5.17s | 2.76s | &mdash; | &mdash; |
-| Decode @ 48% | 42.15s | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; |
+| Encode | 0.23s | 1.36s | 15.78s | 6.88s | 3.35s | 7.72s | 4.64s |
+| Decode @ 2% | 2.65s | 1.27s | 0.52s | 0.29s | 0.17s | 0.37s | 0.19s |
+| Decode @ 5% | 5.97s | 1.60s | 1.22s | 0.65s | 0.37s | 0.84s | 0.46s |
+| Decode @ 10% | 10.79s | 1.72s | 2.48s | 1.30s | 0.71s | 1.68s | 0.91s |
+| Decode @ 20% | 20.50s | 2.46s | 5.43s | 2.77s | 1.48s | 3.57s | 1.86s |
+| Decode @ 30% | 28.50s | 2.34s | 9.01s | 4.59s | 2.43s | &mdash; | &mdash; |
+| Decode @ 35% | 32.63s | 3.00s | &mdash; | &mdash; | 2.77s | &mdash; | &mdash; |
+| Decode @ 48% | 41.62s | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; |
 
 ## Results
 
@@ -309,74 +312,113 @@ and by rate — more where a scheme is near its own threshold and the
 outcome genuinely varies, fewer where it does not — so each cell shows
 recovered/attempted rather than a bare percentage.
 
+<div class="long-table" markdown="1">
+
 | erasure rate | 1D-RS | 2D-RS | BC ω2048 λ2 | BC ω1024 λ2 | BC ω512 λ2 | BC ω1024 λ3 | BC ω1024 λ4 |
 |---|---|---|---|---|---|---|---|
-| 2% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| 5% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| 8% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| 10% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| 12% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 |
-| 15% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 4/4 | 8/8 |
-| 20% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 8/8 | 5/8 |
-| 25% | 1/1 | 3/3 | 4/4 | 4/4 | 4/4 | 8/8 | 0/8 |
-| 30% | 1/1 | 3/3 | 8/8 | 8/8 | 8/8 | 0/8 | 0/4 |
-| 33% | 1/1 | 3/3 | 8/8 | 8/8 | 8/8 | 0/4 | 0/4 |
-| 35% | 1/1 | 3/3 | 0/8 | 1/8 | 4/8 | 0/4 | 0/4 |
-| 38% | 2/2 | 5/5 | 0/8 | 0/8 | 0/8 | 0/4 | 0/4 |
-| 40% | 2/2 | 2/5 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
-| 45% | 2/2 | 0/5 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
-| 48% | 3/3 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
-| 50% | 2/3 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
-| 52% | 0/3 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
-| 55% | 0/2 | 0/3 | 0/4 | 0/4 | 0/4 | 0/4 | 0/4 |
+| 2% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 8% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 10% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 12% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 15% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| 16% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 20/20 |
+| 17% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 20/20 |
+| 18% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 20/20 |
+| 19% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 20/20 |
+| 20% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 16/20 |
+| 21% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/20 |
+| 22% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 |
+| 23% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 |
+| 24% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 |
+| 25% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 16/20 | 0/20 |
+| 25.5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 10/20 | 0/2 |
+| 26% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/20 | 0/2 |
+| 26.5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 1/20 | 0/2 |
+| 27% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 2/20 | 0/2 |
+| 27.5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 28% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 28.5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 29% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 29.5% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 30% | 1/1 | 2/2 | 2/2 | 2/2 | 2/2 | 0/20 | 0/2 |
+| 32.5% | 1/1 | 2/2 | 19/20 | 20/20 | 2/2 | 0/2 | 0/2 |
+| 33% | 1/1 | 2/2 | 20/20 | 20/20 | 20/20 | 0/2 | 0/2 |
+| 33.5% | 1/1 | 2/2 | 12/20 | 16/20 | 20/20 | 0/2 | 0/2 |
+| 34% | 1/1 | 2/2 | 5/20 | 13/20 | 18/20 | 0/2 | 0/2 |
+| 34.5% | 1/1 | 2/2 | 0/20 | 7/20 | 16/20 | 0/2 | 0/2 |
+| 35% | 1/1 | 2/2 | 0/20 | 0/20 | 7/20 | 0/2 | 0/2 |
+| 35.5% | 1/1 | 2/2 | 0/20 | 1/20 | 3/20 | 0/2 | 0/2 |
+| 36% | 1/1 | 2/2 | 0/2 | 0/20 | 1/20 | 0/2 | 0/2 |
+| 36.5% | 1/1 | 2/2 | 0/2 | 0/20 | 0/20 | 0/2 | 0/2 |
+| 37% | 1/1 | 20/20 | 0/2 | 0/2 | 1/20 | 0/2 | 0/2 |
+| 37.5% | 1/1 | 20/20 | 0/2 | 0/2 | 0/20 | 0/2 | 0/2 |
+| 38% | 1/1 | 20/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 39% | 1/1 | 18/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 40% | 1/1 | 10/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 41% | 1/1 | 2/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 42% | 1/1 | 0/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 43% | 1/1 | 0/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 44% | 1/1 | 0/20 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 45% | 1/1 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 48% | 1/1 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 48.5% | 12/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 49% | 12/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 49.5% | 6/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 50% | 6/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 50.5% | 2/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 51% | 1/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 51.5% | 0/12 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 52% | 0/1 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
+| 55% | 0/1 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 | 0/2 |
 
-Every block-circulant row here is decoded with the NTT path switched off
-(`use_fft_phase1=False`), which is the faster of the two by a wide margin
-and is now set explicitly in the adapter rather than left at its default.
-The section on the NTT decoder below measures both paths and explains the
-choice; the erasure tolerances are identical either way, so only the decode
-times depend on it.
+</div>
 
-Across all 520 trials, no scheme returned corrupted data while reporting
-success: silent corruption was zero everywhere (0/28 for 1D-RS, 0/60 for
-2D-RS, and 0/88, 0/88, 0/88, 0/84, 0/84 across the five BC rows). Before
-the decoder fix described below, BC's figure was 31 of 40. The threshold
-refinement added 1,184 further trials and none of them did either, so the
-figure stands at zero across all 1,704 coding trials.
+Every block-circulant row here is decoded by the Vandermonde solver, not
+the NTT. The section on the NTT decoder below measured both paths and found
+the Vandermonde solver faster by a wide margin, and the decoder's phase 1
+now uses it alone, so there is no switch left to set. The erasure
+tolerances are identical either way; only the decode times depend on it.
+
+Across all 1,800 trials, no scheme returned corrupted data while reporting
+success: silent corruption was zero everywhere (0/132 for 1D-RS, 0/272 for
+2D-RS, and 0/236, 0/272, 0/290, 0/308, 0/290 across the five BC rows in
+the table's order). Before the decoder fix described below, BC's figure
+was 31 of 40.
 
 <figure>
 <img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme.">
-<figcaption>Fault tolerance of all seven schemes. <b>(a)</b> Fraction of trials recovered against erasure probability, drawn from the 520-trial sweep combined with the 1,184-trial threshold refinement, which samples each scheme's transition band densely. Every scheme holds at 100% and then collapses within a few percent, which is what makes a single threshold a fair summary. The pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted; the measured points sit on it. <b>(b)</b> Each threshold &mdash; the erasure probability at which a scheme recovers half the time &mdash; with its 95% bootstrap confidence interval. The three &lambda;=2 rows land within 0.013 of one another (0.337, 0.342, 0.349), far closer than to &lambda;=3 or &lambda;=4, so &lambda; sets the reach; but their intervals do not overlap and they rise with &mu;, so &mu; has a small, real effect of its own.</figcaption>
+<figcaption>Fault tolerance of all seven schemes. <b>(a)</b> Fraction of trials recovered against erasure probability, from the 1,800-trial sweep, which samples each scheme's transition band densely. Every scheme holds at 100% and then collapses within a few percent, which is what makes a single threshold a fair summary. The pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted; the measured points sit on it. <b>(b)</b> Each threshold &mdash; the erasure probability at which a scheme recovers half the time &mdash; with its 95% bootstrap confidence interval. The three &lambda;=2 rows land within 0.013 of one another (0.336, 0.342, 0.349), far closer than to &lambda;=3 or &lambda;=4, so &lambda; sets the reach; but their intervals do not overlap and they rise with &mu;, so &mu; has a small, real effect of its own.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_tolerance_vs_guarantee.svg" alt="Measured tolerance for each scheme beside its own minimum-distance guarantee and the rate bound.">
-<figcaption>What each scheme actually tolerated (blue), beside its own minimum-distance guarantee (grey) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed red). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands on its bound &mdash; 0.500 measured, against an exact 0.50006 for an MDS code on an erasure channel &mdash; which is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Each blue bar is the erasure probability at which the scheme recovers half the time, from a maximum-likelihood logistic fit to the threshold refinement (<code>thresholds.py</code>).</figcaption>
+<figcaption>What each scheme actually tolerated (blue), beside its own minimum-distance guarantee (grey) and the rate bound 1&minus;<em>R</em> that no code of that rate can beat (dashed red). Storage is matched to within 3%, so the bars read against each other directly. 1D-RS lands on its bound &mdash; 0.499 measured, against an exact 0.50006 for an MDS code on an erasure channel &mdash; which is what being MDS means. Three schemes sit <em>above</em> their own guarantee: 2D-RS at four times it, and both &lambda;=2 block-circulant rows with &mu;&gt;2. That is not a contradiction &mdash; a guarantee holds against every pattern including the adversarial worst case, while these trials draw patterns at random. Each blue bar is the erasure probability at which the scheme recovers half the time, from a maximum-likelihood logistic fit to every trial in the sweep (<code>thresholds.py</code>).</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_bc_threshold.svg" alt="Block-circulant decoder threshold against the prediction one over one plus lambda.">
-<figcaption>The block-circulant parameter sweep against the source paper's prediction. Bars are measured thresholds with 95% confidence intervals, ordered by &lambda; and then by &mu;; the red rules are the local stopping rate S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;). &lambda; dominates: holding &mu;=4 fixed, raising &lambda; from 2 to 3 to 4 takes the threshold from 0.342 to 0.255 to 0.202. Every measurement sits just above its prediction, which is the expected direction &mdash; S&#8320; is what one block can repair alone, and the cascade across blocks can only add to it. That also explains the smaller effect at fixed &lambda;=2: the threshold rises from 0.337 to 0.342 to 0.349 as &mu; goes from 2 to 4 to 8, because more blocks give the cascade more to work with.</figcaption>
+<figcaption>The block-circulant parameter sweep against the source paper's prediction. Bars are measured thresholds with 95% confidence intervals, ordered by &lambda; and then by &mu;; the red rules are the local stopping rate S&#8320; = &rho;/N&#8320; = 1/(1+&lambda;). &lambda; dominates: holding &mu;=4 fixed, raising &lambda; from 2 to 3 to 4 takes the threshold from 0.342 to 0.255 to 0.204. Every measurement sits just above its prediction, which is the expected direction &mdash; S&#8320; is what one block can repair alone, and the cascade across blocks can only add to it. That also explains the smaller effect at fixed &lambda;=2: the threshold rises from 0.336 to 0.342 to 0.349 as &mu; goes from 2 to 4 to 8, because more blocks give the cascade more to work with.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_decode_time.svg" alt="Mean decode time of successful decodes against erasure rate, log scale.">
-<figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is the most expensive scheme at every rate, by a factor of three to five over the dearest block-circulant row, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at every rate measured. Against 2D-RS the picture is now mixed rather than one-sided: below about 8% erasure every BC row is cheaper, but 2D-RS decode barely grows with erasure rate while BC decode grows roughly linearly, so above that only &omega;512 &lambda;2 and &omega;1024 &lambda;4 stay below it. These are Vandermonde-path timings, with the NTT path switched off &mdash; see the NTT section for what turning it on costs, and for why defining the local code over roots of unity raises the block-circulant numbers here by roughly a factor of two whether or not the transform is ever used.</figcaption>
+<figcaption>Mean decode time of the trials that actually recovered, against erasure rate, log scale. Failed trials are excluded: above its threshold a scheme rejects the pattern on a budget check in under a millisecond having attempted nothing, which is not a decode time. 1D-RS is the most expensive scheme at every rate, by a factor of three to five over the dearest block-circulant row, because it divides one 8192-length polynomial while the others divide short ones. Every block-circulant row is cheaper than 1D-RS at every rate measured. Against 2D-RS the picture is now mixed rather than one-sided: below about 7% erasure every BC row is cheaper, but 2D-RS decode barely grows with erasure rate while BC decode grows roughly linearly, so the rows cross it one by one &mdash; &omega;2048 &lambda;2 first, then &omega;1024 &lambda;3 and &omega;1024 &lambda;2 by about 13% &mdash; and only &omega;512 &lambda;2 and &omega;1024 &lambda;4 stay at or below it across their whole range. These are Vandermonde-path timings, with the NTT path switched off &mdash; see the NTT section for what turning it on costs, and for why defining the local code over roots of unity raises the block-circulant numbers here by roughly a factor of two whether or not the transform is ever used.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_cost_per_erasure.svg" alt="Decode time per erased symbol against erasure rate, log scale.">
-<figcaption>The same decode times with the workload divided out &mdash; cost per erasure actually repaired, rather than cost per decode. Raw decode time rises with erasure rate for every scheme, which mostly says there is more to fix; dividing by the erasure count removes that and leaves the algorithmic difference. 1D-RS sits flat near 10&ndash;13&nbsp;ms per erasure: its cost is essentially linear in the number of erasures, one long division's worth of work each. The block-circulant rows are three to ten times cheaper per erasure and rise gently, which is the short local divisions doing their job. 2D-RS is the interesting shape &mdash; it starts around 8&nbsp;ms and falls steeply toward 1&nbsp;ms, because its decode carries a large fixed cost that amortises as more cells need repairing. That is why it looks expensive at 2% erasure and cheap at 30%.</figcaption>
+<figcaption>The same decode times with the workload divided out &mdash; cost per erasure actually repaired, rather than cost per decode. Raw decode time rises with erasure rate for every scheme, which mostly says there is more to fix; dividing by the erasure count removes that and leaves the algorithmic difference. 1D-RS sits near 11&ndash;13&nbsp;ms per erasure over most of the range &mdash; 16&nbsp;ms at 2%, where a fixed overhead is spread over few erasures, easing to 10.5&nbsp;ms near its threshold: its cost is essentially linear in the number of erasures, one long division's worth of work each. The block-circulant rows are three to sixteen times cheaper per erasure (&omega;2048 &lambda;2 least, &omega;512 &lambda;2 most) and rise gently, which is the short local divisions doing their job. 2D-RS is the interesting shape &mdash; it starts around 8&nbsp;ms and falls steeply toward 1&nbsp;ms, because its decode carries a large fixed cost that amortises as more cells need repairing. That is why it looks expensive at 2% erasure and cheap at 30%.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_encode_decode.svg" alt="Encode cost against decode cost for every scheme, log scale.">
-<figcaption>Encode and decode are not symmetric in a data-availability system and should not be collapsed into one cost. A blob is encoded <em>once</em>, by the proposer; it is decoded by every node that has to reconstruct it, so an expensive encode amortises across the network while an expensive decode does not. The two Reed-Solomon schemes and the block-circulant family sit on opposite sides of this: 1D-RS encodes in under a quarter of a second and then costs 20&nbsp;s to decode, while BC &omega;2048 &lambda;2 spends 16&nbsp;s encoding to decode in 5&nbsp;s. For PeerDAS the second shape is the more useful one, which is an argument for the block-circulant family that the tolerance numbers alone do not make.</figcaption>
+<figcaption>Encode and decode are not symmetric in a data-availability system and should not be collapsed into one cost. A blob is encoded <em>once</em>, by the proposer; it is decoded by every node that has to reconstruct it, so an expensive encode amortises across the network while an expensive decode does not. The two Reed-Solomon schemes and the block-circulant family sit on opposite sides of this: 1D-RS encodes in under a quarter of a second and then costs 21&nbsp;s to decode, while BC &omega;2048 &lambda;2 spends 16&nbsp;s encoding to decode in 6&nbsp;s (decode measured at 21%, the highest rate every scheme still recovers). For PeerDAS the second shape is the more useful one, which is an argument for the block-circulant family that the tolerance numbers alone do not make.</figcaption>
 </figure>
 
 <figure>
 <img src="figures/bench_tolerance_vs_cost.svg" alt="Measured erasure tolerance against decode cost, one point per scheme, with the Pareto frontier.">
-<figcaption>The trade-off the whole comparison is about, in one picture: how much erasure a scheme survives against what it costs to decode at a rate every scheme reached. Down and to the right is better. The dashed line is the Pareto frontier &mdash; the schemes not beaten on both counts at once &mdash; and only three schemes are on it. BC &omega;512 &lambda;2 is the cheapest thing that still tolerates a third of the codeword; 2D-RS buys about five more points of tolerance for roughly double the decode; 1D-RS buys the theoretical maximum and pays an order of magnitude for it. Everything else is dominated: some other scheme tolerates more erasure <em>and</em> decodes faster. Note especially that BC &omega;1024 &lambda;4 is dominated by BC &omega;512 &lambda;2 on both axes, so the tolerance it gives up buys nothing back.</figcaption>
+<figcaption>The trade-off the whole comparison is about, in one picture: how much erasure a scheme survives against what it costs to decode at a rate every scheme reached. Down and to the right is better. The dashed line is the Pareto frontier &mdash; the schemes not beaten on both counts at once &mdash; and only three schemes are on it. BC &omega;512 &lambda;2 is the cheapest thing that still tolerates a third of the codeword; 2D-RS buys about five more points of tolerance for about 60% more decode time; 1D-RS buys the theoretical maximum and pays an order of magnitude for it. Everything else is dominated: some other scheme tolerates more erasure <em>and</em> decodes faster. Note especially that BC &omega;1024 &lambda;4 is dominated by BC &omega;512 &lambda;2 on both axes, so the tolerance it gives up buys nothing back.</figcaption>
 </figure>
 
 <figure>
@@ -387,21 +429,24 @@ figure stands at zero across all 1,704 coding trials.
 ## What the results show
 
 **1D-RS behaves exactly as Reed-Solomon theory says it must.** Its
-threshold is **0.500** (95% CI 0.498–0.501), against an exact 0.50006 for
+threshold is **0.499** (95% CI 0.497–0.501), against an exact 0.50006 for
 an MDS code with n = 2k on an erasure channel. It recovers every trial up
-to 49% erasure, about half at 50%, and none from 51%. The invariant
-underneath is exact rather than approximate: across all 84 refinement
-trials, recovery succeeded if and only if the drawn erasure count was at
-most n&minus;k = 4096, with no exceptions. The partial results at the
-threshold are not the decoder being unreliable — they are the random mask
-landing on either side of a hard line. Being MDS, 1D-RS extracts all of
-its theoretical budget.
+to 49% erasure and none from 51.5%. The invariant underneath is exact
+rather than approximate: across all 132 trials, recovery succeeded if and
+only if the drawn erasure count was at most n&minus;k = 4096, with no
+exceptions. The partial results at the threshold are not the decoder being
+unreliable — they are the random mask landing on either side of a hard
+line. That also accounts for the point estimate sitting a hair under the
+exact value: at ε = 0.495, where the exact recovery probability is 0.82,
+six of the twelve masks happened to carry more than 4096 erasures — a draw
+with about a 1% chance — and each of those six failed, exactly as the rule
+says it must. Being MDS, 1D-RS extracts all of its theoretical budget.
 
 **2D-RS comes second, and beats its own guarantee by a wide margin.** Its
-threshold is **0.401** (95% CI 0.399–0.404). Two reference points matter
+threshold is **0.400** (95% CI 0.397–0.403). Two reference points matter
 and they are very far apart. Its rate would permit 0.515; its *minimum
 distance* only guarantees 0.098, because a product code's distance is the
-product of its component distances, 33 × 25 = 825. The measured 0.401 is
+product of its component distances, 33 × 25 = 825. The measured 0.400 is
 four times that guarantee.
 
 That gap is the cross-axis cascade doing real work. A guarantee has to
@@ -413,23 +458,23 @@ repairs enough neighbours. The honest summary is that 2D-RS's *typical*
 behaviour is far better than its *guaranteed* behaviour, and which of the
 two matters depends entirely on whether the erasures are adversarial.
 Against the 1−*R* bound it reaches 78%; against its own distance it is at
-412%.
+410%.
 
 **The Block-Circulant rows separate the code from the decoder, and λ is
 what moves the decoder.** This is the clearest result in the sweep:
 
 | row | μ | *d* | threshold | 95% CI | predicted S₀ |
 |---|---|---|---|---|---|
-| ω2048 λ2 | 2 | 4097 (MDS) | **0.337** | 0.335–0.338 | 0.333 |
-| ω1024 λ2 | 4 | 2049 | **0.342** | 0.340–0.344 | 0.333 |
-| ω512 λ2 | 8 | 1025 | **0.349** | 0.348–0.351 | 0.333 |
-| ω1024 λ3 | 4 | 3073 | **0.255** | 0.253–0.257 | 0.250 |
-| ω1024 λ4 | 4 | 4097 (MDS) | **0.202** | 0.200–0.203 | 0.200 |
+| ω2048 λ2 | 2 | 4097 (MDS) | **0.336** | 0.335–0.338 | 0.333 |
+| ω1024 λ2 | 4 | 2049 | **0.342** | 0.340–0.343 | 0.333 |
+| ω512 λ2 | 8 | 1025 | **0.349** | 0.347–0.351 | 0.333 |
+| ω1024 λ3 | 4 | 3073 | **0.255** | 0.252–0.257 | 0.250 |
+| ω1024 λ4 | 4 | 4097 (MDS) | **0.204** | 0.202–0.206 | 0.200 |
 
 Two things fall out of that table. First, **the prediction holds every
 time, from just below.** S₀ = ρ/N₀ = 1/(1+λ), the source paper's local
 stopping rate, sits under the measured threshold for all five rows, by
-between 0.002 and 0.016. That is the right side to be on: S₀ is what one
+between 0.003 and 0.016. That is the right side to be on: S₀ is what one
 block can repair on its own, and the cascade across blocks can only add to
 it. The limit is not mysterious; it is arithmetic about how many erasures
 fit inside one local support.
@@ -437,7 +482,7 @@ fit inside one local support.
 Second, **λ is the parameter that moves it, and μ moves it slightly.**
 Holding μ = 4 fixed, raising λ from 2 to 3 costs 9 points and to 4 costs
 14. Holding λ = 2 fixed, quadrupling μ from 2 to 8 *gains* just over a
-point — 0.337, 0.342, 0.349 — a small effect but a real one, since
+point — 0.336, 0.342, 0.349 — a small effect but a real one, since
 the three intervals do not overlap. It has the same cause as the gap
 above S₀: more blocks give the cross-block cascade more to work with. The
 answer to "which knob should we turn" is still λ, and downward; μ is a
@@ -456,8 +501,8 @@ potential.
 
 Set against that, every BC row is cheaper than 1D-RS at every rate
 measured. Within the block-circulant family the ordering is now set as much
-by the field as by λ: ω1024 λ4 decodes faster than either λ=2 row of the
-same ω, not because λ=4 is a better choice but because its local length
+by the field as by λ: ω1024 λ4 decodes faster than the λ=2 and λ=3 rows
+of the same ω, not because λ=4 is a better choice but because its local length
 5120 does not divide *p*&minus;1, so it never moved onto 255-bit evaluation
 points and never paid for them. The NTT section below measures that cost.
 The local system each solves is ρ×ρ, which generic elimination handles in
@@ -516,29 +561,33 @@ five rows, and above that budget a pair is skipped, counted, and its
 positions left honestly flagged. Every row here has ρ ≥ 512, so a pair
 facing the *full* erasure load is always over budget.
 
-What that misses is the residual. Once phase 1 has resolved some blocks, a
-pair can be left with few enough unknowns to fall under the budget, and
-then phase 2 does run. In the threshold refinement this happened on
-**12 of 1,184 trials (1%)**, all in the two largest-block λ=2 rows
-(ω2048 λ2 ten times, ω1024 λ2 twice), all just below threshold, and each
-cost 10–17 minutes where a normal decode takes 5–12 seconds. All 12
-recovered.
+What that could miss is the residual: once phase 1 has resolved some
+blocks, a pair can in principle be left with few enough unknowns to fall
+under the budget. Whether that ever happened was checked directly rather
+than assumed. Every one of the 1,396 block-circulant trials was replayed
+with the decoder's phase counters switched on, the masks regenerated from
+the sweep's seed; every erasure count and every outcome reproduced
+exactly. **Phase 2 never ran.** In 674 of those trials phase 1 stalled with
+a pair over the budget, which was skipped; in the rest phase 1 either
+finished the job or stalled with nothing a pair could take on. So **all
+five rows are measured as single-phase decoders** — exactly, not
+approximately — and every block-circulant threshold above is what the
+single-block phase alone can reach. That is a limit of affordable
+computation rather than of the code.
 
-Whether phase 2 rescued those trials or merely spent the time before phase
-1 finished on a later pass is not recoverable from the data, so the effect
-is bounded instead: refitting with all 12 counted as failures — the case
-least favourable to a single-phase reading — moves ω2048 λ2 from 0.3367 to
-0.3341 and ω1024 λ2 from 0.3417 to 0.3412. Both stay above their 1/3
-prediction, and the μ ordering is unchanged. So **all five rows are
-measured as effectively single-phase decoders**, to within 0.003, and this
-is a limit of affordable computation rather than of the code.
+The replay also settles the timings. Decode times are wall-clock, so a
+machine that slept or throttled mid-decode would inflate them. None of the
+1,800 trials shows that: no successful decode took more than 1.15 times
+the median of the same scheme's decodes within three points of erasure
+rate, and the longest decode of all was 44 s, an ordinary 1D-RS decode
+near its threshold.
 
 Since the decoder was revised, phase 2 is the paper's Algorithm 1
 auxiliary construction only; the earlier Gaussian-elimination fallback on
-the stacked parity checks was removed. Algorithm 1 needs the paper's
-evaluation-point layout, which the benchmark's encoder does not use, so on
-these rows phase 2 has little to work with — consistent with how rarely it
-mattered. The cost of the earlier approach, measured directly on the
+the stacked parity checks was removed. Algorithm 1 also needs the paper's
+evaluation-point layout, which the benchmark's encoder does not use, so
+even a pair under the budget would have had little to gain. The cost of
+the earlier approach, measured directly on the
 512-equation systems that ω=ρ=256 produces, shows why phase 2 was never
 affordable at full load:
 
@@ -548,17 +597,24 @@ affordable at full load:
 | 369 | 8% | 39.5s | 10.5 min |
 | 461 | 10% | 61.7s | 16.4 min |
 
-That is for the *smallest* local block swept here, and one decoding round is not
-one decode — the loop repeats while it makes progress. At ω=ρ=1024 a full
+That is for ω=ρ=256 — smaller than any local block in the current sweep;
+the measurement dates from an earlier parameter set with sixteen blocks,
+hence sixteen pairs per round — and one decoding round is not one decode:
+the loop repeats while it makes progress. At ω=ρ=1024 a full
 pair is 2048 equations in 2048 unknowns; at the 0.57 microseconds per field
 operation these timings imply, that is about 80 minutes for a single pair.
 Lifting the cap enough to change any result would take days per sweep.
 
 The honest reading of the BC numbers is therefore: this is what the
-single-block phase of `DecCBC[2]` achieves. The pairwise phase would
-roughly double the budget from ρ to 2ρ, which the same arithmetic puts at
-0.333 for ω=1024, 0.200 for ω=512 and 0.111 for ω=256 — still short of
-the 0.50 these codes permit.
+single-block phase of `DecCBC[2]` achieves. A working pairwise phase would
+roughly double the budget from ρ to 2ρ, spread over the union of two
+adjacent supports — 2ρ + min(λ+1, μ)·ω symbols. As a plain budget count,
+which ignores how erasures actually fall across pairs and so is an upper
+estimate, that puts the reach at 0.50 for ω2048 λ2, 0.40 for ω1024 λ2 and
+ω512 λ2, and 0.333 for λ3 and λ4, against the single-block reach of
+1/(1+λ) — 0.333, 0.250 and 0.200 — that the measured thresholds sit just
+above. Only ω2048 λ2, whose two blocks share every
+information block, would reach the 0.50 these codes permit.
 
 ## The Block-Circulant decoder fix
 
@@ -643,7 +699,7 @@ never moved onto roots of unity.
 Two consequences for reading the decode figures. The gap between 1D-RS and
 the block-circulant family is **narrower than it would otherwise be** — about
 three to five times rather than an order of magnitude. And the crossover with
-2D-RS, which the decode-cost figure places near 8% erasure, would sit
+2D-RS, which the decode-cost figure places near 7% erasure, would sit
 substantially higher without the penalty. Neither changes any tolerance
 result: success rates are identical across all three versions, verified cell
 by cell.
@@ -718,7 +774,10 @@ times slower than the solver it was meant to replace.
 Each cell is the NTT path against the Vandermonde fallback, mean of
 3 trials, both decoding the same corrupted codeword in the same
 process. **Bold is the faster path.** Phase 2 is held off throughout
-(`use_fft_phase2=False`), so this isolates the single-block phase.
+(`use_fft_phase2=False`), so this isolates the single-block phase. This was
+measured on the decoder version that still exposed the NTT switch; the
+current decoder's phase 1 is Vandermonde-only, so `fft_benchmark.py`
+carries this measurement forward rather than repeating it.
 
 <figure>
 <img src="figures/fft_vs_vandermonde.svg" alt="Decode time for the NTT path against the Vandermonde fallback, per scheme and erasure rate, log scale.">
@@ -758,9 +817,10 @@ in pure-Python modular arithmetic operand width is not free.
 <figcaption><code>vandermonde_solve</code> given identical input on 300 nodes, differing only in how wide those nodes are. Small integers 1..300 are 9 bits; roots of unity in this field are 253&ndash;255 bits. The solver does the same number of operations either way &mdash; the gap is the cost of the operands themselves.</figcaption>
 </figure>
 
-Measured end to end against the pre-NTT decoder (commit `8d93ae3`), on the
-same machine within the same hour, with the NTT path switched *off* so that
-both versions run the same algorithm:
+An earlier run of the same comparison against the pre-NTT decoder (commit
+`8d93ae3`), on the same machine within the same hour, with the NTT path
+switched *off* so that both versions ran the same algorithm, also timed the
+λ4 row:
 
 | variant | pre-NTT | current | |
 |---|---|---|---|
@@ -775,10 +835,11 @@ unchanged is the one row whose local length does not divide *p* &minus; 1,
 so it never moved to roots of unity and never paid for them. The
 microbenchmark above accounts for essentially all of the gap.
 
-This particular table is the one measurement here that `fft_benchmark.py`
-does not reproduce, because it needs both versions of the decoder present
-at once. To repeat it, check the old file out beside the current one and
-run the same decodes against each:
+This earlier table is not stored in a data file. The λ=2 and λ=3 rows are
+re-measured by `decoder_version_benchmark.py` (the three-version table
+above, 2.15–2.37×, which is the measurement to cite); the λ4 row can be
+repeated by checking the old file out beside the current one and running
+the same decodes against each:
 
 ```
 git worktree add /tmp/prefft 8d93ae3
@@ -791,8 +852,8 @@ be:
 
 **Phase 1's NTT path is correct but not yet worth using.** It needs the
 Newton-iteration division before its asymptotics reach the measured cost.
-Until then the Vandermonde solver is the faster path, and the switch
-`use_fft_phase1` exists so that this is a decision rather than an accident.
+Until then the Vandermonde solver is the faster path, which is why the
+current decoder's phase 1 uses it alone.
 
 **Phase 2's NTT path cannot work as written, and this is not a speed
 question.** It relabels the union of two adjacent supports with a fresh set
@@ -805,15 +866,16 @@ Algorithm 1 auxiliary GRS construction is the missing piece, and it would
 fix the correction radius and the cost together.
 
 **Moving to roots of unity is a bet, not an improvement.** It costs a
-factor of about 2.2 today and buys nothing until the division is fixed. It
-is the right bet *if* the Newton iteration lands, because then the same
-choice that costs 2.2× unlocks an O(*n* log² *n*) decoder. It is the wrong
+factor of about 2.3 today (2.33× median across the measured points) and
+buys nothing until the division is fixed. It is the right bet *if* the
+Newton iteration lands, because then the same choice that costs 2.3×
+unlocks an O(*n* log² *n*) decoder. It is the wrong
 one if the work stops here.
 
 ## Reproducing
 
 ```
-pip install galois numpy matplotlib
+pip install -r requirements.txt
 
 python3 benchmark_1D_2D_BC.py     # the erasure sweep -> benchmark_results.json
 python3 fft_benchmark.py          # the NTT measurements -> fft_results.json
@@ -828,11 +890,14 @@ decoder's own claim separately from ground truth — are written to
 node-width microbenchmark and the phase-by-phase structural check go to
 `fft_results.json`.
 
-Both sweeps take a while: the erasure sweep is hours, and `fft_benchmark.py`
-is 10–20 minutes because it deliberately runs the slow path it is measuring.
+The erasure sweep takes about two hours. `fft_benchmark.py` took 10–20
+minutes when it could still run the NTT comparison, because it deliberately
+runs the slow path it is measuring; with the current decoder that
+comparison is carried forward rather than repeated (see the NTT section).
 Neither is a prerequisite for the figures. `make_figures.py` reads the
-committed JSON, so every figure in this report regenerates in a couple of
-seconds without re-measuring anything.
+committed JSON, so every figure in this report regenerates in under a
+minute without re-measuring anything — most of that is the bootstrap
+behind the threshold intervals.
 
 That indirection is the point. These figures were previously hand-written
 SVG, which meant a re-run could leave a chart quietly disagreeing with the

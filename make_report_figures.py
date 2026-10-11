@@ -56,11 +56,10 @@ SELECTION = [
      "Results — fault tolerance", dict(
       question="How much of the codeword can each scheme lose and still "
                "rebuild the blob exactly?",
-      data="Two experiments. The coarse sweep: 520 trials over one real "
-           "EIP-4844 blob, 7 schemes x 18 erasure rates from 2% to 55% "
-           "(benchmark_results.json). The threshold refinement: 1,184 further "
-           "trials on a fine grid across each scheme's own transition band "
-           "(threshold_results.json). Panel (a) draws both combined.",
+      data="The erasure sweep: one run over one real EIP-4844 blob, "
+           "covering 2% to 55% erasure, with dense trials on a fine grid "
+           "across each scheme's own transition band "
+           "(benchmark_results.json).",
       reading="(a) Fraction of trials recovered against erasure probability, "
               "one line per scheme; the pale band is the exact recovery "
               "probability of 1D-RS, computed from the MDS property rather "
@@ -70,10 +69,10 @@ SELECTION = [
               "logistic fit.",
       shows="Every scheme holds at 100% then collapses within a few percent, "
             "which is what makes a single threshold a fair summary. 1D-RS "
-            "sits on its exact MDS curve, at 0.500. The three lambda=2 rows "
-            "land within 0.013 of each other (0.337, 0.342, 0.349), far "
+            "sits on its exact MDS curve, at 0.499. The three lambda=2 rows "
+            "land within 0.013 of each other (0.336, 0.342, 0.349), far "
             "closer to one another than to lambda=3 (0.255) or lambda=4 "
-            "(0.202): lambda sets the reach. Their intervals do not overlap, "
+            "(0.204): lambda sets the reach. Their intervals do not overlap, "
             "though, and they rise with mu - so mu has a small, real effect.",
       caveat="Erasures are drawn i.i.d., so these are upper bounds on "
              "performance against an adversary choosing the worst pattern.")),
@@ -82,17 +81,16 @@ SELECTION = [
      "Results — fault tolerance (space-saving alternative to 01)", dict(
       question="Where does each scheme fall over, and how close together are "
                "those points?",
-      data="The threshold refinement: 1,184 trials on a fine grid across "
-           "each scheme's transition band, 12-20 per rate "
-           "(threshold_results.json).",
+      data="The erasure sweep's dense trials across each scheme's "
+           "transition band, 12-20 per rate (benchmark_results.json).",
       reading="Horizontal bars, one per scheme, sorted by threshold. Bar "
               "length is the erasure probability at which the scheme "
               "recovers half the time, from a maximum-likelihood logistic "
               "fit; the whisker is its 95% bootstrap confidence interval.",
-      shows="1D-RS reaches 0.500, the most an MDS code with n = 2k can "
-            "sustain. The three lambda=2 rows sit within 0.013 of each "
-            "other (0.337, 0.342, 0.349) while lambda=3 and lambda=4 fall to "
-            "0.255 and 0.202. Intervals are about +/-0.002 throughout, so "
+      shows="1D-RS reaches 0.499, against the exact 0.50006 an MDS code with "
+            "n = 2k can sustain. The three lambda=2 rows sit within 0.013 of "
+            "each other (0.336, 0.342, 0.349) while lambda=3 and lambda=4 fall "
+            "to 0.255 and 0.204. Intervals are +/-0.003 or narrower, so "
             "every difference shown is resolved.",
       caveat="A standalone, single-column alternative to figure 01. Use one "
              "or the other, not both: they are the same data. This one "
@@ -104,23 +102,24 @@ SELECTION = [
      "bench", "Results — fault tolerance", dict(
       question="Does the block-circulant decoder behave as the source paper "
                "predicts?",
-      data="Thresholds from the refinement experiment, with 95% intervals; "
+      data="Thresholds from the erasure sweep, with 95% intervals; "
            "the prediction is the local code's stopping rate from "
            "Sasidharan, Viterbo & Feist (ePrint 2026/708).",
       reading="Bars are measured thresholds with 95% confidence intervals, "
               "ordered by lambda and then by mu. Red rules are the predicted "
               "local stopping rate S0 = rho/n0 = 1/(1+lambda).",
       shows="Lambda sets the reach. Predicted 0.333/0.250/0.200 for lambda "
-            "= 2/3/4 against measured 0.337-0.349, 0.255 and 0.202. Every "
+            "= 2/3/4 against measured 0.336-0.349, 0.255 and 0.204. Every "
             "measurement sits just above its prediction, as it should: the "
             "local stopping rate is what one block can repair alone, and "
             "the cascade across blocks can only add to it. At fixed "
-            "lambda=2 the threshold also rises with mu (0.337, 0.342, 0.349 "
+            "lambda=2 the threshold also rises with mu (0.336, 0.342, 0.349 "
             "for mu = 2, 4, 8) - more blocks give that cascade more to work "
             "with.",
       caveat="An earlier estimate put lambda=3 at 0.275. It was the midpoint "
              "of a gap between two coarse grid points with no trial inside "
-             "it; the refinement places it at 0.255, on the prediction.")),
+             "it; dense sampling across the band places it just above the "
+             "prediction, at 0.255.")),
 
     (4, M.fig_tolerance_vs_guarantee, "bench", "tolerance-vs-guarantee",
      "bench", "Discussion — guarantees versus behaviour", dict(
@@ -131,9 +130,9 @@ SELECTION = [
       reading="Blue is the measured 50% threshold, grey the worst-case "
               "guarantee from minimum distance, dashed red the rate bound "
               "1-R that no code of that rate can beat.",
-      shows="1D-RS sits on its bound at 0.500, which is what being MDS "
+      shows="1D-RS sits on its bound at 0.499, which is what being MDS "
             "means and a useful check that the harness is sound. 2D-RS "
-            "reaches 0.401 against a guarantee of 0.098 - four times its own "
+            "reaches 0.400 against a guarantee of 0.098 - four times its own "
             "bound.",
       caveat="Not a contradiction. A minimum-distance guarantee holds "
              "against every pattern including the adversarial worst case; "
@@ -152,8 +151,9 @@ SELECTION = [
       shows="1D-RS is the most expensive at every rate, three to five times "
             "the dearest block-circulant row, because it divides one "
             "8192-length polynomial while the others divide short ones. "
-            "Against 2D-RS the picture is mixed: below about 8% every BC row "
-            "is cheaper, above it only the two smallest stay below.",
+            "Against 2D-RS the picture is mixed: below about 7% every BC row "
+            "is cheaper; above it they cross one by one, and only omega512 "
+            "lambda2 and omega1024 lambda4 stay at or below it.",
       caveat="Single-threaded Python over galois. Relative comparisons hold; "
              "absolute seconds would not survive an optimised build.")),
 
@@ -166,8 +166,9 @@ SELECTION = [
       reading="Milliseconds per erased symbol, log axis. A flat line means "
               "cost is linear in the number of erasures; a falling line "
               "means a fixed cost is being amortised over more repairs.",
-      shows="1D-RS is flat at 10-13 ms per erasure - one long division's "
-            "worth of work each. The BC rows sit at 1-3.5 ms and rise "
+      shows="1D-RS sits near 11-13 ms per erasure (16 ms at 2%, easing to "
+            "10.5 ms near its threshold) - one long division's worth of work "
+            "each. The BC rows sit at 0.85-3.7 ms and rise "
             "gently. 2D-RS falls steeply from 8 ms to 1 ms, revealing a "
             "large fixed cost, which is exactly why it looks expensive at 2% "
             "erasure and cheap at 30%.",
@@ -181,8 +182,8 @@ SELECTION = [
            "at the highest rate every scheme still recovers.",
       reading="Paired bars per scheme, log axis in seconds.",
       shows="The two families sit on opposite sides of the asymmetry. 1D-RS "
-            "encodes in 0.23 s then costs 20 s to decode; BC omega2048 "
-            "lambda2 spends 15.7 s encoding in order to decode in 5.5 s.",
+            "encodes in 0.23 s then costs 21 s to decode; BC omega2048 "
+            "lambda2 spends 15.8 s encoding in order to decode in 5.8 s.",
       caveat="A blob is encoded once by the proposer and decoded by every "
              "node reconstructing it, so an expensive encode amortises "
              "across the network and an expensive decode does not. For DAS "
@@ -201,8 +202,8 @@ SELECTION = [
               "both counts at once.",
       shows="Only three of seven are on the frontier. BC omega512 lambda2 is "
             "the cheapest thing still surviving a third of the codeword; "
-            "2D-RS buys about five more points of tolerance for roughly "
-            "double the decode; 1D-RS buys the maximum and pays an order of "
+            "2D-RS buys about five more points of tolerance for about 60% "
+            "more decode time; 1D-RS buys the maximum and pays an order of "
             "magnitude. BC omega1024 lambda4 is dominated on both axes by "
             "omega512 lambda2, so the tolerance it gives up buys nothing.",
       caveat="If the report has one summary figure, this is it.")),
@@ -215,11 +216,14 @@ SELECTION = [
            "n(1-threshold)/k, expressed as a multiple of one blob.",
       reading="Bars per scheme against a dashed line at 1.0, the theoretical "
               "floor - nothing rebuilds 124 KiB from less than 124 KiB.",
-      shows="1D-RS needs exactly the floor, 1.00x. Everything else "
-            "needs 1.23x to 1.60x. A scheme tolerating a lower erasure rate "
+      shows="1D-RS needs essentially the floor, 1.00x. Everything else "
+            "needs 1.24x to 1.59x. A scheme tolerating a lower erasure rate "
             "at the same storage cost necessarily needs more.",
-      caveat="Computed from code parameters. Network figure 04 measures the "
-             "same quantity independently and agrees on the ordering.")),
+      caveat="Computed from the measured thresholds. Network figure 04 shows "
+             "what a node actually pulls; its download target is set from "
+             "the same measured tolerance, so the shared ordering is by "
+             "construction, and the network figure adds the real overheads "
+             "on top.")),
 
     # -------------------------------------------------------- 02-network-sim
     (1, M.fig_net_erasure, "netA", "erasure-vs-adversaries", "net",
@@ -235,26 +239,33 @@ SELECTION = [
       shows="A cell is lost only if all four of its custodians withhold, so "
             "the erasure the code sees is roughly the fourth power of the "
             "bad-peer fraction: 50% of the network withholding yields about "
-            "5.6% erasure. Every scheme gives the identical curve, because "
-            "this is a property of the network and custody, not the code.",
+            "5.6% erasure. Every scheme gives the same curve - 2D-RS, with 132 "
+            "cells rather than 128, differs only in the fourth decimal - "
+            "because this is a property of the network and custody, not the "
+            "code.",
       caveat="Deflating for the coding schemes: replication absorbs most "
              "peer failure before the erasure code is asked to do anything.")),
 
     (2, M.fig_net_recovery, "netA", "recovery-vs-adversaries", "net",
      "Results — network layer: fault tolerance", dict(
-      question="Do the schemes fail in the same order when losses come from "
-               "peer behaviour rather than an injected erasure rate?",
+      question="At what level of peer withholding does each scheme stop "
+               "recovering the blob?",
       data="Same run. No erasure rate is injected here - losses are whatever "
-           "failed to arrive before the 4 s deadline.",
+           "failed to arrive before the 4 s deadline. Whether a realised "
+           "erasure is survivable is read from the coding benchmark's "
+           "measured recovery curve (calibrated mode).",
       reading="Fraction of 30 trials that rebuilt the blob byte-exactly, "
               "against withholding.",
-      shows="They fail in exactly the order the coding benchmark predicted, "
-            "and at the withholding rates that produce their measured "
-            "thresholds. BC omega1024 lambda4 breaks first (8/30 at 70% "
-            "withholding, which yields 0.233 erasure against its 0.202 "
-            "threshold); 1D-RS is still at 30/30 when 80% of peers refuse.",
-      caveat="This is the project's strongest evidence: two independent "
-             "methods agreeing is far better than either alone.")),
+      shows="BC omega1024 lambda4 breaks first (5/30 at 70% withholding, "
+            "which yields 0.233 erasure against its 0.204 threshold), with "
+            "omega1024 lambda3 close behind (21/30). 2D-RS and the lambda2 "
+            "rows hold until 80%, where erasure reaches 0.400; 1D-RS is "
+            "still at 30/30 when 80% of peers refuse.",
+      caveat="The failure order is inherited from the benchmark by "
+             "construction - recovery is calibrated, not re-decoded - so this "
+             "translates the benchmark's thresholds into withholding terms "
+             "rather than confirming them independently. Running the same "
+             "points with --real-decode would make it a confirmation.")),
 
     (3, M.fig_net_latency, "netA", "latency-gather-time", "net",
      "Results — network layer: latency", dict(
@@ -267,9 +278,9 @@ SELECTION = [
       shows="Yes - it costs time. A peer that never answers cannot be routed "
             "around for free: the client burns its request timeout before "
             "falling back to another custodian. Gather climbs from 0.14 s to "
-            "3.22 s for 1D-RS across the sweep. The scheme needing the most "
-            "cells hits the deadline first, omega1024 lambda4 at 50% "
-            "withholding against 1D-RS at 80%.",
+            "2.76 s for 1D-RS across the sweep. The scheme needing the most "
+            "cells hits the deadline first - omega1024 lambda4, at 60% "
+            "withholding - while 1D-RS never reaches it.",
       caveat="Covers the brief's 'packet propagation latency'. Invisible in "
              "any figure measured only at zero adversaries.")),
 
@@ -284,9 +295,12 @@ SELECTION = [
               "at the actual payload (six blobs = 0.73 MiB). Includes the "
               "over-request margin and anything re-requested after a "
               "timeout.",
-      shows="1D-RS pulls least at 1.04 MiB and BC omega1024 lambda4 most at "
-            "1.54 MiB - the same ordering benchmark figure 08 computes from "
-            "code parameters, arrived at by completely independent means.",
+      shows="1D-RS pulls least at 1.02 MiB and BC omega1024 lambda4 most at "
+            "1.54 MiB, the whole codeword. The ordering matches benchmark "
+            "figure 09 by construction - the download target is set from the "
+            "same measured tolerance - and what this figure adds is the real "
+            "overhead on top: the over-request margin, requests already in "
+            "flight, and re-requests after timeouts.",
       caveat="Read the fall at high withholding carefully: that is cells "
              "that never arrived, not a saving.")),
 
@@ -294,15 +308,19 @@ SELECTION = [
      "Results — network layer: throughput", dict(
       question="How many blobs can a node actually rebuild within one slot?",
       data="Same six-blob run. Throughput implied by the measured time - "
-           "blobs attempted, scaled by recovery rate and by whether the "
-           "total fits the slot - not an independently measured rate.",
+           "blobs attempted, scaled by recovery rate and by the share of the "
+           "work that fits in the 12 s slot - not an independently measured "
+           "rate.",
       reading="Blobs reconstructed per slot out of six, against withholding, "
               "with a dashed line at six.",
-      shows="The ordering inverts the tolerance ordering. 1D-RS tolerates "
-            "the most erasure of any scheme and reconstructs the fewest "
-            "blobs, about 0.2 of the six, because one 8192-length polynomial "
-            "division costs roughly 59 s per blob. The three cheapest BC "
-            "rows keep up with all six until 20% withholding.",
+      shows="The ordering broadly inverts the tolerance ordering. 1D-RS "
+            "tolerates the most erasure of any scheme and reconstructs the "
+            "fewest blobs, about 0.4 of the six, because one 8192-length "
+            "polynomial division costs about 31 s per blob. BC omega1024 "
+            "lambda3 and lambda4 keep up with all six until 20% withholding; "
+            "at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 "
+            "and omega2048 lambda2 2.8 - the exception to a clean inversion, "
+            "its large blocks being slow to decode.",
       caveat="Covers the brief's 'block processing throughput'.")),
 
     (6, M.fig_net_time_budget, "netB", "time-budget-vs-slot", "net",
@@ -313,10 +331,12 @@ SELECTION = [
       reading="Log seconds against withholding, with the 4 s sampling "
               "deadline and the 12 s slot both marked. Anything above the "
               "12 s line cannot keep up with the chain.",
-      shows="At zero adversaries only BC omega1024 lambda3 (6.4 s) and "
-            "lambda4 (1.3 s) finish inside a slot. Past about 20% "
-            "withholding nothing does. 1D-RS is not close at any setting - "
-            "354 s, roughly thirty slots of work for one slot of data.",
+      shows="At zero adversaries only BC omega1024 lambda3 (5.9 s) and "
+            "lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 "
+            "just over at 13.7 s. By 40% withholding only lambda4 still "
+            "averages under 12 s, and it recovers in only 19 of 30 trials. "
+            "1D-RS is not close at any setting - 187 s, roughly fifteen "
+            "slots of work for one slot of data.",
       caveat="The figure that reframes the comparison: erasure tolerance is "
              "not the binding constraint, decode throughput is.")),
 
@@ -328,11 +348,12 @@ SELECTION = [
            "inflated by timeouts.",
       reading="Gather and decode as separate bars per scheme on a log axis - "
               "separate rather than stacked, because stacking on a log axis "
-              "would misrepresent the sum. The slot deadline is marked.",
-      shows="Every scheme gathers in about one second. Decode spans three "
-            "orders of magnitude above that, from effectively zero to 354 s. "
-            "At every setting tried, arithmetic rather than bandwidth or "
-            "latency decides the outcome.",
+              "would misrepresent the sum. The 4 s sampling deadline is marked.",
+      shows="Every scheme gathers in about one second. Decode runs from "
+            "effectively zero - omega1024 lambda4, which ends up holding the "
+            "whole codeword - to 186 s for 1D-RS. Apart from that one "
+            "scheme, arithmetic rather than bandwidth or latency decides the "
+            "outcome.",
       caveat="Bandwidth was the constraint this project expected to find "
              "binding. It is not close.")),
 
@@ -390,7 +411,7 @@ OMITTED = {
     "fft_profile": "same",
     "fft_node_width": "same",
     "fft_grs_premise": "same",
-    "rs_decode_vs_erasure_count": "1D vs 2D only; figure 4 covers it across "
+    "rs_decode_vs_erasure_count": "1D vs 2D only; figure 05 covers it across "
                                   "all seven schemes",
 }
 
@@ -425,9 +446,11 @@ def main():
                 fig.tight_layout()
             for ext in ("pdf", "svg", "png"):
                 path = os.path.join(OUT, _s, f"{_n}.{ext}")
+                # No timestamps in the vector formats, so regenerating
+                # unchanged data leaves the files byte-identical.
                 kw = ({"dpi": 300} if ext == "png"
                       else {"metadata": {"Date": None}} if ext == "svg"
-                      else {})
+                      else {"metadata": {"CreationDate": None}})
                 fig.savefig(path, format=ext, bbox_inches="tight", **kw)
                 _saved[ext] = path
             plt.close(fig)

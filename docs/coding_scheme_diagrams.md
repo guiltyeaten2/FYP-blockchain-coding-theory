@@ -275,10 +275,10 @@ ones. How much they overlap is the parameter that decides whether the
 resulting code is any good.
 
 <figure>
-<svg viewBox="0 0 300 300" role="img" aria-label="Block-circulant overlap. With lambda equal to two, a parity block is computed from only two information blocks and the minimum distance is five. With lambda equal to mu, every parity block is computed from every information block and the minimum distance rises to 4097, which equals n minus k plus one, the Singleton bound, making the code MDS."><defs><marker id="bcar" markerWidth="6" markerHeight="6" refX="4.6" refY="2.2" orient="auto"><path d="M0,0 L4.6,2.2 L0,4.4 Z" fill="context-stroke"/></marker></defs>
+<svg viewBox="0 0 300 300" role="img" aria-label="Block-circulant overlap. With lambda equal to two, a parity block is computed from only two information blocks and the minimum distance is two rho plus one. With lambda equal to mu, every parity block is computed from every information block and the minimum distance rises to 4097, which equals n minus k plus one, the Singleton bound, making the code MDS."><defs><marker id="bcar" markerWidth="6" markerHeight="6" refX="4.6" refY="2.2" orient="auto"><path d="M0,0 L4.6,2.2 L0,4.4 Z" fill="context-stroke"/></marker></defs>
 <text x="30" y="24" font-size="9.4" font-weight="700">Full overlap makes the code optimal</text>
 <text x="30" y="36" font-size="7.4" fill="#4a5561">how many information blocks each parity block sees</text>
-<text x="30" y="60" font-size="7.8" font-weight="700" fill="#c62828">&#955; = 2  (previously benchmarked)</text>
+<text x="30" y="60" font-size="7.8" font-weight="700" fill="#c62828">&#955; = 2  (three of the five rows swept)</text>
 <rect x="30" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
 <text x="53.0" y="80" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">0</tspan></text>
 <rect x="86" y="68" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
@@ -292,7 +292,7 @@ resulting code is any good.
 <path d="M 53.0 87 L 137.0 121" stroke="#c62828" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
 <path d="M 109.0 87 L 137.0 121" stroke="#c62828" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
 <text x="30" y="154" font-size="6.8" fill="#4a5561">Parity block 0 is computed from 2 of the &#956; blocks.</text>
-<text x="30" y="172" font-size="7.8" font-weight="700" fill="#1b7a34">&#955; = &#956;  (swept here)</text>
+<text x="30" y="172" font-size="7.8" font-weight="700" fill="#1b7a34">&#955; = &#956;  (&#969;2048 &#955;2 and &#969;1024 &#955;4)</text>
 <rect x="30" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
 <text x="53.0" y="192" text-anchor="middle" font-size="7.0">m<tspan font-size="5.4" dy="1.5">0</tspan></text>
 <rect x="86" y="180" width="46" height="18" fill="#1546a0" opacity="0.16" stroke="currentColor" stroke-width="0.6"/>
@@ -309,53 +309,62 @@ resulting code is any good.
 <path d="M 221.0 199 L 137.0 233" stroke="#1b7a34" stroke-width="0.9" opacity="0.75" marker-end="url(#bcar)"/>
 <text x="30" y="266" font-size="6.8" fill="#4a5561">Parity block 0 is computed from every block.</text>
 <rect x="24" y="270" width="252" height="22" fill="none" stroke="#1546a0" stroke-width="0.9"/>
-<text x="30" y="284" font-size="7.2" fill="#1b1f24"><tspan font-weight="700">d = &#955;&#961; + 1</tspan>: 5 &#8594; 4097 = n &#8722; k + 1, the Singleton bound.</text></svg>
-<figcaption>Overlap decides everything. Minimum distance is <em>d</em> = &#955;&#961; + 1, so the &#955;=2 parameterisation benchmarked earlier is <em>guaranteed</em> to correct only four erasures in an 8192-symbol codeword; anything beyond that depended on how the erasures happened to fall. Setting &#955; = &#956; makes every parity block depend on every information block and lifts <em>d</em> to 4097 = <em>n</em> &#8722; <em>k</em> + 1, the Singleton bound. As codes, the parameterisations swept in the report are therefore MDS &#8212; exactly as good as Reed-Solomon.</figcaption>
+<text x="30" y="284" font-size="7.2" fill="#1b1f24"><tspan font-weight="700">d = &#955;&#961; + 1</tspan>, up to 4097 = n &#8722; k + 1 (Singleton) at &#955; = &#956;.</text></svg>
+<figcaption>Overlap decides the code&#8217;s guarantee. Minimum distance is <em>d</em> = &#955;&#961; + 1, so the more information blocks each parity block depends on, the more erasures the code is <em>guaranteed</em> to survive. At &#955; = &#956; every parity block depends on every information block and <em>d</em> reaches 4097 = <em>n</em> &#8722; <em>k</em> + 1, the Singleton bound: as a code that is MDS, exactly as good as Reed-Solomon. Two of the five rows swept are like that &#8212; &#969;2048 &#955;2, where &#956; = 2, and &#969;1024 &#955;4. The &#955;=2 rows at &#956; = 4 and 8 and the &#955;=3 row are not, with worst-case guarantees of 0.250, 0.125 and 0.375. (The project&#8217;s first parameterisation, &#969; = &#961; = 2 with &#956; = 2048, had <em>d</em> = 5: guaranteed to correct only four erasures in an 8192-symbol codeword.)</figcaption>
 </figure>
 
 
 ## Why block-circulant tolerance is limited
 
-The parameterisations swept in the report are MDS codes: any 4096
-surviving symbols determine the blob, exactly as for 1D-RS. They
-nevertheless stop recovering far earlier, and the reason is entirely in
-the decoder, which never looks beyond a single local block.
+Whatever the code guarantees, the decoder stops early, and for the same
+reason in every row: it never looks beyond a single local block. Even the
+two MDS rows — where any 4096 surviving symbols determine the blob, exactly
+as for 1D-RS — stop recovering near a third and a fifth of the codeword
+respectively.
 
 <figure>
-<svg viewBox="0 0 300 300" role="img" aria-label="Why block-circulant tolerance is limited by its decoder. Because lambda equals mu, one local block\u2019s support covers the entire message plus that block\u2019s own parity, so a single block that comes in under its budget of rho erasures recovers the whole blob. That happens while 4096x plus rho x is at most rho, so the decoder gives out at rho over n-zero: 0.200, 0.111 and 0.059 for the three parameterisations, far below the 0.50 these MDS codes would allow."><text x="26" y="24" font-size="9.4" font-weight="700">The code is optimal; the decoder is local</text>
+<svg viewBox="0 0 300 324" role="img" aria-label="Why block-circulant tolerance is limited by its decoder. One local block\u2019s support is its own rho parity symbols plus the lambda times omega message symbols it covers, and the block solves only while its support holds at most rho erasures. That holds while lambda omega x plus rho x is at most rho, so with rho equal to omega the decoder gives out at one over one plus lambda: 0.333 for the three lambda-two rows, 0.250 for lambda three and 0.200 for lambda four, far below the 0.50 the codes are built for."><text x="26" y="24" font-size="9.4" font-weight="700">Whatever the code, the decoder is local</text>
 <text x="26" y="36" font-size="7.4" fill="#4a5561">what one local block can see, and what it can fix</text>
 <rect x="26" y="54" width="198.4" height="20" fill="#1546a0" opacity="0.18" stroke="currentColor" stroke-width="0.6"/>
 <rect x="224.4" y="54" width="49.6" height="20" fill="#1b7a34" opacity="0.30" stroke="currentColor" stroke-width="0.6"/>
-<text x="125.2" y="67" text-anchor="middle" font-size="7.0">all 4096 message symbols</text>
+<text x="125.2" y="67" text-anchor="middle" font-size="7.0">the &#955;&#969; message symbols it covers</text>
 <text x="249.2" y="67" text-anchor="middle" font-size="6.4" fill="#1b7a34" font-weight="700">&#961;</text>
-<text x="26" y="48" font-size="7.2" font-weight="700">one local block&#8217;s support (&#955; = &#956;)</text>
-<text x="26" y="85" font-size="6.8" fill="#4a5561">n&#8320; = &#961; + &#955;&#969; = &#961; + 4096</text>
+<text x="26" y="48" font-size="7.2" font-weight="700">one local block&#8217;s support</text>
+<text x="26" y="85" font-size="6.8" fill="#4a5561">n&#8320; = &#961; + &#955;&#969;</text>
 <text x="26" y="108" font-size="7.4" fill="#1b1f24">It solves when its support holds at most &#961; erasures.</text>
-<text x="26" y="120" font-size="7.4" fill="#1b1f24">That support is the whole message, so <tspan font-weight="700">one block</tspan> finishes the job.</text>
+<text x="26" y="120" font-size="7.4" fill="#1b1f24">At erasure rate x, about x&#183;n&#8320; of them are missing.</text>
 <rect x="26" y="132" width="248" height="30" fill="none" stroke="#1546a0" stroke-width="0.9"/>
-<text x="34" y="146" font-size="7.4" fill="#1546a0" font-weight="700">4096x + &#961;x &#8804; &#961;</text>
-<text x="34" y="156" font-size="7.2" fill="#1b1f24">so the decoder gives out at x = &#961;/n&#8320; &#8212; not at 0.50.</text>
-<text x="26" y="186" font-size="7.2" font-weight="700">&#969; = &#961;</text>
+<text x="34" y="146" font-size="7.4" fill="#1546a0" font-weight="700">&#955;&#969;x + &#961;x &#8804; &#961;</text>
+<text x="34" y="156" font-size="7.2" fill="#1b1f24">so it gives out at x = &#961;/n&#8320; = 1/(1+&#955;) when &#961; = &#969;.</text>
+<text x="26" y="186" font-size="7.2" font-weight="700">row</text>
 <text x="96" y="186" font-size="7.2" font-weight="700">n&#8320;</text>
 <text x="152" y="186" font-size="7.2" font-weight="700">&#961;/n&#8320;</text>
 <text x="212" y="186" font-size="7.2" font-weight="700">solve cost</text>
 <line x1="26" y1="190" x2="274" y2="190" stroke="currentColor" stroke-width="0.6"/>
-<text x="26" y="202" font-size="7.0">1024</text>
-<text x="96" y="202" font-size="7.0">5120</text>
-<text x="152" y="202" font-size="7.0" font-weight="700" fill="#1b7a34">0.200</text>
-<text x="212" y="202" font-size="7.0">1024&#215;1024</text>
-<text x="26" y="215" font-size="7.0">512</text>
-<text x="96" y="215" font-size="7.0">4608</text>
-<text x="152" y="215" font-size="7.0" font-weight="700" fill="#1b7a34">0.111</text>
-<text x="212" y="215" font-size="7.0">512&#215;512</text>
-<text x="26" y="228" font-size="7.0">256</text>
-<text x="96" y="228" font-size="7.0">4352</text>
-<text x="152" y="228" font-size="7.0" font-weight="700" fill="#1b7a34">0.059</text>
-<text x="212" y="228" font-size="7.0">256&#215;256</text>
-<rect x="26" y="242" width="248" height="46" fill="none" stroke="#c62828" stroke-width="0.9"/>
-<text x="34" y="256" font-size="7.2" font-weight="700" fill="#c62828">The gap is the decoder, not the code.</text>
-<text x="34" y="267" font-size="7.0" fill="#1b1f24">All three are MDS: any 4096 surviving symbols suffice.</text>
-<text x="34" y="278" font-size="7.0" fill="#1b1f24">Bigger blocks close more of it; the solve stays O(&#961;&#178;).</text></svg>
-<figcaption>Why the measured tolerance is far below 0.50 anyway. <code>DecCBC[2]</code> solves one block at a time, and a block succeeds only when its own support holds at most &#961; erasures. Because &#955; = &#956;, that support is the entire message plus the block&#8217;s own parity, which cuts both ways: one successful block recovers the whole blob at once, but the erasure budget &#961; has to cover erasures spread across all 4096 message symbols as well. Solving 4096<em>x</em> + &#961;<em>x</em> &#8804; &#961; gives <em>x</em> &#8804; &#961;/n&#8320;, which is what the measurements land on. Larger local blocks raise the limit, and because that local system is a Vandermonde matrix in distinct evaluation points it can be solved in &#961;&#178; rather than &#961;&#179; time &#8212; which is what makes &#969;=1024 measurable at all.</figcaption>
+<text x="26" y="202" font-size="7.0">&#969;2048 &#955;2</text>
+<text x="96" y="202" font-size="7.0">6144</text>
+<text x="152" y="202" font-size="7.0" font-weight="700" fill="#1b7a34">0.333</text>
+<text x="212" y="202" font-size="7.0">2048&#215;2048</text>
+<text x="26" y="215" font-size="7.0">&#969;1024 &#955;2</text>
+<text x="96" y="215" font-size="7.0">3072</text>
+<text x="152" y="215" font-size="7.0" font-weight="700" fill="#1b7a34">0.333</text>
+<text x="212" y="215" font-size="7.0">1024&#215;1024</text>
+<text x="26" y="228" font-size="7.0">&#969;512 &#955;2</text>
+<text x="96" y="228" font-size="7.0">1536</text>
+<text x="152" y="228" font-size="7.0" font-weight="700" fill="#1b7a34">0.333</text>
+<text x="212" y="228" font-size="7.0">512&#215;512</text>
+<text x="26" y="241" font-size="7.0">&#969;1024 &#955;3</text>
+<text x="96" y="241" font-size="7.0">4096</text>
+<text x="152" y="241" font-size="7.0" font-weight="700" fill="#1b7a34">0.250</text>
+<text x="212" y="241" font-size="7.0">1024&#215;1024</text>
+<text x="26" y="254" font-size="7.0">&#969;1024 &#955;4</text>
+<text x="96" y="254" font-size="7.0">5120</text>
+<text x="152" y="254" font-size="7.0" font-weight="700" fill="#1b7a34">0.200</text>
+<text x="212" y="254" font-size="7.0">1024&#215;1024</text>
+<rect x="26" y="266" width="248" height="46" fill="none" stroke="#c62828" stroke-width="0.9"/>
+<text x="34" y="280" font-size="7.2" font-weight="700" fill="#c62828">The gap is the decoder, not the code.</text>
+<text x="34" y="291" font-size="7.0" fill="#1b1f24">Even the MDS rows (&#969;2048 &#955;2, &#969;1024 &#955;4) stop here;</text>
+<text x="34" y="302" font-size="7.0" fill="#1b1f24">measured thresholds sit just above, at 0.336&#8211;0.349, 0.255, 0.204.</text></svg>
+<figcaption>Why the measured tolerance is far below 0.50 anyway. <code>DecCBC[2]</code> solves one block at a time, and a block succeeds only when its own support &#8212; its &#961; parity symbols plus the &#955;&#969; message symbols it covers &#8212; holds at most &#961; erasures. Solving &#955;&#969;<em>x</em> + &#961;<em>x</em> &#8804; &#961; gives <em>x</em> &#8804; &#961;/n&#8320; = 1/(1+&#955;) when &#961; = &#969;, and the measurements land just above it: 0.336&#8211;0.349 for &#955; = 2, 0.255 for &#955; = 3 and 0.204 for &#955; = 4, the small excess coming from the cascade across blocks. That limit holds even for the two MDS rows, whose code alone could survive half the codeword. Because the local system is a Vandermonde matrix in distinct evaluation points it can be solved in &#961;&#178; rather than &#961;&#179; time &#8212; which is what makes &#969; = 1024 and 2048 measurable at all.</figcaption>
 </figure>
 

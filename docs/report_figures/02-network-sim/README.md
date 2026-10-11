@@ -10,17 +10,17 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** SimPy simulation, 64 peers, custody replication 4, one blob per slot at 50 Mbps, 4 s deadline, 30 trials per point, withholding swept 0 to 80%. docs/runA.json.
 
-**Shows.** A cell is lost only if all four of its custodians withhold, so the erasure the code sees is roughly the fourth power of the bad-peer fraction: 50% of the network withholding yields about 5.6% erasure. Every scheme gives the identical curve, because this is a property of the network and custody, not the code.
+**Shows.** A cell is lost only if all four of its custodians withhold, so the erasure the code sees is roughly the fourth power of the bad-peer fraction: 50% of the network withholding yields about 5.6% erasure. Every scheme gives the same curve - 2D-RS, with 132 cells rather than 128, differs only in the fourth decimal - because this is a property of the network and custody, not the code.
 
 ## 02-recovery-vs-adversaries
 
 *Goes in: Results — network layer: fault tolerance*
 
-**Question.** Do the schemes fail in the same order when losses come from peer behaviour rather than an injected erasure rate?
+**Question.** At what level of peer withholding does each scheme stop recovering the blob?
 
-**Data.** Same run. No erasure rate is injected here - losses are whatever failed to arrive before the 4 s deadline.
+**Data.** Same run. No erasure rate is injected here - losses are whatever failed to arrive before the 4 s deadline. Whether a realised erasure is survivable is read from the coding benchmark's measured recovery curve (calibrated mode).
 
-**Shows.** They fail in exactly the order the coding benchmark predicted, and at the withholding rates that produce their measured thresholds. BC omega1024 lambda4 breaks first (8/30 at 70% withholding, which yields 0.233 erasure against its 0.202 threshold); 1D-RS is still at 30/30 when 80% of peers refuse.
+**Shows.** BC omega1024 lambda4 breaks first (5/30 at 70% withholding, which yields 0.233 erasure against its 0.204 threshold), with omega1024 lambda3 close behind (21/30). 2D-RS and the lambda2 rows hold until 80%, where erasure reaches 0.400; 1D-RS is still at 30/30 when 80% of peers refuse.
 
 ## 03-latency-gather-time
 
@@ -30,7 +30,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same run. Gather time is network time only, excluding decode.
 
-**Shows.** Yes - it costs time. A peer that never answers cannot be routed around for free: the client burns its request timeout before falling back to another custodian. Gather climbs from 0.14 s to 3.22 s for 1D-RS across the sweep. The scheme needing the most cells hits the deadline first, omega1024 lambda4 at 50% withholding against 1D-RS at 80%.
+**Shows.** Yes - it costs time. A peer that never answers cannot be routed around for free: the client burns its request timeout before falling back to another custodian. Gather climbs from 0.14 s to 2.76 s for 1D-RS across the sweep. The scheme needing the most cells hits the deadline first - omega1024 lambda4, at 60% withholding - while 1D-RS never reaches it.
 
 ## 04-bandwidth-fetched
 
@@ -40,7 +40,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** SimPy, 64 peers, replication 4, six blobs per slot at 25 Mbps - the bandwidth-pressure configuration. 30 trials per point. docs/runB.json.
 
-**Shows.** 1D-RS pulls least at 1.04 MiB and BC omega1024 lambda4 most at 1.54 MiB - the same ordering benchmark figure 08 computes from code parameters, arrived at by completely independent means.
+**Shows.** 1D-RS pulls least at 1.02 MiB and BC omega1024 lambda4 most at 1.54 MiB, the whole codeword. The ordering matches benchmark figure 09 by construction - the download target is set from the same measured tolerance - and what this figure adds is the real overhead on top: the over-request margin, requests already in flight, and re-requests after timeouts.
 
 ## 05-throughput-blobs-per-slot
 
@@ -48,9 +48,9 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Question.** How many blobs can a node actually rebuild within one slot?
 
-**Data.** Same six-blob run. Throughput implied by the measured time - blobs attempted, scaled by recovery rate and by whether the total fits the slot - not an independently measured rate.
+**Data.** Same six-blob run. Throughput implied by the measured time - blobs attempted, scaled by recovery rate and by the share of the work that fits in the 12 s slot - not an independently measured rate.
 
-**Shows.** The ordering inverts the tolerance ordering. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.2 of the six, because one 8192-length polynomial division costs roughly 59 s per blob. The three cheapest BC rows keep up with all six until 20% withholding.
+**Shows.** The ordering broadly inverts the tolerance ordering. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31 s per blob. BC omega1024 lambda3 and lambda4 keep up with all six until 20% withholding; at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 and omega2048 lambda2 2.8 - the exception to a clean inversion, its large blocks being slow to decode.
 
 ## 06-time-budget-vs-slot
 
@@ -60,7 +60,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run. Gather plus decode summed per slot.
 
-**Shows.** At zero adversaries only BC omega1024 lambda3 (6.4 s) and lambda4 (1.3 s) finish inside a slot. Past about 20% withholding nothing does. 1D-RS is not close at any setting - 354 s, roughly thirty slots of work for one slot of data.
+**Shows.** At zero adversaries only BC omega1024 lambda3 (5.9 s) and lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 just over at 13.7 s. By 40% withholding only lambda4 still averages under 12 s, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting - 187 s, roughly fifteen slots of work for one slot of data.
 
 ## 07-gather-vs-decode
 
@@ -70,7 +70,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run, at zero adversaries so neither side is inflated by timeouts.
 
-**Shows.** Every scheme gathers in about one second. Decode spans three orders of magnitude above that, from effectively zero to 354 s. At every setting tried, arithmetic rather than bandwidth or latency decides the outcome.
+**Shows.** Every scheme gathers in about one second. Decode runs from effectively zero - omega1024 lambda4, which ends up holding the whole codeword - to 186 s for 1D-RS. Apart from that one scheme, arithmetic rather than bandwidth or latency decides the outcome.
 
 ## 08-scalability-peer-count
 

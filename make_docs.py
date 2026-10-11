@@ -72,6 +72,13 @@ pre {
 pre code { background: none; padding: 0; font-size: inherit; }
 table { border-collapse: collapse; width: 100%; margin: 9pt 0;
         font-size: 8.8pt; break-inside: avoid; }
+/* A table taller than a page cannot avoid breaking, and asking it to only
+   pushes it to a fresh page first, leaving the previous one nearly empty.
+   Wrap such a table in <div class="long-table" markdown="1">: it breaks
+   between rows, and the header repeats on each page. */
+.long-table table { break-inside: auto; }
+.long-table tr { break-inside: avoid; }
+.long-table thead { display: table-header-group; }
 th, td { border: 0.5pt solid #ccc; padding: 3.5pt 5pt; text-align: left;
          vertical-align: top; }
 /* Bold, NOT uppercased -- uppercasing turns omega into Omega. */

@@ -131,6 +131,7 @@ def style_of(name):
 # in-plot labels sit below it so they read as subordinate.
 FS_LABEL = 7.0      # direct line labels, value annotations
 FS_SMALL = 6.0      # notes, secondary text
+NOTE_GID = "methods-note"   # tags the foot note _harvest_and_strip lifts out
 FS_PANEL = 8.0      # panel letters
 FS_KEY = 5.8        # in-figure keys. Deliberately NOT FS_SMALL: the IEEE
                     # harvester strips FS_SMALL text as a methods note, and a
@@ -158,15 +159,79 @@ plt.rcParams.update({
 })
 
 
+def _obstacles(ax):
+    """What a label must not cover, in display space: every point along every
+    data line in `ax`, resampled densely so segments count as well as
+    vertices, and a pad of one marker radius plus a point, since a marker is
+    drawn around its vertex. Reference rules (axhline/axvline) are left out:
+    a name briefly interrupting a dashed rule hides nothing, whereas one
+    sitting on a curve hides data. Call only once scales and limits are final.
+    """
+    import math
+    import numpy as np
+    pts, sizes = [], []
+    for ln in ax.get_lines():
+        if ln.get_transform() != ax.transData:
+            continue                          # a rule, not data
+        if ln.get_marker() not in (None, "None", "", " "):
+            sizes.append(ln.get_markersize())
+        xy = ax.transData.transform(ln.get_xydata())
+        xy = xy[np.isfinite(xy).all(axis=1)]
+        pts.extend(xy)
+        for (xa, ya), (xb, yb) in zip(xy, xy[1:]):
+            n = int(math.hypot(xb - xa, yb - ya) / 2) + 2
+            pts.extend(zip(np.linspace(xa, xb, n), np.linspace(ya, yb, n)))
+    pts = np.array(pts) if pts else np.empty((0, 2))
+    pad = (max(sizes or [0.0]) / 2 + 1.0) * ax.figure.dpi / 72.0
+    return pts, pad
+
+
+def _clear_of(bb, box, pts, pad, taken, own=None):
+    """True if bounding box `bb` sits inside `box`, overlaps nothing in
+    `taken`, and keeps `pad` away from every obstacle point. `own` is a
+    display point (a label's own line end) whose immediate surroundings are
+    exempt: a name set just past its own end marker is where it belongs."""
+    if not (box.x0 <= bb.x0 and bb.x1 <= box.x1
+            and box.y0 <= bb.y0 and bb.y1 <= box.y1):
+        return False
+    if any(bb.overlaps(o) for o in taken):
+        return False
+    hit = ((pts[:, 0] >= bb.x0 - pad) & (pts[:, 0] <= bb.x1 + pad)
+           & (pts[:, 1] >= bb.y0 - pad) & (pts[:, 1] <= bb.y1 + pad))
+    if own is not None:
+        near = ((pts[:, 0] - own[0]) ** 2
+                + (pts[:, 1] - own[1]) ** 2) <= (2 * pad) ** 2
+        hit &= ~near
+    return not hit.any()
+
+
+def _taken(ax, renderer):
+    """Boxes already occupied by text or a legend in `ax`."""
+    out = [t.get_window_extent(renderer) for t in ax.texts]
+    if ax.get_legend() is not None:
+        out.append(ax.get_legend().get_window_extent(renderer))
+    return out
+
+
 def _label_ends(ax, series, fontsize=FS_LABEL):
     """Label each line at its right-hand end instead of in a legend.
 
     A seven-entry legend makes the reader hold seven colour-to-name pairings
     in their head and then find each one in a thicket of overlapping curves.
-    Putting the name where the line ends removes that lookup. Labels are
-    pushed apart vertically when they would collide, so a nudged one no
-    longer sits exactly on its line -- which is why each is drawn in its
-    line's own colour.
+    Putting the name where the line ends removes that lookup. Labels that
+    would stack are pushed apart vertically, so a nudged one no longer sits
+    exactly on its line -- which is why each is drawn in its line's own
+    colour.
+
+    Series also end at different x, so a label can land on a NEIGHBOUR's
+    curve, and its white backing would then hide that curve. So each label
+    tries a set of positions -- at its line's end; just above or below its
+    own line, working back from the end; then further from the end -- and
+    takes the first clear of every data line, earlier label, text and legend
+    (see _obstacles). One moved well away from its line gets a thin leader
+    back to the line's end. Clearances are measured with the final scales
+    and only grow afterwards, since the layout pass in _save can enlarge the
+    axes but not shrink them below this.
 
     `series` is [(name, xs, ys, colour)]; lines must already be plotted.
     """
@@ -182,26 +247,110 @@ def _label_ends(ax, series, fontsize=FS_LABEL):
     fro = (lambda v: 10 ** v) if log else (lambda v: v)
     lo, hi = to(y0), to(y1)
     gap = (hi - lo) * 0.062
+    xr = ax.get_xlim()
+    # Only labels whose lines end near the same x can stack on one another;
+    # nudging a label away from one that sits far to its left or right just
+    # moves it off its own line for nothing.
+    near_x = 0.12 * (xr[1] - xr[0])
     placed = []
     for yv, xv, name, colour in ends:
         t = to(yv)
-        if placed and t - placed[-1][0] < gap:
-            t = placed[-1][0] + gap
+        stack = [p[0] for p in placed if abs(p[1] - xv) < near_x]
+        if stack and t - max(stack) < gap:
+            t = max(stack) + gap
         placed.append((t, xv, name, colour))
-    over = placed[-1][0] - hi
-    if over > 0:
-        placed = [(t - over, xv, n, c) for t, xv, n, c in placed]
-    xr = ax.get_xlim()
-    for t, xv, name, colour in placed:
-        # Series end at different x, so a label can land on a NEIGHBOUR's
-        # curve even after vertical de-collision. The white backing keeps it
-        # legible wherever it lands.
-        ax.annotate(name, xy=(xv, fro(t)), xytext=(4, 0),
-                    textcoords="offset points",
-                    ha="left", va="center", fontsize=fontsize, color=colour,
-                    bbox=dict(boxstyle="round,pad=0.12", fc="white",
-                              ec="none", alpha=0.85))
+    # Keep the top of a stack a half-label inside the frame, not on it, and
+    # push the rest of that stack down only as far as each label has to go:
+    # one with room to spare below the stack stays on its own line.
+    top = max(placed, key=lambda p: p[0])
+    ceiling = hi - gap / 2
+    for i in sorted((i for i, p in enumerate(placed)
+                     if abs(p[1] - top[1]) < near_x),
+                    key=lambda i: placed[i][0], reverse=True):
+        t, xv, n, c = placed[i]
+        t = min(t, ceiling)
+        placed[i] = (t, xv, n, c)
+        ceiling = t - gap
     ax.set_xlim(xr[0], xr[1] + (xr[1] - xr[0]) * 0.26)
+
+    fig = ax.figure
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    pts, pad = _obstacles(ax)
+    box = ax.get_window_extent(renderer)
+    taken = _taken(ax, renderer)
+
+    def _put(name, colour, xy, off, ha, va, **kw):
+        return ax.annotate(name, xy=xy, xytext=off, textcoords="offset points",
+                           ha=ha, va=va, fontsize=fontsize, color=colour,
+                           bbox=dict(boxstyle="round,pad=0.12", fc="white",
+                                     ec="none", alpha=0.85), **kw)
+
+    curves = {name: list(zip(xs, ys)) for name, xs, ys, _ in series if xs}
+    for t, xv, name, colour in placed:
+        end = (xv, fro(t))
+        cands = [(end, (4, dy), "left", "center") for dy in (0, -8, 8)]
+        for pt in reversed(curves[name][:-1]):
+            cands.append((pt, (0, 5), "center", "bottom"))
+            cands.append((pt, (0, -5), "center", "top"))
+        cands += [(end, (4, dy), "left", "center")
+                  for dy in (-14, 14, -20, 20, -26, 26, -32, 32)]
+        tip_px = ax.transData.transform(curves[name][-1])
+        chosen = None
+        for xy, off, ha, va in cands:
+            ann = _put(name, colour, xy, off, ha, va)
+            bb = ann.get_window_extent(renderer)
+            if _clear_of(bb, box, pts, pad, taken,
+                         own=tip_px if xy == end else None):
+                chosen = bb
+                if xy == end and abs(off[1]) >= 14:
+                    # Moved well away from its line: redraw with a leader to
+                    # the line's true end, same text position.
+                    tip = curves[name][-1]
+                    dy_pt = ((ax.transData.transform(end)[1]
+                              - ax.transData.transform(tip)[1])
+                             * 72.0 / fig.dpi)
+                    ann.remove()
+                    _put(name, colour, tip, (off[0], off[1] + dy_pt), ha, va,
+                         arrowprops=dict(arrowstyle="-", color=colour, lw=0.6,
+                                         shrinkA=0, shrinkB=2))
+                break
+            ann.remove()
+        if chosen is None:
+            # Nowhere clear: fall back to the line's own end, where the
+            # backing at least keeps the name legible.
+            chosen = _put(name, colour, end, (4, 0), "left",
+                          "center").get_window_extent(renderer)
+        taken.append(chosen)
+
+
+def _rule_label(ax, text, y, colour, fontsize=FS_KEY):
+    """Name a horizontal reference rule at y where the name covers no data:
+    just above or below the rule, at the left or the right of the axes, in
+    that order of preference. Call after _label_ends, so the x-limits are
+    final and the scheme names are already there to be avoided."""
+    fig = ax.figure
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    pts, pad = _obstacles(ax)
+    box = ax.get_window_extent(renderer)
+    taken = _taken(ax, renderer)
+    trans = ax.get_yaxis_transform()          # x in axes fraction, y in data
+    cands = [((0.01, y), (0, 3), "left", "bottom"),
+             ((0.01, y), (0, -3), "left", "top"),
+             ((0.99, y), (0, 3), "right", "bottom"),
+             ((0.99, y), (0, -3), "right", "top")]
+    for xy, off, ha, va in cands:
+        ann = ax.annotate(text, xy=xy, xycoords=trans, xytext=off,
+                          textcoords="offset points", ha=ha, va=va,
+                          fontsize=fontsize, color=colour)
+        if _clear_of(ann.get_window_extent(renderer), box, pts, pad, taken):
+            return ann
+        ann.remove()
+    xy, off, ha, va = cands[0]
+    return ax.annotate(text, xy=xy, xycoords=trans, xytext=off,
+                       textcoords="offset points", ha=ha, va=va,
+                       fontsize=fontsize, color=colour)
 
 
 def _harvest_and_strip(fig, name):
@@ -230,10 +379,12 @@ def _harvest_and_strip(fig, name):
     # relative to the axes so it behaves on short figures), so both the
     # figure-level and axes-level text lists have to be searched. Scanning
     # only fig.texts silently left the note in the artwork.
+    # Found by tag, not by font size: matching on size also swallowed any
+    # in-figure label that happened to share it -- the scheme names on the
+    # trade-off scatter and the values on the data-needed bars.
     for holder in [fig] + list(fig.axes):
         for txt in list(getattr(holder, "texts", [])):
-            fs = txt.get_fontsize()
-            if fs and abs(fs - FS_SMALL) < 0.01:
+            if txt.get_gid() == NOTE_GID:
                 out["note"] = txt.get_text().replace("\n", " ")
                 txt.set_text("")
     if out["title"] is None and out["panel_titles"]:
@@ -297,7 +448,7 @@ def _subtitle(ax, text, width=95):
     ax.annotate(wrapped, xy=(0.5, 0), xycoords="axes fraction",
                 xytext=(0, -26), textcoords="offset points",
                 ha="center", va="top", fontsize=FS_SMALL, color="#555",
-                linespacing=1.4, annotation_clip=False)
+                linespacing=1.4, annotation_clip=False, gid=NOTE_GID)
 
 
 def _readable_log(ax, axis="y"):
@@ -326,74 +477,21 @@ def _readable_log(ax, axis="y"):
 
 # --------------------------------------------------------------- thresholds
 #
-# Thresholds come from threshold_refinement.py: dense trials across each
-# scheme's own transition band, fitted by maximum-likelihood logistic
-# regression with a bootstrap 95% interval (see thresholds.py).
+# A threshold is the erasure probability at which a scheme recovers half the
+# time. It is estimated by a maximum-likelihood logistic fit to every trial,
+# with a bootstrap 95% interval (thresholds.py), from the sweep's own dense
+# sampling across each scheme's transition band.
 #
-# They used to come from linear interpolation between the two coarse-sweep
-# rates bracketing the 50% crossing. The coarse sweep runs as few as three
-# trials near a threshold, and that produced 1D-RS = 0.505 -- above the 0.5 an
-# MDS code with n = 2k can sustain -- plus two intervals of width zero that
-# reflected perfect separation in the data, not real precision. The decoder
-# was never at fault; the estimate was.
+# It used to be read off a sparser sweep by interpolating between the two
+# rates bracketing the 50% crossing. With as few as three trials there, that
+# produced 1D-RS = 0.505 -- above the 0.5 an MDS code with n = 2k can sustain
+# -- and intervals of width zero that reflected gaps in the data rather than
+# precision. The decoder was never at fault; the estimate was.
 import thresholds as _T
-
-_REFINED = None
-
-
-def _refined():
-    global _REFINED
-    if _REFINED is None:
-        path = os.path.join(HERE, "threshold_results.json")
-        _REFINED = {}
-        if os.path.exists(path):
-            with open(path) as f:
-                d = json.load(f)
-            if not d.get("quick"):                 # never trust a smoke test
-                for name, e in d.get("schemes", {}).items():
-                    if e.get("estimate"):
-                        _REFINED[name] = e["estimate"]
-    return _REFINED
-
-
-def _merged_trials(trials):
-    """Coarse-sweep records for one scheme, merged with its refinement trials.
-
-    The coarse sweep covers 2-55% but runs as few as three trials near a
-    threshold; the refinement runs 12-20 per rate across the transition band
-    only. Drawn from the coarse sweep alone, 1D-RS showed 67% recovery at
-    epsilon = 0.50 against an exact 50%, because three trials happened to give
-    two successes -- so the curve visibly missed the theory it should match.
-    Merging puts the dense samples exactly where the shape is decided.
-
-    Counts at a rate present in both are summed, not averaged, so each trial
-    carries equal weight.
-    """
-    if not trials:
-        return trials
-    name = trials[0].get("scheme")
-    path = os.path.join(HERE, "threshold_results.json")
-    extra = []
-    if os.path.exists(path):
-        with open(path) as f:
-            d = json.load(f)
-        if not d.get("quick"):
-            extra = d.get("schemes", {}).get(name, {}).get("trials", [])
-    pool = {}
-    for t in list(trials) + list(extra):
-        r = round(t["rate"], 4)
-        k, n = pool.get(r, (0, 0))
-        pool[r] = (k + t["successes"], n + t["trials"])
-    return [{"scheme": name, "rate": r, "successes": k, "trials": n,
-             "success_rate": k / n} for r, (k, n) in sorted(pool.items())]
 
 
 def _estimate(trials):
-    """Refined estimate for this scheme if available, else a logistic fit to
-    the trials supplied. Returns the estimate dict or None."""
-    name = trials[0].get("scheme") if trials else None
-    if name in _refined():
-        return _refined()[name]
+    """Logistic-fit estimate for one scheme's trials, or None."""
     return _T.estimate_threshold(_T.points_from_trials(trials))
 
 
@@ -453,7 +551,7 @@ def fig_success_curves(bench):
     series = []
     for r in bench["results"]:
         m, ls = STYLE.get(r["scheme"], ("o", "-"))
-        ts = sorted(_merged_trials(r["trials"]), key=lambda t: t["rate"])
+        ts = sorted(r["trials"], key=lambda t: t["rate"])
         xs = [t["rate"] for t in ts]
         ys = [t["success_rate"] for t in ts]
         # Markers only where the curve is actually doing something. On the
@@ -519,9 +617,10 @@ def fig_success_curves(bench):
     axb.xaxis.set_major_formatter(FuncFormatter(_pct))
     axb.grid(axis="y", alpha=0)
 
-    _subtitle(axb, "(a) the 520-trial coarse sweep. (b) thresholds from a "
-                   "logistic fit to dense trials across each transition band. "
-                   "A trial counts as recovered only if the bytes match exactly")
+    _subtitle(axb, "one erasure sweep, sampled densely across each scheme's "
+                   "transition band; thresholds from a logistic fit with 95% "
+                   "bootstrap intervals. A trial counts as recovered only if "
+                   "the bytes match exactly")
     return _save(fig, "bench_success_curves.svg")
 
 
@@ -666,7 +765,7 @@ def fig_bc_threshold_prediction(bench):
     ax.set_xticklabels([f"{disp(t[0])}\n\u03bc={mu_of.get(t[0], '?')}"
                         for t in rows], fontsize=6.0)
     ax.set_ylabel("Erasure rate tolerated (%)")
-    ax.set_title("Block-circulant threshold follows $1/(1+\\lambda)$, not $\\mu$ or $\\omega$")
+    ax.set_title("Block-circulant threshold is set by $\\lambda$, near $1/(1+\\lambda)$; $\\mu$ adds a little")
     ax.set_ylim(0, max(t[3] for t in rows) * 1.22)
     ax.yaxis.set_major_formatter(FuncFormatter(_pct))
     _subtitle(ax, "bars: erasure rate at 50% success. rules: the local code's "
@@ -725,9 +824,9 @@ def fig_data_needed(bench):
                label="theoretical floor (1 blob)")
     for b_, m in zip(bars, mult):
         ax.text(b_.get_x() + b_.get_width() / 2, m + 0.015, f"{m:.2f}x",
-                ha="center", fontsize=6)
+                ha="center", fontsize=6.5)
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=18, ha="right")
+    ax.set_xticklabels([disp(l) for l in labels], rotation=18, ha="right")
     ax.set_ylabel("Surviving data needed (blobs)")
     ax.set_title("What a node must actually fetch to rebuild one blob")
     _subtitle(ax, "n(1-tolerance)/k: surviving symbols required, as a "
@@ -773,8 +872,6 @@ def fig_tolerance_vs_cost(bench):
     for name, th, c in pts:
         ax.scatter([th], [c], s=95, color=COLOURS.get(name), zorder=3,
                    edgecolor="white", linewidth=0.8)
-        ax.annotate(disp(name), xy=(th, c), xytext=(7, 4),
-                    textcoords="offset points", fontsize=6)
 
     # Pareto frontier: nothing tolerates more erasure AND decodes faster.
     front = sorted((p for p in pts
@@ -791,6 +888,38 @@ def fig_tolerance_vs_cost(bench):
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
     ax.legend(loc="upper left", fontsize=8)
+    # Name each point where the name covers neither the frontier nor another
+    # point: the frontier leaves its points up and to the right, which is
+    # exactly where a fixed label offset would put the name.
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    lines, pad = _obstacles(ax)
+    import numpy as np
+    dots = ax.transData.transform([(th, c) for _, th, c in pts])
+    r_dot = (95 ** 0.5) / 2 * fig.dpi / 72.0          # scatter s is area in pt^2
+    box = ax.get_window_extent(renderer)
+    taken = _taken(ax, renderer)
+    for (name, th, c), (dx, dy) in zip(pts, dots):
+        for off, ha, va in (((7, 4), "left", "bottom"), ((7, -4), "left", "top"),
+                            ((-7, 4), "right", "bottom"), ((-7, -4), "right", "top"),
+                            ((9, 0), "left", "center"), ((-9, 0), "right", "center")):
+            ann = ax.annotate(disp(name), xy=(th, c), xytext=off,
+                              textcoords="offset points", ha=ha, va=va,
+                              fontsize=6.5)
+            bb = ann.get_window_extent(renderer)
+            others = np.array([d for d in dots if not (d[0] == dx and d[1] == dy)])
+            near_dot = (len(others) and
+                        ((others[:, 0] >= bb.x0 - r_dot) & (others[:, 0] <= bb.x1 + r_dot)
+                         & (others[:, 1] >= bb.y0 - r_dot)
+                         & (others[:, 1] <= bb.y1 + r_dot)).any())
+            if not near_dot and _clear_of(bb, box, lines, pad, taken):
+                taken.append(bb)
+                break
+            ann.remove()
+        else:
+            ann = ax.annotate(disp(name), xy=(th, c), xytext=(7, 4),
+                              textcoords="offset points", fontsize=6.5)
+            taken.append(ann.get_window_extent(renderer))
     return _save(fig, "bench_tolerance_vs_cost.svg")
 
 
@@ -1125,7 +1254,7 @@ def fig_net_recovery(runA):
 
 def fig_net_gather_vs_decode(runB):
     """Gather against decode, per scheme. The whole point of the figure is
-    the axis: decode is orders of magnitude above gather, so the bottleneck
+    the axis: decode sits far above gather for every scheme that decodes, so the bottleneck
     is arithmetic, not bandwidth."""
     rows = [r for r in runB["rows"] if r["adversarial"] == 0.0]
     schemes = [s for s in ORDER if any(r["scheme"] == s for r in rows)]
@@ -1141,7 +1270,7 @@ def fig_net_gather_vs_decode(runB):
     deadline = runB["config"].get("deadline_s")
     if deadline:
         ax.axhline(deadline, color="#444", lw=1.1, ls="--",
-                   label=f"slot deadline ({deadline:.0f}s)")
+                   label=f"sampling deadline ({deadline:.0f}s)")
     ax.set_yscale("log")
     from matplotlib.transforms import blended_transform_factory
     tr = blended_transform_factory(ax.transData, ax.transAxes)
@@ -1156,7 +1285,7 @@ def fig_net_gather_vs_decode(runB):
     ax.set_xticklabels([disp(x) for x in schemes], rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("Time per slot (s)")
     cfg = runB["config"]
-    ax.set_title("Decode dominates gather by orders of magnitude")
+    ax.set_title("Decode, not gather, dominates the time per slot")
     _subtitle(ax, f"{cfg.get('blobs_per_slot', 6)} blobs per slot, "
                   f"{cfg.get('downlink_mbps', 25):.0f} Mbps downlink, no "
                   f"adversaries; gather is network time, decode is CPU")
@@ -1186,16 +1315,16 @@ def fig_net_throughput(runB):
         ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(s_), xs, ys, COLOURS[s_]))
     ax.axhline(target, color="#444", ls="--", lw=1.1)
-    # Labelled on the line: the legend that used to carry this was removed in
-    # favour of naming each curve at its end.
-    ax.annotate(f"blobs attempted ({target:.0f})", xy=(0.0, target),
-                xytext=(2, 4), textcoords="offset points",
-                fontsize=6.5, color="#444")
     ax.set_xlabel("Peers refusing to serve (%)")
     ax.set_ylabel("Blobs reconstructed per slot (count)")
-    ax.set_title("Throughput inverts the tolerance ordering")
+    ax.set_title("Throughput broadly inverts the tolerance ordering")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _label_ends(ax, series)
+    # Labelled on the line, after the scheme names: the curves that keep up
+    # with every blob run along this rule, so its name goes wherever it
+    # covers none of them.
+    _rule_label(ax, f"blobs attempted ({target:.0f})", target, "#444",
+                fontsize=6.5)
     return _save(fig, "net_throughput.svg")
 
 
@@ -1313,11 +1442,10 @@ def fig_net_time_budget(runB):
         c_, ls_, mk_ = style_of(sc)
         ax.plot(xs, ys, marker=mk_, ls=ls_, color=c_)
         series.append((disp(sc), xs, ys, COLOURS[sc]))
-    for y, lab, col in ((cfg.get("deadline_s", 4.0), "sampling deadline", "#c1442e"),
-                        (12.0, "one Ethereum slot", "#444")):
+    rules = ((cfg.get("deadline_s", 4.0), "sampling deadline", "#c1442e"),
+             (12.0, "one Ethereum slot", "#444"))
+    for y, lab, col in rules:
         ax.axhline(y, color=col, ls="--", lw=1.2)
-        ax.annotate(f"{lab} ({y:.0f}s)", xy=(0.0, y), xytext=(2, 4),
-                    textcoords="offset points", fontsize=6.5, color=col)
     ax.set_yscale("log")
     ax.set_xlabel("Peers refusing to serve (%)")
     ax.set_ylabel("Gather + decode per slot (s)")
@@ -1325,6 +1453,11 @@ def fig_net_time_budget(runB):
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _readable_log(ax)
     _label_ends(ax, series)
+    # Named after the scheme labels are placed, wherever the name covers no
+    # curve: a scheme whose total sits just above a rule would otherwise run
+    # straight through that rule's name.
+    for y, lab, col in rules:
+        _rule_label(ax, f"{lab} ({y:.0f}s)", y, col, fontsize=6.5)
     _subtitle(ax, f"{cfg.get('blobs_per_slot', 6)} blobs per slot, "
                   f"{cfg.get('downlink_mbps', 25):.0f} Mbps; anything above "
                   f"the 12s line cannot keep up with the chain")
@@ -1364,14 +1497,21 @@ def fig_net_peers(runC):
                 label="exact hypergeometric (computed, not fitted)"
                       if adv == levels[0] else None)
         ax.axhline(adv ** rep, color=col, lw=1.0, ls=":")
-        # Name the band beside its own curve rather than in a legend.
+        # Name the band beside its own curve rather than in a legend, just
+        # off its p^4 rule rather than on it -- below the top band's rule,
+        # above the bottom band's, where there is room.
+        top_band = adv == levels[-1]
         ax.annotate(f"{100 * adv:.0f}% of peers withholding\n"
                     f"$p^{{{rep}}}$ limit {adv ** rep:.3f}",
-                    xy=(peers[-1], hyp[-1]), xytext=(9, 0),
-                    textcoords="offset points", va="center",
+                    xy=(peers[-1], adv ** rep),
+                    xytext=(9, -4 if top_band else 4),
+                    textcoords="offset points",
+                    va="top" if top_band else "bottom",
                     fontsize=6.5, color=col)
     ax.set_xscale("log", base=2)
     ax.set_xlim(peers[0] * 0.85, peers[-1] * 3.6)
+    # Headroom over the top rule, so its markers and name clear the frame.
+    ax.set_ylim(min(0.0, ax.get_ylim()[0]), levels[-1] ** rep * 1.14)
     ax.set_xlabel("Network size (peers)")
     ax.set_ylabel("Cells missing at deadline (%)")
     ax.set_title("Realised erasure rises with peer count, then plateaus")

@@ -204,23 +204,24 @@ also what lets the network simulator reuse the identical code.
 
 <figure>
 <img src="figures/bench_success_curves.svg" alt="Fraction of trials recovered against erasure rate, one curve per scheme, with a zoom on the transition band.">
-<figcaption>Every scheme holds at 100% and then falls off a cliff, so a single threshold number fairly summarises each one. (a) Recovery against erasure probability; the pale band is the exact curve for 1D-RS, which the measured points sit on. (b) Thresholds with 95% confidence intervals: 1D-RS at 0.500, and the three &lambda;=2 rows within 0.013 of one another, rising slightly with &mu;.</figcaption>
+<figcaption>Every scheme holds at 100% and then falls off a cliff, so a single threshold number fairly summarises each one. (a) Recovery against erasure probability; the pale band is the exact curve for 1D-RS, which the measured points sit on. (b) Thresholds with 95% confidence intervals: 1D-RS at 0.499, and the three &lambda;=2 rows within 0.013 of one another, rising slightly with &mu;.</figcaption>
 </figure>
 
-Measured thresholds: **1D-RS 0.500** (its theoretical maximum, exactly as an
-MDS code should — the exact value is 0.50006), **2D-RS 0.401**, the three
-**λ=2 rows 0.337–0.349**, **λ=3 0.255**, **λ=4 0.202**. Each comes from a
-logistic fit to dense trials across that scheme's transition band, with a
-95% confidence interval of about ±0.002.
+Measured thresholds: **1D-RS 0.499** (its theoretical maximum, as an MDS
+code's should be — the exact value, 0.50006, is inside its interval),
+**2D-RS 0.400**, the three **λ=2 rows 0.336–0.349**, **λ=3 0.255**,
+**λ=4 0.204**. Each comes from a logistic fit to dense trials across that
+scheme's transition band, with a 95% confidence interval of ±0.003 or
+narrower.
 
 The block-circulant numbers track the 1/(1+λ) prediction closely — 0.333,
-0.250, 0.200 predicted against 0.337–0.349, 0.255, 0.202 measured — and
+0.250, 0.200 predicted against 0.336–0.349, 0.255, 0.204 measured — and
 each sits just *above* its prediction, which is the right side: the
 prediction is what one block repairs alone, and the cascade across blocks
 can only add to it. At fixed λ=2 the threshold also rises slightly with μ,
 for the same reason.
 
-Note that 2D-RS at 0.401 sits **four times above** its own worst-case
+Note that 2D-RS at 0.400 sits **four times above** its own worst-case
 guarantee of 0.10. That is not a contradiction: a minimum-distance guarantee
 holds against every pattern including the adversarial worst case, while
 these trials draw patterns at random. It is a useful reminder that a
@@ -235,13 +236,14 @@ guarantee and an expectation are different claims.
 
 If you read one figure in the project, read this one. It says: BC ω512 λ2 is
 the cheapest thing that still survives a third of the codeword going missing;
-2D-RS buys about five more points of tolerance for roughly double the decode;
+2D-RS buys about five more points of tolerance for about 60% more decode time;
 1D-RS buys the theoretical maximum and pays an order of magnitude for it.
 
 One asymmetry worth holding onto: **encode is paid once, decode is paid by
 everyone.** A blob is encoded by the proposer and decoded by every node that
-reconstructs it. 1D-RS encodes in a quarter of a second and then costs 20 s
-to decode; BC ω2048 λ2 spends 16 s encoding in order to decode in 5 s. For
+reconstructs it. 1D-RS encodes in a quarter of a second and then costs 21 s
+to decode; BC ω2048 λ2 spends 16 s encoding in order to decode in 6 s
+(decode at 21% erasure, the highest rate every scheme still recovers). For
 data availability sampling the second shape is the more useful one — an
 argument for block-circulant that the tolerance numbers alone do not make.
 
@@ -286,8 +288,8 @@ differences in tolerance between schemes only start to matter once well over
 half the network is hostile.
 
 <figure>
-<img src="figures/net_gather_vs_decode.svg" alt="Gather time against decode time per scheme on a log axis, with the slot deadline marked.">
-<figcaption>The central result of the network layer. Every scheme gathers its data in about a second; decode spans three orders of magnitude above that, and every scheme except one blows through the four-second deadline. At every setting tried, the bottleneck is arithmetic &mdash; not bandwidth, not latency.</figcaption>
+<img src="figures/net_gather_vs_decode.svg" alt="Gather time against decode time per scheme on a log axis, with the four-second sampling deadline marked.">
+<figcaption>The central result of the network layer. Every scheme gathers its data in about a second; decode runs from about 5&nbsp;s to 186&nbsp;s above that, and every scheme except one blows through the four-second deadline. Apart from the one scheme that avoids decoding altogether, the bottleneck is arithmetic &mdash; not bandwidth, not latency.</figcaption>
 </figure>
 
 That last figure is the one that should change how you read the rest of the
@@ -315,9 +317,9 @@ To run things:
 ```
 pip install galois numpy simpy matplotlib
 
-python3 benchmark_1D_2D_BC.py     # the erasure sweep (hours)
+python3 benchmark_1D_2D_BC.py     # the erasure sweep (about 2 hours)
 python3 network_sim.py            # the network layer (seconds)
-python3 make_figures.py           # all figures (~3 seconds)
+python3 make_figures.py           # all figures (~40 seconds)
 python3 make_docs.py              # all PDFs
 ```
 
@@ -337,11 +339,12 @@ decoder's second phase builds the paper's auxiliary code over the union of
 two adjacent blocks (Algorithm 1). But that construction needs the paper's
 own layout of evaluation points, and the benchmark encodes every
 parameterisation with a simpler shared layout so that all five rows stay
-comparable. On those codes phase 2 has almost nothing to work with: it
-engaged on 1% of the threshold-refinement trials, and even counting every
-one of those as a failure moves no threshold by more than 0.003.
-Consequently **all five BC rows are measured as effectively single-phase
-decoders**, and their thresholds are what phase 1 achieves. Making phase 2
+comparable. On those codes phase 2 never gets a turn: replaying every
+block-circulant trial with the decoder's counters on showed it never ran,
+because whenever phase 1 stalled, the pair left over was beyond the
+256-unknown compute budget. Consequently **all five BC rows are measured as
+single-phase decoders**, exactly, and their thresholds are what phase 1
+achieves. Making phase 2
 genuinely extend the reach — on a layout that also keeps the comparison
 fair — is the highest-value piece of work left.
 
@@ -370,7 +373,7 @@ requirement not met.
 * **1D-RS** is optimal on tolerance and expensive to decode. **2D-RS** is
   cheap to decode and has a weak worst-case guarantee it comfortably beats
   in practice. **Block-circulant** buys repair locality, and its reach is
-  set by λ — measured at 0.34, 0.255 and 0.202 for λ = 2, 3, 4, against a
+  set by λ — measured at 0.34, 0.255 and 0.204 for λ = 2, 3, 4, against a
   1/(1+λ) prediction of 0.333, 0.250, 0.200.
 * Held at equal storage cost, only three of the seven schemes are on the
   cost-versus-tolerance frontier.

@@ -286,62 +286,71 @@ BC_VARIANTS = [
 # flagged as erased. Nothing is guessed at.
 BC_PAIR_UNKNOWN_CAP = 256
 
-RATES = [0.02, 0.05, 0.08, 0.10, 0.12, 0.15, 0.20, 0.25, 0.30, 0.33,
-         0.35, 0.38, 0.40, 0.45, 0.48, 0.50, 0.52, 0.55]
-RNG_SEED = 20260827  # fixed seed -> reproducible sweep across runs
+def _grid(lo, hi, step):
+    n = int(round((hi - lo) / step)) + 1
+    return [round(lo + i * step, 4) for i in range(n)]
 
-# Each scheme's OWN empirical transition point -- these are NOT all 0.50.
+
+# Each scheme's own transition band: the span over which recovery goes from
+# every trial to none. The sweep samples these densely, because a threshold
+# can only be placed as precisely as the trials around it allow.
 #
-# Each scheme's OWN empirical transition point -- these are NOT all the same.
+# An earlier version spread its budget evenly and ran as few as three trials
+# near a threshold. That was enough to show each curve's shape but not to
+# place a threshold to three decimals: it gave 1D-RS = 0.505, above the 0.5 an
+# MDS code with n = 2k can sustain. The decoder was right -- every trial obeyed
+# the n - k rule -- but three trials at a rate whose true recovery probability
+# is 0.504 happened to give two successes. Steps here are finer where the
+# transition is sharper: 1D-RS has n = 8192, so its realised erasure fraction
+# varies by only about 0.0055 around the target and its whole transition is
+# two hundredths wide.
 #
-#   1D-RS   : n-k = k and RS is MDS, so it succeeds iff the drawn erasure
-#             count is <= n-k. The transition sits exactly at 0.50.
-#   2D-RS   : now 88x96 (see 2D_RS_Galois.py) for rate 0.485 -- the closest
-#             reachable to 0.5 in this field, replacing the previous 88x88 at
-#             rate 0.529. Per-line budgets are 88-64 = 24 down a column and
-#             96-64 = 32 along a row, and the cross-axis cascade lifts the
-#             grid as a whole above either.
-#   BC-*    : a local block resolves the erasures landing in its own support
-#             of n0 = rho + lambda*omega symbols while they number at most
-#             rho, i.e. while the rate is below rho/n0 = 1/(1+lambda) when
-#             rho = omega. That is 0.333 at lambda=2, 0.250 at lambda=3 and
-#             0.200 at lambda=4, independent of mu. Whether the cascade then
-#             carries the rest of the codeword depends on mu, which is what
-#             the mu=4 and mu=8 rows at lambda=2 are there to separate.
-SCHEME_BOUNDARY = {
-    "1D-RS": 0.50,
-    "2D-RS": 0.40,
-    "BC-2048-L2": 0.333,
-    "BC-1024-L2": 0.333,
-    "BC-1024-L3": 0.250,
-    "BC-1024-L4": 0.200,
-    "BC-512-L2": 0.333,
+#   1D-RS   MDS: recovers iff the drawn erasure count is <= n - k, so the
+#           50% point is exactly 0.50006 on an erasure channel.
+#   2D-RS   88x96 product code; per-line budgets of 24 and 32, lifted by the
+#           cross-axis cascade.
+#   BC-*    a local block repairs its own support while it holds at most rho
+#           erasures, i.e. below 1/(1+lambda); the cascade across blocks then
+#           adds a little, and more blocks (larger mu) add a little more.
+TRANSITION = {
+    "1D-RS":      (0.485, 0.515, 0.005),
+    "2D-RS":      (0.37,  0.44,  0.01),
+    "BC-2048-L2": (0.325, 0.355, 0.005),
+    "BC-1024-L2": (0.325, 0.365, 0.005),
+    "BC-1024-L3": (0.250, 0.300, 0.005),
+    "BC-1024-L4": (0.16,  0.25,  0.01),
+    "BC-512-L2":  (0.330, 0.375, 0.005),
 }
-BOUNDARY_RATE = SCHEME_BOUNDARY["1D-RS"]  # kept for the shared-mask sizing below
+
+# The coarse grid shows each scheme's whole curve, 2% to 55%; the transition
+# bands are merged into it. One grid for every scheme keeps the n = 8192
+# schemes on literally the same erased positions at every rate (see the
+# shared masks in main()).
+_COARSE = [0.02, 0.05, 0.08, 0.10, 0.12, 0.15, 0.20, 0.25, 0.30, 0.33,
+           0.35, 0.38, 0.40, 0.45, 0.48, 0.50, 0.52, 0.55]
+RATES = sorted({round(r, 4) for r in _COARSE}
+               | {r for lo, hi, st in TRANSITION.values() for r in _grid(lo, hi, st)})
+RNG_SEED = 20260827  # fixed seed -> reproducible masks across runs
+BOUNDARY_RATE = 0.50  # 1D-RS's exact boundary; recorded in the JSON
+
+# Trials inside a scheme's own band. 1D-RS gets fewer because each successful
+# decode costs about 40 s; its curve is also known exactly, which the fit is
+# checked against (thresholds.mds_success_probability).
+DENSE_TRIALS = {"1D-RS": 12}
+DENSE_DEFAULT = 20
 
 
 def trials_for(scheme_name, rate):
-    """Trial count as a function of (scheme, rate) -- more trials near THAT
-    SCHEME'S OWN transition, where binomial variance in the drawn erasure
-    count can flip the outcome; fewer far from it, where the result is not in
-    doubt and extra trials only cost runtime. 1D-RS stays the most
-    conservative because its decode is the expensive one and its worst-case
-    cost lands almost exactly on its own boundary."""
-    dist = abs(rate - SCHEME_BOUNDARY.get(scheme_name, 0.50))
-    if scheme_name == "1D-RS":
-        if dist <= 0.03:
-            return 3
-        return 1 if rate <= 0.35 else 2
-    if scheme_name == "2D-RS":
-        return 5 if dist <= 0.05 else 3
-    if scheme_name.startswith("BC"):
-        # BC's recoverability is a per-trial probability rather than a
-        # certainty, because whether any single block comes in under budget
-        # depends on how the mask happens to fall. Counts are lower than they
-        # would ideally be because the pairwise phase, where it runs at all,
-        # costs tens of seconds per pair -- see BC_PAIR_UNKNOWN_CAP.
-        return 8 if dist <= 0.06 else 4
-    return 1
+    """Trial count for (scheme, rate): dense inside THAT scheme's own
+    transition band, where the outcome genuinely varies from draw to draw,
+    and sparse outside it, where recovery is certain either way and extra
+    trials only cost runtime."""
+    lo, hi, _ = TRANSITION.get(scheme_name, (0.0, 0.0, 1.0))
+    if lo - 1e-9 <= rate <= hi + 1e-9:
+        return DENSE_TRIALS.get(scheme_name, DENSE_DEFAULT)
+    # Outside the band. 1D-RS's decode is the expensive one, so one trial;
+    # the rest are cheap enough for two.
+    return 1 if scheme_name == "1D-RS" else 2
 
 
 # ---------------------------------------------------------------------------
@@ -544,20 +553,19 @@ class BCAdapter:
         return out
 
     def decode(self, corrupted, mask):
-        # The NTT path is switched off deliberately, not left at its default.
+        # No NTT here, and nothing to switch: the decoder's phase 1 is
+        # Vandermonde-only.
         #
-        # It is correct -- it recovers the blob exactly on every eligible
-        # parameterisation -- but it is 7-23x slower than the Vandermonde
-        # solver it falls back to, because roughly four fifths of it is a
-        # schoolbook polynomial division rather than the transform. Leaving
-        # it on would make every BC row in this sweep an order of magnitude
-        # more expensive while measuring nothing new. See fft_benchmark.py
-        # for the measurement and the NTT section of
-        # docs/benchmark_1D_2D_BC_report.md for the reasoning.
-        #
-        # Flip either of these to True to measure the NTT path instead. When
-        # the divmod is replaced with Newton iteration the trade flips and
-        # phase 1 should be switched back on.
+        # The NTT path was correct -- it recovered the blob exactly on every
+        # eligible parameterisation -- but 7-23x slower than the Vandermonde
+        # solver, because roughly four fifths of it is a schoolbook
+        # polynomial division rather than the transform. The decoder
+        # revision dropped it from phase 1, along with the use_fft_phase1/2
+        # switches this adapter used to pass. See fft_benchmark.py for the
+        # measurement (carried forward, since the switch is gone) and the
+        # NTT section of docs/benchmark_1D_2D_BC_report.md for the
+        # reasoning. If the divmod is replaced with Newton iteration the
+        # trade flips and the NTT path is worth restoring.
         t0 = time.time()
         recovered, remaining = bc.dec_cbc_2(
             None, corrupted, mask, self.mu, self.lambda_, self.omega, self.rho,
@@ -659,7 +667,7 @@ def run_scheme(adapter, blob, app_bytes, rates, rng, trials_fn,
         mean_erased = sum(n_erased_list) / len(n_erased_list)
         ci_lo, ci_hi = wilson_ci(successes, n_trials)
         ok_t_str = f"{mean_ok_t:7.3f}s" if mean_ok_t is not None else "      --"
-        print(f"  rate={rate:.2f}  erased(mean)={mean_erased:7.1f}/{adapter.n}  "
+        print(f"  rate={rate:.3f}  erased(mean)={mean_erased:7.1f}/{adapter.n}  "
               f"decode(all)={mean_t:7.3f}s  decode(ok only)={ok_t_str}  "
               f"success={successes}/{n_trials}  claimed_ok={claimed_ok}/{n_trials}  "
               f"silent_corruption={silent_corruption}/{n_trials}  "
@@ -789,7 +797,7 @@ if __name__ == "__main__":
         print(f"  {r['scheme']:<12} {desc}{extra}")
 
     print(f"\nMean decode time per rate:")
-    print(f"{'scheme':<12} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
+    print(f"{'scheme':<12} " + " ".join(f"rate={r:.3f}".rjust(14) for r in RATES))
     for r in all_results:
         row = [r["scheme"].ljust(12)]
         for t in r["trials"]:
@@ -797,7 +805,7 @@ if __name__ == "__main__":
         print(" ".join(row))
 
     print(f"\nSuccess rate per rate (successes/trials, 95% Wilson CI):")
-    print(f"{'scheme':<12} " + " ".join(f"rate={r:.2f}".rjust(14) for r in RATES))
+    print(f"{'scheme':<12} " + " ".join(f"rate={r:.3f}".rjust(14) for r in RATES))
     for r in all_results:
         row = [r["scheme"].ljust(12)]
         for t in r["trials"]:

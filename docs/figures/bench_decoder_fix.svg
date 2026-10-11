@@ -1682,7 +1682,7 @@ z
      <use xlink:href="#TimesNewRomanPSMT-34" x="50"/>
     </g>
    </g>
-   <g id="text_17">
+   <g id="methods-note">
     <!-- the same 40 trials at omega = rho = lambda = 2, mu = 2048, spanning 5-45% erasure, re-run -->
     <g style="fill: #555555" transform="translate(13.526719 186.7545) scale(0.06 -0.06)">
      <defs>
@@ -2087,7 +2087,7 @@ z
      <use xlink:href="#TimesNewRomanPSMT-73" x="855.322266"/>
     </g>
    </g>
-   <g id="text_18">
+   <g id="text_17">
     <!-- Decoder fix: silent corruption eliminated, -->
     <g transform="translate(57.703125 9.155) scale(0.08 -0.08)">
      <defs>
@@ -2262,7 +2262,7 @@ L 147.37625 30.73225
 z
 " style="fill: #777777; opacity: 0.45; stroke: #333333; stroke-linejoin: miter"/>
     </g>
-    <g id="text_19">
+    <g id="text_18">
      <!-- before the fix -->
      <g transform="translate(171.37625 36.33225) scale(0.08 -0.08)">
       <use xlink:href="#TimesNewRomanPSMT-62"/>
@@ -2289,7 +2289,7 @@ L 147.37625 42.0435
 z
 " style="fill: #777777; stroke: #333333; stroke-linejoin: miter"/>
     </g>
-    <g id="text_20">
+    <g id="text_19">
      <!-- after the fix -->
      <g transform="translate(171.37625 47.6435) scale(0.08 -0.08)">
       <use xlink:href="#TimesNewRomanPSMT-61"/>

@@ -12,7 +12,7 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 **Short.** Every scheme holds, then collapses within a few percent
 
-**Full.** Every scheme holds, then collapses within a few percent. (a) Fraction of trials recovered against erasure probability, one line per scheme; the pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted. (b) Each scheme's threshold -- the erasure probability at which it recovers half the time -- with its 95% bootstrap confidence interval, from a maximum-likelihood logistic fit. (a) the 520-trial coarse sweep. (b) thresholds from a logistic fit to dense trials across each transition band. A trial counts as recovered only if the bytes match exactly.
+**Full.** Every scheme holds, then collapses within a few percent. (a) Fraction of trials recovered against erasure probability, one line per scheme; the pale band is the exact recovery probability of 1D-RS, computed from the MDS property rather than fitted. (b) Each scheme's threshold -- the erasure probability at which it recovers half the time -- with its 95% bootstrap confidence interval, from a maximum-likelihood logistic fit. One erasure sweep, sampled densely across each scheme's transition band; thresholds from a logistic fit with 95% bootstrap intervals. A trial counts as recovered only if the bytes match exactly.
 
 **Panels.** (a) Every scheme holds, then collapses within a few percent; (b) Threshold with 95% confidence interval
 
@@ -42,15 +42,15 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 ### 03-bc-threshold-vs-theory
 
-**Short.** Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$
+**Short.** Block-circulant threshold is set by $\lambda$, near $1/(1+\lambda)$; $\mu$ adds a little
 
-**Full.** Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$. Bars are measured thresholds with 95% confidence intervals, ordered by lambda and then by mu. Red rules are the predicted local stopping rate S0 = rho/n0 = 1/(1+lambda). Bars: erasure rate at 50% success. rules: the local code's stopping rate $S_0=\rho/n_0=1/(1+\lambda)$.
+**Full.** Block-circulant threshold is set by $\lambda$, near $1/(1+\lambda)$; $\mu$ adds a little. Bars are measured thresholds with 95% confidence intervals, ordered by lambda and then by mu. Red rules are the predicted local stopping rate S0 = rho/n0 = 1/(1+lambda). Bars: erasure rate at 50% success. rules: the local code's stopping rate $S_0=\rho/n_0=1/(1+\lambda)$.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/03-bc-threshold-vs-theory}
-  \caption{Block-circulant threshold follows $1/(1+\lambda)$, not $\mu$ or $\omega$.}
+  \caption{Block-circulant threshold is set by $\lambda$, near $1/(1+\lambda)$; $\mu$ adds a little.}
   \label{fig:03-bc-threshold-vs-theory}
 \end{figure}
 ```
@@ -119,7 +119,7 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 **Short.** Tolerance against the cost of achieving it lower and further right is better
 
-**Full.** Tolerance against the cost of achieving it lower and further right is better. One point per scheme: tolerance horizontal, decode cost vertical on a log axis. Down and to the right is better. The dashed line is the Pareto frontier - schemes not beaten on both counts at once. BC ω512 λ2.
+**Full.** Tolerance against the cost of achieving it lower and further right is better. One point per scheme: tolerance horizontal, decode cost vertical on a log axis. Down and to the right is better. The dashed line is the Pareto frontier - schemes not beaten on both counts at once.
 
 ```latex
 \begin{figure}[t]
@@ -209,15 +209,15 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 ### 05-throughput-blobs-per-slot
 
-**Short.** Throughput inverts the tolerance ordering
+**Short.** Throughput broadly inverts the tolerance ordering
 
-**Full.** Throughput inverts the tolerance ordering. Blobs reconstructed per slot out of six, against withholding, with a dashed line at six.
+**Full.** Throughput broadly inverts the tolerance ordering. Blobs reconstructed per slot out of six, against withholding, with a dashed line at six.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/05-throughput-blobs-per-slot}
-  \caption{Throughput inverts the tolerance ordering.}
+  \caption{Throughput broadly inverts the tolerance ordering.}
   \label{fig:05-throughput-blobs-per-slot}
 \end{figure}
 ```
@@ -239,15 +239,15 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 ### 07-gather-vs-decode
 
-**Short.** Decode dominates gather by orders of magnitude
+**Short.** Decode, not gather, dominates the time per slot
 
-**Full.** Decode dominates gather by orders of magnitude. Gather and decode as separate bars per scheme on a log axis - separate rather than stacked, because stacking on a log axis would misrepresent the sum. The slot deadline is marked. 6 blobs per slot, 25 Mbps downlink, no adversaries; gather is network time, decode is CPU.
+**Full.** Decode, not gather, dominates the time per slot. Gather and decode as separate bars per scheme on a log axis - separate rather than stacked, because stacking on a log axis would misrepresent the sum. The 4 s sampling deadline is marked. 6 blobs per slot, 25 Mbps downlink, no adversaries; gather is network time, decode is CPU.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/07-gather-vs-decode}
-  \caption{Decode dominates gather by orders of magnitude.}
+  \caption{Decode, not gather, dominates the time per slot.}
   \label{fig:07-gather-vs-decode}
 \end{figure}
 ```

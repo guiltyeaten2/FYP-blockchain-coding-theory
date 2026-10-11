@@ -39,56 +39,56 @@ z
    <g id="patch_3">
     <path d="M 59.266608 164.009637 
 L 82.670155 164.009637 
-L 82.670155 60.604589 
-L 59.266608 60.604589 
+L 82.670155 60.783818 
+L 59.266608 60.783818 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_4">
     <path d="M 120.85489 164.009637 
 L 144.258437 164.009637 
-L 144.258437 80.912648 
-L 120.85489 80.912648 
+L 144.258437 81.212568 
+L 120.85489 81.212568 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_5">
     <path d="M 182.443171 164.009637 
 L 205.846718 164.009637 
-L 205.846718 94.310868 
-L 182.443171 94.310868 
+L 205.846718 94.362828 
+L 182.443171 94.362828 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_6">
     <path d="M 244.031453 164.009637 
 L 267.435 164.009637 
-L 267.435 93.278615 
-L 244.031453 93.278615 
+L 267.435 93.276067 
+L 244.031453 93.276067 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_7">
     <path d="M 305.619735 164.009637 
 L 329.023282 164.009637 
-L 329.023282 111.229744 
-L 305.619735 111.229744 
+L 329.023282 111.302064 
+L 305.619735 111.302064 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_8">
     <path d="M 367.208016 164.009637 
 L 390.611563 164.009637 
-L 390.611563 122.238115 
-L 367.208016 122.238115 
+L 390.611563 121.803345 
+L 367.208016 121.803345 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
    <g id="patch_9">
     <path d="M 428.796298 164.009637 
 L 452.199845 164.009637 
-L 452.199845 91.67099 
-L 428.796298 91.67099 
+L 452.199845 91.775519 
+L 428.796298 91.775519 
 z
 " clip-path="url(#pdac0b6556a)" style="fill: #2e75b6"/>
    </g>
@@ -2370,7 +2370,7 @@ L 501.84 3.6
    </g>
    <g id="text_17">
     <!-- 0.50 -->
-    <g transform="translate(64.843382 58.948748) scale(0.07 -0.07)">
+    <g transform="translate(64.843382 59.127976) scale(0.07 -0.07)">
      <defs>
       <path id="TimesNewRomanPSMT-2e" d="M 800 606 
 Q 947 606 1047 504 
@@ -2401,7 +2401,7 @@ z
    </g>
    <g id="text_19">
     <!-- 0.40 -->
-    <g transform="translate(126.431663 79.256807) scale(0.07 -0.07)">
+    <g transform="translate(126.431663 79.556726) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-34" x="75"/>
@@ -2419,7 +2419,7 @@ z
    </g>
    <g id="text_21">
     <!-- 0.34 -->
-    <g transform="translate(188.019945 92.655026) scale(0.07 -0.07)">
+    <g transform="translate(188.019945 92.706986) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-33" x="75"/>
@@ -2437,7 +2437,7 @@ z
    </g>
    <g id="text_23">
     <!-- 0.34 -->
-    <g transform="translate(249.608226 91.622773) scale(0.07 -0.07)">
+    <g transform="translate(249.608226 91.620226) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-33" x="75"/>
@@ -2455,7 +2455,7 @@ z
    </g>
    <g id="text_25">
     <!-- 0.25 -->
-    <g transform="translate(311.196508 109.573902) scale(0.07 -0.07)">
+    <g transform="translate(311.196508 109.646223) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-32" x="75"/>
@@ -2473,7 +2473,7 @@ z
    </g>
    <g id="text_27">
     <!-- 0.20 -->
-    <g transform="translate(372.78479 120.582273) scale(0.07 -0.07)">
+    <g transform="translate(372.78479 120.147503) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-32" x="75"/>
@@ -2491,7 +2491,7 @@ z
    </g>
    <g id="text_29">
     <!-- 0.35 -->
-    <g transform="translate(434.373071 90.015148) scale(0.07 -0.07)">
+    <g transform="translate(434.373071 90.119678) scale(0.07 -0.07)">
      <use xlink:href="#TimesNewRomanPSMT-30"/>
      <use xlink:href="#TimesNewRomanPSMT-2e" x="50"/>
      <use xlink:href="#TimesNewRomanPSMT-33" x="75"/>

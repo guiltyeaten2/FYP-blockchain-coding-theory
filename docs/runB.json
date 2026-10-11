@@ -22,13 +22,13 @@
       "peers": 64,
       "trials": 30,
       "recovered": 30,
-      "mean_erasure_fraction": 0.3203125,
-      "mean_kib_fetched": 1068.46875,
-      "mean_gather_s": 0.7970684367580333,
-      "mean_decode_s": 354.07479375,
-      "mean_total_s": 354.87186218675805,
+      "mean_erasure_fraction": 0.3359375,
+      "mean_kib_fetched": 1043.90625,
+      "mean_gather_s": 0.7804260587686186,
+      "mean_decode_s": 185.89683749999998,
+      "mean_total_s": 186.6772635587686,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 0.2028901349245566
+      "blobs_per_slot": 0.38569239031797464
     },
     {
       "scheme": "1D-RS",
@@ -36,13 +36,13 @@
       "peers": 64,
       "trials": 30,
       "recovered": 30,
-      "mean_erasure_fraction": 0.32083333333333336,
-      "mean_kib_fetched": 1067.5817708333334,
-      "mean_gather_s": 1.618889211764638,
-      "mean_decode_s": 354.39345,
-      "mean_total_s": 356.01233921176464,
-      "mean_timeouts": 125.53333333333333,
-      "blobs_per_slot": 0.20224018122352966
+      "mean_erasure_fraction": 0.33645833333333336,
+      "mean_kib_fetched": 1043.0875,
+      "mean_gather_s": 1.5868843339036,
+      "mean_decode_s": 186.486965,
+      "mean_total_s": 188.07384933390358,
+      "mean_timeouts": 122.46666666666667,
+      "blobs_per_slot": 0.38282834245696884
     },
     {
       "scheme": "1D-RS",
@@ -50,13 +50,13 @@
       "peers": 64,
       "trials": 30,
       "recovered": 30,
-      "mean_erasure_fraction": 0.3328125,
-      "mean_kib_fetched": 1051.0020833333333,
-      "mean_gather_s": 3.207522557667592,
-      "mean_decode_s": 363.70234854166665,
-      "mean_total_s": 366.9098710993342,
-      "mean_timeouts": 357.1666666666667,
-      "blobs_per_slot": 0.1962334776774302
+      "mean_erasure_fraction": 0.34765625,
+      "mean_kib_fetched": 1027.8723958333333,
+      "mean_gather_s": 3.1417643217457463,
+      "mean_decode_s": 194.065795,
+      "mean_total_s": 197.20755932174572,
+      "mean_timeouts": 348.96666666666664,
+      "blobs_per_slot": 0.36509756648086406
     },
     {
       "scheme": "1D-RS",
@@ -64,13 +64,13 @@
       "peers": 64,
       "trials": 30,
       "recovered": 15,
-      "mean_erasure_fraction": 0.5138020833333333,
-      "mean_kib_fetched": 754.06875,
-      "mean_gather_s": 4.0,
-      "mean_decode_s": 470.1029233333333,
-      "mean_total_s": 474.1029233333333,
-      "mean_timeouts": 482.76666666666665,
-      "blobs_per_slot": 0.07593287918768862
+      "mean_erasure_fraction": 0.5143229166666666,
+      "mean_kib_fetched": 753.4546875,
+      "mean_gather_s": 3.997448097156371,
+      "mean_decode_s": 240.94458416666666,
+      "mean_total_s": 244.93948036097942,
+      "mean_timeouts": 482.5,
+      "blobs_per_slot": 0.14697508113818572
     },
     {
       "scheme": "2D-RS",
@@ -81,10 +81,10 @@
       "mean_erasure_fraction": 0.21212121212121213,
       "mean_kib_fetched": 1277.25,
       "mean_gather_s": 0.9533856735642854,
-      "mean_decode_s": 31.150945454545454,
-      "mean_total_s": 32.104331128109735,
+      "mean_decode_s": 15.711545454545456,
+      "mean_total_s": 16.664931128109743,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 2.2426880570316143
+      "blobs_per_slot": 4.320449898442921
     },
     {
       "scheme": "2D-RS",
@@ -95,10 +95,10 @@
       "mean_erasure_fraction": 0.2128787878787879,
       "mean_kib_fetched": 1276.021875,
       "mean_gather_s": 1.984351682303841,
-      "mean_decode_s": 31.19325454545454,
-      "mean_total_s": 33.17760622775838,
+      "mean_decode_s": 15.872454545454548,
+      "mean_total_s": 17.856806227758387,
       "mean_timeouts": 152.03333333333333,
-      "blobs_per_slot": 2.1701384815327773
+      "blobs_per_slot": 4.032076009654855
     },
     {
       "scheme": "2D-RS",
@@ -109,10 +109,10 @@
       "mean_erasure_fraction": 0.24823232323232325,
       "mean_kib_fetched": 1221.6432291666667,
       "mean_gather_s": 3.718937014326059,
-      "mean_decode_s": 32.379510505050504,
-      "mean_total_s": 36.09844751937656,
+      "mean_decode_s": 17.01232,
+      "mean_total_s": 20.731257014326058,
       "mean_timeouts": 398.8333333333333,
-      "blobs_per_slot": 1.994545609235759
+      "blobs_per_slot": 3.473016612077375
     },
     {
       "scheme": "2D-RS",
@@ -123,66 +123,10 @@
       "mean_erasure_fraction": 0.5174242424242425,
       "mean_kib_fetched": 768.6015625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 36.44204545454545,
-      "mean_total_s": 40.44204545454545,
+      "mean_decode_s": 18.993654545454547,
+      "mean_total_s": 22.993654545454547,
       "mean_timeouts": 481.1666666666667,
-      "blobs_per_slot": 0.118688358762539
-    },
-    {
-      "scheme": "BC-2048-L2",
-      "adversarial": 0.0,
-      "peers": 64,
-      "trials": 30,
-      "recovered": 30,
-      "mean_erasure_fraction": 0.15625,
-      "mean_kib_fetched": 1326.375,
-      "mean_gather_s": 0.9907224021807299,
-      "mean_decode_s": 20.050125,
-      "mean_total_s": 21.040847402180734,
-      "mean_timeouts": 0.0,
-      "blobs_per_slot": 3.4219154116643473
-    },
-    {
-      "scheme": "BC-2048-L2",
-      "adversarial": 0.2,
-      "peers": 64,
-      "trials": 30,
-      "recovered": 30,
-      "mean_erasure_fraction": 0.15677083333333333,
-      "mean_kib_fetched": 1325.4880208333334,
-      "mean_gather_s": 2.0281391665766733,
-      "mean_decode_s": 20.127568750000002,
-      "mean_total_s": 22.155707916576674,
-      "mean_timeouts": 155.76666666666668,
-      "blobs_per_slot": 3.2497268997724214
-    },
-    {
-      "scheme": "BC-2048-L2",
-      "adversarial": 0.4,
-      "peers": 64,
-      "trials": 30,
-      "recovered": 29,
-      "mean_erasure_fraction": 0.21432291666666667,
-      "mean_kib_fetched": 1242.1119791666667,
-      "mean_gather_s": 3.788751443994186,
-      "mean_decode_s": 28.022761637931037,
-      "mean_total_s": 31.8042286489595,
-      "mean_timeouts": 408.06666666666666,
-      "blobs_per_slot": 2.188388241331456
-    },
-    {
-      "scheme": "BC-2048-L2",
-      "adversarial": 0.6,
-      "peers": 64,
-      "trials": 30,
-      "recovered": 1,
-      "mean_erasure_fraction": 0.5114583333333333,
-      "mean_kib_fetched": 755.70625,
-      "mean_gather_s": 4.0,
-      "mean_decode_s": 40.869318750000005,
-      "mean_total_s": 44.869318750000005,
-      "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.053488665904917486
+      "blobs_per_slot": 0.20875324496639783
     },
     {
       "scheme": "BC-1024-L2",
@@ -193,10 +137,10 @@
       "mean_erasure_fraction": 0.15625,
       "mean_kib_fetched": 1326.375,
       "mean_gather_s": 0.9907224021807299,
-      "mean_decode_s": 10.55265,
-      "mean_total_s": 11.54337240218073,
+      "mean_decode_s": 12.680625,
+      "mean_total_s": 13.67134740218073,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 6.0
+      "blobs_per_slot": 5.26648894815702
     },
     {
       "scheme": "BC-1024-L2",
@@ -207,10 +151,10 @@
       "mean_erasure_fraction": 0.15677083333333333,
       "mean_kib_fetched": 1325.4880208333334,
       "mean_gather_s": 2.0281391665766733,
-      "mean_decode_s": 10.5933875,
-      "mean_total_s": 12.621526666576672,
+      "mean_decode_s": 12.71897125,
+      "mean_total_s": 14.747110416576673,
       "mean_timeouts": 155.76666666666668,
-      "blobs_per_slot": 5.7045397044293145
+      "blobs_per_slot": 4.88231239654024
     },
     {
       "scheme": "BC-1024-L2",
@@ -221,10 +165,10 @@
       "mean_erasure_fraction": 0.21432291666666667,
       "mean_kib_fetched": 1242.1119791666667,
       "mean_gather_s": 3.788751443994186,
-      "mean_decode_s": 14.711081896551724,
-      "mean_total_s": 18.492548907580193,
+      "mean_decode_s": 17.64963879310345,
+      "mean_total_s": 21.431105804131914,
       "mean_timeouts": 408.06666666666666,
-      "blobs_per_slot": 3.7636780277201587
+      "blobs_per_slot": 3.2476159016760175
     },
     {
       "scheme": "BC-1024-L2",
@@ -235,10 +179,10 @@
       "mean_erasure_fraction": 0.5114583333333333,
       "mean_kib_fetched": 755.70625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 21.255225000000003,
-      "mean_total_s": 25.255225000000003,
+      "mean_decode_s": 25.4716875,
+      "mean_total_s": 29.4716875,
       "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.09502984035976712
+      "blobs_per_slot": 0.0814340882245036
     },
     {
       "scheme": "BC-1024-L3",
@@ -246,11 +190,11 @@
       "peers": 64,
       "trials": 30,
       "recovered": 30,
-      "mean_erasure_fraction": 0.0625,
-      "mean_kib_fetched": 1473.75,
-      "mean_gather_s": 1.0964268543267606,
-      "mean_decode_s": 5.255199999999999,
-      "mean_total_s": 6.351626854326759,
+      "mean_erasure_fraction": 0.046875,
+      "mean_kib_fetched": 1498.3125,
+      "mean_gather_s": 1.1147356418445304,
+      "mean_decode_s": 4.7637,
+      "mean_total_s": 5.878435641844531,
       "mean_timeouts": 0.0,
       "blobs_per_slot": 6.0
     },
@@ -260,12 +204,12 @@
       "peers": 64,
       "trials": 30,
       "recovered": 30,
-      "mean_erasure_fraction": 0.06302083333333333,
-      "mean_kib_fetched": 1472.8630208333334,
-      "mean_gather_s": 2.2256969841560093,
-      "mean_decode_s": 5.300866666666666,
-      "mean_total_s": 7.526563650822675,
-      "mean_timeouts": 172.83333333333334,
+      "mean_erasure_fraction": 0.04739583333333333,
+      "mean_kib_fetched": 1497.3572916666667,
+      "mean_gather_s": 2.2591276032421015,
+      "mean_decode_s": 4.8127812500000005,
+      "mean_total_s": 7.071908853242102,
+      "mean_timeouts": 175.2,
       "blobs_per_slot": 6.0
     },
     {
@@ -274,13 +218,13 @@
       "peers": 64,
       "trials": 30,
       "recovered": 24,
-      "mean_erasure_fraction": 0.1859375,
-      "mean_kib_fetched": 1292.1921875,
-      "mean_gather_s": 3.9281837716093246,
-      "mean_decode_s": 13.653197916666668,
-      "mean_total_s": 17.563427631178325,
-      "mean_timeouts": 416.06666666666666,
-      "blobs_per_slot": 3.279542080826488
+      "mean_erasure_fraction": 0.18333333333333332,
+      "mean_kib_fetched": 1296.9,
+      "mean_gather_s": 3.939473230243949,
+      "mean_decode_s": 16.24075546875,
+      "mean_total_s": 20.165097006554934,
+      "mean_timeouts": 416.8333333333333,
+      "blobs_per_slot": 2.8564206748559826
     },
     {
       "scheme": "BC-1024-L3",
@@ -304,9 +248,9 @@
       "recovered": 30,
       "mean_erasure_fraction": 0.0,
       "mean_kib_fetched": 1572.0,
-      "mean_gather_s": 1.256799799930808,
+      "mean_gather_s": 1.1738560050410767,
       "mean_decode_s": 0.0,
-      "mean_total_s": 1.256799799930808,
+      "mean_total_s": 1.1738560050410767,
       "mean_timeouts": 0.0,
       "blobs_per_slot": 6.0
     },
@@ -318,9 +262,9 @@
       "recovered": 30,
       "mean_erasure_fraction": 0.0013020833333333333,
       "mean_kib_fetched": 1569.953125,
-      "mean_gather_s": 2.7233314514704134,
-      "mean_decode_s": 0.37589999999999996,
-      "mean_total_s": 3.0992314514704136,
+      "mean_gather_s": 2.36740044833354,
+      "mean_decode_s": 0.19410000000000002,
+      "mean_total_s": 2.56150044833354,
       "mean_timeouts": 184.93333333333334,
       "blobs_per_slot": 6.0
     },
@@ -329,14 +273,14 @@
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 16,
+      "recovered": 19,
       "mean_erasure_fraction": 0.17890625,
       "mean_kib_fetched": 1304.4734375,
-      "mean_gather_s": 4.0,
-      "mean_decode_s": 12.458276953125,
-      "mean_total_s": 16.458276953125,
+      "mean_gather_s": 3.970500876629233,
+      "mean_decode_s": 6.978277302631579,
+      "mean_total_s": 10.931699739414578,
       "mean_timeouts": 418.06666666666666,
-      "blobs_per_slot": 2.333172549554699
+      "blobs_per_slot": 3.8
     },
     {
       "scheme": "BC-1024-L4",
@@ -351,6 +295,62 @@
       "mean_total_s": null,
       "mean_timeouts": 483.03333333333336,
       "blobs_per_slot": 0.0
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "adversarial": 0.0,
+      "peers": 64,
+      "trials": 30,
+      "recovered": 30,
+      "mean_erasure_fraction": 0.15625,
+      "mean_kib_fetched": 1326.375,
+      "mean_gather_s": 0.9907224021807299,
+      "mean_decode_s": 24.671475,
+      "mean_total_s": 25.66219740218073,
+      "mean_timeouts": 0.0,
+      "blobs_per_slot": 2.805683350946461
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "adversarial": 0.2,
+      "peers": 64,
+      "trials": 30,
+      "recovered": 30,
+      "mean_erasure_fraction": 0.15677083333333333,
+      "mean_kib_fetched": 1325.4880208333334,
+      "mean_gather_s": 2.0281391665766733,
+      "mean_decode_s": 24.74366625,
+      "mean_total_s": 26.771805416576676,
+      "mean_timeouts": 155.76666666666668,
+      "blobs_per_slot": 2.689396507992649
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "adversarial": 0.4,
+      "peers": 64,
+      "trials": 30,
+      "recovered": 29,
+      "mean_erasure_fraction": 0.21432291666666667,
+      "mean_kib_fetched": 1242.1119791666667,
+      "mean_gather_s": 3.788751443994186,
+      "mean_decode_s": 34.59236573275862,
+      "mean_total_s": 38.37383274378709,
+      "mean_timeouts": 408.06666666666666,
+      "blobs_per_slot": 1.8137359503467523
+    },
+    {
+      "scheme": "BC-2048-L2",
+      "adversarial": 0.6,
+      "peers": 64,
+      "trials": 30,
+      "recovered": 1,
+      "mean_erasure_fraction": 0.5114583333333333,
+      "mean_kib_fetched": 755.70625,
+      "mean_gather_s": 4.0,
+      "mean_decode_s": 50.356350000000006,
+      "mean_total_s": 54.356350000000006,
+      "mean_timeouts": 483.03333333333336,
+      "blobs_per_slot": 0.04415307503171202
     }
   ]
 }

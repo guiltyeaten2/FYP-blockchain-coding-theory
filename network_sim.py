@@ -129,7 +129,7 @@ class DecodeModel:
     """Decode cost and recoverability, read off the measured sweep rather
     than re-derived. Loading benchmark_results.json means this file never
     has to guess what a decode costs -- the answer was already measured, at
-    18 erasure rates, over 520 trials."""
+    55 erasure rates, over 1,800 trials."""
 
     def __init__(self, path=None, speedup=1.0):
         path = path or os.path.join(HERE, "benchmark_results.json")
@@ -149,8 +149,8 @@ class DecodeModel:
                 "overhead": r["overhead"],
                 "encode_s": r["encode_time_s"],
                 "cost_points": sorted(pts),
-                "last_full": last_full,      # recovers every time at or below
-                "first_zero": first_zero,    # never recovers at or above
+                "last_full": last_full,      # highest swept rate where every trial recovered
+                "first_zero": first_zero,    # lowest rate above that where none did
             }
 
     def names(self):
@@ -371,8 +371,10 @@ def run_round(scheme, model, cfg, rng, adapter=None, encoded=None, blob=None,
     #
     #     symbols needed = n * (1 - tolerance)
     #
-    #     1D-RS  tol 0.50 -> 4096 of 8192   (the information floor; it is MDS)
-    #     2D-RS  tol 0.35 -> 5492 of 8448
+    #     1D-RS  tol 0.49 -> 4178 of 8192   (2% over the MDS floor of 4096:
+    #                                        the rule is the same for every
+    #                                        scheme, not tailored to MDS)
+    #     2D-RS  tol 0.38 -> 5238 of 8448
     #     BC L2  tol 0.33 -> 5489 of 8192
     #
     # This is the same quantity as the benchmark report's "surviving data
@@ -481,7 +483,8 @@ def sweep(model, schemes, adversarial_rates, peer_counts, trials, cfg_base,
                 "mean_total_s": statistics.fmean(r.total_seconds for r in ok) if ok else None,
                 "mean_timeouts": statistics.fmean(r.timeouts for r in per),
                 # blobs actually reconstructed per slot: how many the node got
-                # through, scaled by whether the work fit in the slot at all.
+                # through, scaled by the share of the work that fits in the slot
+                # (min(1, slot / total)) and by the recovery rate.
                 # This is the report's "block processing throughput".
                 "blobs_per_slot": (
                     (cfg_base.blobs_per_slot * min(1.0, SLOT_SECONDS / statistics.fmean(

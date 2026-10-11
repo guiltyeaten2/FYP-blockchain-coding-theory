@@ -2,7 +2,10 @@
 
 A skeleton for the data-collection / results and discussion / evaluation
 sections, with the figure and number for each claim already attached.
-Figure numbers refer to `docs/report_figures/`.
+Figures are named by their folder in `docs/report_figures/`: **bench NN**
+is `01-benchmark/NN-…`, **net NN** is `02-network-sim/NN-…`, and
+**method 01** is `03-methodology/01-…`. Renumber them for the report once
+you know which ones you are keeping.
 
 The two chapters can be combined — the structure below works either as two
 chapters or as one chapter with results and interpretation interleaved per
@@ -47,7 +50,7 @@ Four, in increasing order of strictness:
 
 ### A.3 Why byte-level verification, not the decoder's own flag
 
-This deserves its own subsection, and **figure 13**. An earlier decoder
+This deserves its own subsection, and **method 01**. An earlier decoder
 returned zeros for values it had not solved and reported success: across 40
 trials it claimed success every time and was wrong on 31. Had the harness
 trusted the `remaining` flag, it would have reported 100% success at every
@@ -55,34 +58,38 @@ erasure rate.
 
 This is the strongest methodological point in the project. It shows the
 validation caught a fault that would have invalidated every number, and it
-justifies the expense of byte-level checking.
+justifies the expense of byte-level checking. Across the final sweep's 1,800
+trials, silent corruption is zero for every scheme.
 
 ### A.4 Trial allocation and the threshold definition
 
-- Trial counts vary by scheme and rate — more near a transition where
-  outcomes genuinely vary, fewer where they do not. Give the rule, and note
-  that 95% Wilson intervals are in the JSON.
+- Trial counts vary by scheme and rate — 12–20 per rate on a fine grid
+  across each scheme's own transition band, one or two well away from it,
+  where the outcome is certain either way. Give the rule, and note that 95%
+  Wilson intervals are in the JSON.
 - **Define the threshold explicitly**: the erasure probability ε at which
   a scheme recovers half the time, on the binary erasure channel BEC(ε).
-  It is estimated by a maximum-likelihood logistic fit to the dense
-  refinement trials, with a 95% bootstrap interval — not read off the
-  coarse sweep. Every tolerance number depends on this, so state it once,
-  early, and do not change it.
-- **Say why the refinement exists — it is a strength, not an admission.**
-  The coarse sweep runs as few as three trials near a threshold, and
-  reading thresholds off it gave 1D-RS = 0.505, above what an MDS code with
-  n = 2k can sustain. The decoder was right (every trial obeyed the n − k
-  rule); three trials just cannot place a threshold to three decimals. The
-  refinement's 1,184 trials and the exact MDS check (0.4996 measured,
-  0.50006 exact) show the method is sound. Catching and correcting this is
-  exactly what a careful methodology section should show.
+  It is estimated by a maximum-likelihood logistic fit to every trial in
+  the sweep, with a 95% bootstrap interval. Every tolerance number depends
+  on this, so state it once, early, and do not change it.
+- **Say why the sampling is dense — it is a strength, not an admission.**
+  An earlier sweep spread its trials evenly and ran as few as three near a
+  threshold, and reading thresholds off it gave 1D-RS = 0.505, above what an
+  MDS code with n = 2k can sustain. The decoder was right (every trial
+  obeyed the n − k rule); three trials just cannot place a threshold to
+  three decimals. The final sweep samples each transition densely, and the
+  exact MDS check shows the method is sound: 1D-RS measures 0.499
+  (CI 0.497–0.501) against an exact 0.50006, and all 132 of its trials obey
+  the n − k rule. Catching and correcting this is exactly what a careful
+  methodology section should show.
 
 ### A.5 Reproducibility
 
 Measurement writes JSON; every figure and table is computed from that JSON
 rather than transcribed. Figure generation is deterministic. State the
 pipeline — `benchmark_1D_2D_BC.py` → `benchmark_results.json` →
-`make_figures.py` — and that 520 trials underlie the sweep.
+`make_figures.py` — and that 1,800 trials over 55 erasure rates underlie
+the sweep.
 
 ---
 
@@ -93,28 +100,31 @@ things the network layer must capture. Which figure answers which:
 
 | criterion | coding benchmark | network simulation |
 |---|---|---|
-| Fault tolerance | `01`, `02`, `03` | `01`, `02` |
-| Computational complexity | `04`, `05` | `07` |
-| Encoding / decoding efficiency | `04`, `06` | `06`, `07` |
+| Fault tolerance | bench `01` (or `02`), `03`, `04` | net `01`, `02` |
+| Computational complexity | bench `05`, `06` | net `07` |
+| Encoding / decoding efficiency | bench `05`, `07` | net `06`, `07` |
 | Storage overhead | held fixed at ~2× — stated in method, not a figure | — |
-| Bandwidth consumption | `08` (data needed) | `04` (data fetched) |
-| Scalability | — | `08` (peer count) |
+| Bandwidth consumption | bench `09` (data needed) | net `04` (data fetched) |
+| Scalability | — | net `08` (peer count) |
 
 | Phase 3 brief asks for | covered by |
 |---|---|
-| Bandwidth saturation | network `04`, at 25 Mbps with six blobs |
-| Packet propagation latency | network `03` (gather time against withholding) |
-| Block processing throughput | network `05` (blobs per slot), `06` (fits in a slot) |
+| Bandwidth saturation | net `04`, at 25 Mbps with six blobs |
+| Packet propagation latency | net `03` (gather time against withholding) |
+| Block processing throughput | net `05` (blobs per slot), `06` (fits in a slot) |
 | Varying adversarial conditions | every network figure sweeps it |
 | **Standard network architectures (plural)** | **not covered — one topology only** |
 
 Two things worth noticing in that table. **Storage overhead has no figure**
 because it is a controlled variable, not a result — say so explicitly in
 §A.1 rather than leaving a reader to wonder where it went. And **bandwidth
-is measured twice by independent means**: the benchmark computes what a
-scheme needs from its parameters, the simulation measures what a node
-actually pulled. They agree on the ordering, which is worth one sentence in
-§C — two methods agreeing is evidence, not repetition.
+appears twice, but not independently**: the benchmark computes what a
+scheme needs from its measured threshold, and the simulation sets each
+node's download target from the same measured tolerance, so the two share
+an ordering by construction. What the simulation adds is the real overhead
+above that target — over-request, requests already in flight, re-requests
+after timeouts. Say that in one sentence in §C rather than presenting it as
+two methods agreeing.
 
 ---
 
@@ -123,82 +133,93 @@ actually pulled. They agree on the ordering, which is worth one sentence in
 One section per axis from the research question. Report numbers; save
 interpretation for Chapter C (or the paired subsection, if combining).
 
-### B.1 Fault tolerance — **figures 1, 2**
+### B.1 Fault tolerance — **bench 01 (or 02), bench 03**
 
 | scheme | threshold | 95% CI |
 |---|---|---|
-| 1D-RS | 0.500 | 0.498–0.501 |
-| 2D-RS | 0.401 | 0.399–0.404 |
-| BC ω512 λ2 | 0.349 | 0.348–0.351 |
-| BC ω1024 λ2 | 0.342 | 0.340–0.344 |
-| BC ω2048 λ2 | 0.337 | 0.335–0.338 |
-| BC ω1024 λ3 | 0.255 | 0.253–0.257 |
-| BC ω1024 λ4 | 0.202 | 0.200–0.203 |
+| 1D-RS | 0.499 | 0.497–0.501 |
+| 2D-RS | 0.400 | 0.397–0.403 |
+| BC ω512 λ2 | 0.349 | 0.347–0.351 |
+| BC ω1024 λ2 | 0.342 | 0.340–0.343 |
+| BC ω2048 λ2 | 0.336 | 0.335–0.338 |
+| BC ω1024 λ3 | 0.255 | 0.252–0.257 |
+| BC ω1024 λ4 | 0.204 | 0.202–0.206 |
+
+Bench 01 and bench 02 are the same data. Use one: 01 shows the shape of
+each transition, 02 is the compact single-column version.
 
 Two findings:
 
-- **1D-RS reaches 0.500, its exact theoretical value** (0.50006 for an MDS
-  code with n = 2k on an erasure channel) — what being MDS means, and the
-  check that the harness is sound. Its measured points sit on the exact
-  curve in figure 1(a).
+- **1D-RS reaches its exact theoretical value.** 0.499 measured, with the
+  exact 0.50006 for an MDS code with n = 2k inside the interval — what
+  being MDS means, and the check that the harness is sound. Its measured
+  points sit on the exact curve in bench 01(a).
 - **λ sets the block-circulant threshold; μ refines it.** Holding μ = 4,
-  raising λ from 2 to 3 to 4 takes it from 0.342 to 0.255 to 0.202, against
+  raising λ from 2 to 3 to 4 takes it from 0.342 to 0.255 to 0.204, against
   predictions of 0.333, 0.250, 0.200. Every measurement sits just *above*
   its prediction — the prediction is one block's repair limit, and the
   cascade across blocks can only add to it. At fixed λ = 2 the three rows
-  rise slightly with μ (0.337, 0.342, 0.349 for μ = 2, 4, 8), a real effect
-  since the intervals do not overlap, with the same cause. Figure 2 is
+  rise slightly with μ (0.336, 0.342, 0.349 for μ = 2, 4, 8), a real effect
+  since the intervals do not overlap, with the same cause. Bench 03 is
   theory and experiment agreeing — lead with it.
 - **Do not write that μ "does not matter".** An earlier draft said the λ=2
-  rows land at the same threshold. At the refined resolution they do not;
+  rows land at the same threshold. At the sweep's resolution they do not;
   they differ by just over a point, ordered by μ. The honest claim is that
   λ dominates and μ is second-order.
 
-### B.2 Computational cost — **figures 4, 6**
+### B.2 Computational cost — **bench 05, bench 07**
 
 Report encode and decode separately; they are not interchangeable. Decode at
-20% erasure: 1D-RS 20.4 s, 2D-RS 2.7 s, BC rows 1.5–5.5 s. Encode runs the
-other way: 1D-RS 0.23 s, BC ω2048 15.7 s.
+20% erasure: 1D-RS 20.5 s, 2D-RS 2.5 s, BC rows 1.5–5.4 s. Encode runs the
+other way: 1D-RS 0.23 s, BC ω2048 15.8 s.
 
 Note that all timings are single-threaded Python over `galois`, so they are
 **relative** measurements, not production figures. Say so once here rather
 than defending it later.
 
-### B.3 Bandwidth — **figure 8**
+### B.3 Bandwidth — **bench 09**
 
 Surviving data needed to rebuild one blob, as a multiple of blob size:
-1D-RS 1.00× (exactly the floor — nothing rebuilds k symbols from fewer than
-k), everything else 1.23–1.60×. An earlier figure of 0.99× was below the
-floor, and was the same threshold error propagating.
+1D-RS 1.00× (the floor — nothing rebuilds k symbols from fewer than k),
+everything else 1.24–1.59×. An earlier figure of 0.99× was below the floor,
+and was the same threshold error propagating.
 
-### B.4 Network behaviour — **network figures 01–08**
+### B.4 Network behaviour — **net 01–07**
 
 The simulation's distinguishing feature: in the benchmark the erasure mask is
 an *input you invent*; here it is an *output* — whatever failed to arrive
 before the deadline. Make that the opening sentence of the section.
 
-- Realised erasure ≈ p⁴ under custody replication 4 (network `01`),
-  identical across all six schemes.
-- Schemes fail in the same order as the coding benchmark predicted (network
-  `02`), via an entirely different mechanism. **This is the most valuable
-  result in the project** — two independent methods agreeing is far stronger
-  evidence than either alone. Do not bury it.
-- **Latency** (network `03`): withholding costs time, not just data, because
+- Realised erasure ≈ p⁴ under custody replication 4 (net `01`), the same
+  for all six schemes (2D-RS, with 132 cells rather than 128, differs only
+  in the fourth decimal). This is the network layer's own measurement and
+  does not depend on the coding benchmark.
+- **What the thresholds mean in withholding terms** (net `02`): BC ω1024 λ4
+  breaks first, at 70% withholding (5/30 recovered), and 1D-RS never does
+  up to 80%. The order itself is inherited from the benchmark — the
+  simulation reads recovery off the benchmark's measured curve — so present
+  this as what the thresholds mean operationally, not as an independent
+  confirmation of them. **Do not call it cross-validation**; a marker who
+  reads the method will see why.
+- **Latency** (net `03`): withholding costs time, not just data, because
   the client must burn its request timeout before falling back. The scheme
-  needing the most cells hits the deadline first — BC ω1024 λ4 at 50%
-  withholding, against 80% for 1D-RS.
-- **Bandwidth** (network `04`): 1.04 MiB fetched by 1D-RS against 1.54 MiB
-  by BC ω1024 λ4, for 0.73 MiB of payload. Same ordering as the benchmark's
-  surviving-data figure, arrived at independently.
-- **Throughput** (network `05`): blobs reconstructed per slot inverts the
-  tolerance ordering — the scheme surviving the most erasure rebuilds the
-  fewest blobs.
-- **Does it fit in a slot?** (network `06`): at six blobs and no adversaries
-  only BC ω1024 λ3 and λ4 finish inside twelve seconds; past about 20%
-  withholding nothing does. 1D-RS takes 354 s — roughly thirty slots of work
-  for one slot of data.
+  needing the most cells hits the deadline first — BC ω1024 λ4 at 60%
+  withholding — while 1D-RS never reaches it in the sweep.
+- **Bandwidth** (net `04`): 1.02 MiB fetched by 1D-RS against 1.54 MiB
+  by BC ω1024 λ4 (the whole codeword), for 0.73 MiB of payload. Same
+  ordering as the benchmark's surviving-data figure by construction; the
+  measured part is the overhead above it.
+- **Throughput** (net `05`): blobs reconstructed per slot broadly inverts
+  the tolerance ordering — the scheme surviving the most erasure rebuilds
+  the fewest blobs (1D-RS, 0.39 of six). The one exception is ω2048 λ2,
+  whose large blocks make it slower to decode than 2D-RS.
+- **Does it fit in a slot?** (net `06`): at six blobs and no adversaries
+  only BC ω1024 λ3 (5.9 s) and λ4 (1.2 s) finish inside twelve seconds, with
+  ω1024 λ2 just over at 13.7 s; by 40% withholding only λ4 still averages
+  under twelve, and it recovers in 19 of 30. 1D-RS takes 187 s — roughly
+  fifteen slots of work for one slot of data.
 
-### B.5 Scalability — **figure 12**
+### B.5 Scalability — **net 08**
 
 Realised erasure against peer count, against the exact hypergeometric
 probability computed from the model rather than fitted. Measurement lies on
@@ -209,9 +230,9 @@ custodying it, so peer count cannot be varied without specifying replication.
 
 ## Chapter C — Discussion and evaluation
 
-### C.1 Guarantees versus behaviour — **figure 3**
+### C.1 Guarantees versus behaviour — **bench 04**
 
-2D-RS tolerates 0.401 against a worst-case guarantee of 0.098 — four times
+2D-RS tolerates 0.400 against a worst-case guarantee of 0.098 — four times
 its own bound. Not a contradiction: a minimum-distance guarantee holds
 against *every* pattern including the adversarial worst case, while these
 trials draw patterns at random.
@@ -219,40 +240,43 @@ trials draw patterns at random.
 This distinction is worth a paragraph of its own, because it is the most
 likely place for a reader to think they have found an error.
 
-### C.2 Why the costs differ — **figure 5**
+### C.2 Why the costs differ — **bench 06**
 
 Raw decode time rises with erasure rate for everything, which mostly says
-there is more to repair. Divide it out and the structure appears: 1D-RS flat
-at 10–13 ms per erasure (cost linear in erasures, one long division's worth
-each); BC rows at 1–3.5 ms; 2D-RS falling from 8 ms to 1 ms, revealing a
-large fixed cost that amortises — which is why it looks expensive at 2%
-erasure and cheap at 30%.
+there is more to repair. Divide it out and the structure appears: 1D-RS near
+11–13 ms per erasure over most of the range (cost linear in erasures, one
+long division's worth each); BC rows at 0.85–3.7 ms; 2D-RS falling from
+8 ms to 1 ms, revealing a large fixed cost that amortises — which is why it
+looks expensive at 2% erasure and cheap at 30%.
 
-### C.3 The trade-off — **figure 7**
+### C.3 The trade-off — **bench 08**
 
 The synthesis. Only three of seven schemes are on the cost-versus-tolerance
 frontier. BC ω512 λ2 is the cheapest scheme still surviving a third of the
-codeword; 2D-RS buys ~5 points more tolerance for roughly double the decode;
-1D-RS buys the maximum and pays an order of magnitude.
+codeword; 2D-RS buys ~5 points more tolerance for about 60% more decode
+time; 1D-RS buys the maximum and pays an order of magnitude. (Costs are at
+21% erasure, the highest rate every scheme still recovers.)
 
 Call out explicitly that **BC ω1024 λ4 is dominated on both axes** by BC
 ω512 λ2 — a parameter choice with nothing to recommend it. Negative results
 about your own parameter space are credible and worth stating.
 
-### C.4 The asymmetry that changes the recommendation — **figure 6**
+### C.4 The asymmetry that changes the recommendation — **bench 07**
 
 Encode is paid once by the proposer; decode is paid by every reconstructing
-node. 1D-RS encodes in 0.23 s and decodes in 20 s; BC ω2048 spends 15.7 s
-encoding to decode in 5.5 s. For data-availability sampling the second shape
-is the more useful one — an argument for block-circulant the tolerance
-numbers alone do not make.
+node. 1D-RS encodes in 0.23 s and decodes in 21 s; BC ω2048 spends 15.8 s
+encoding to decode in 5.8 s (decode at 21%). For data-availability sampling
+the second shape is the more useful one — an argument for block-circulant
+the tolerance numbers alone do not make.
 
-### C.5 The result that reframes the rest — **figure 11**
+### C.5 The result that reframes the rest — **net 07, net 06**
 
-Every scheme gathers in about a second; decode spans three orders of
-magnitude above that and misses the 4-second sampling deadline. **Bandwidth
-was the expected constraint and is not close.** Decode arithmetic is the
-binding one.
+Every scheme gathers in about a second; decode runs from about 5 s to 186 s
+above that, and at six blobs most schemes miss the 12-second slot. The one
+exception, BC ω1024 λ4, avoids decoding by ending up with the whole
+codeword. **Bandwidth was the expected constraint and is not close.** Decode
+arithmetic is the binding one: cutting the link from 25 to 5 Mbps moves
+2D-RS's six-blob total by only 6%.
 
 This has a consequence worth stating: it reorders the research question's own
 priorities. A scheme's erasure tolerance matters less than expected, because
@@ -278,30 +302,38 @@ everything else.
   1D-RS gap and moves the 2D-RS crossover; it does not touch any tolerance
   result. Raise it yourself in §B.2 — it is the kind of thing a reader finds
   and then distrusts everything else.
-- **One blob of application data.** Erasure patterns are reseeded per trial,
-  but the payload is fixed.
-- **Block-circulant is measured effectively single-phase.** Phase 2
+- **One blob of application data.** Erasure patterns differ per trial, but
+  the payload is fixed.
+- **Block-circulant is measured single-phase — exactly.** Phase 2
   implements the paper's auxiliary construction, but that needs the paper's
   evaluation-point layout and the benchmark uses a shared one for
-  comparability. Phase 2 engaged on 12 of 1,184 refinement trials (1%);
-  counting all 12 as failures moves ω2048 λ2 from 0.337 to 0.334 and leaves
-  the rest within 0.001. So BC thresholds are what phase 1 achieves — a
-  limit of this implementation and its layout choice, not of the code. Say
-  which, and quote the bound.
+  comparability. Replaying all 1,396 BC trials with the decoder's counters
+  on showed phase 2 never ran: in 674 trials a stalled pair was over the
+  256-unknown budget and was skipped. So BC thresholds are exactly what
+  phase 1 achieves — a limit of this implementation and its layout choice,
+  not of the code. Say which.
+- **Network recovery is calibrated, not re-decoded.** The simulation reads
+  recovery and download size off the benchmark's measured curves, so its
+  failure and bandwidth orderings are inherited from the benchmark.
+  `--real-decode` checked decode cost and recovery under clustered erasure,
+  but only at 1–10% erasure, far below every threshold.
 - **One network topology**, where the brief asks for several.
 - **Simulated network.** Latency and bandwidth are modelled, not measured on
   real hardware.
 
 ### C.7 Limitations and further work
 
-Three concrete items, each with a named fix:
+Four concrete items, each with a named fix:
 
 1. Implement Algorithm 1's auxiliary GRS construction for phase 2 — would
    raise the correction radius from ρ toward 2ρ and drop the cost from cubic
    to quadratic.
 2. Replace the NTT path's polynomial division with Newton iteration — the
    transform is only 12% of that decode; ~80% is a schoolbook division.
-3. Add further network topologies.
+3. Run the network's near-threshold points with `--real-decode`, which would
+   turn the inherited failure ordering into an independent check of how the
+   codes behave under clustered, cell-level erasure.
+4. Add further network topologies.
 
 ---
 
@@ -324,14 +356,17 @@ results. Its four figures are in `docs/figures/` and deliberately left out of
 
 ## Figure budget
 
-Thirteen figures is a lot for one chapter. If you need to cut, in order of
-what goes first:
+There are 18 figures in `docs/report_figures/`, two of which (bench 01 and
+02) are alternatives, so 17 in practice — a lot for one chapter. The middle
+column is there because each figure in it is the only one answering a
+criterion or a brief item; cut one and that item goes unanswered.
 
-| keep | if space |
-|---|---|
-| 07 (the trade-off — if you keep one, keep this) | 03 |
-| 01, 02 (tolerance, and theory agreeing) | 05 |
-| 11 (the bottleneck) | 08 |
-| 10 (the two methods agreeing) | 12 |
-| 04 (decode cost) | 13 (move to methodology) |
-| 09 (p⁴) | 06 |
+| keep (the argument) | keep (criteria coverage) | if space |
+|---|---|---|
+| bench 08 (the trade-off — if you keep one, keep this) | bench 09 (bandwidth) | bench 04 (guarantee vs behaviour) |
+| bench 01 or 02 (tolerance) | net 03 (latency) | bench 06 (cost per erasure) |
+| bench 03 (theory agreeing) | net 04 (bandwidth saturation) | bench 07 (encode vs decode) |
+| bench 05 (decode cost) | net 05 (throughput) | net 02 (withholding at which each breaks) |
+| net 07, net 06 (the bottleneck) | net 08 (scalability) | |
+| net 01 (p⁴) | | |
+| method 01 (move to methodology) | | |
