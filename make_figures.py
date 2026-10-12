@@ -1272,15 +1272,16 @@ def fig_net_gather_vs_decode(runB):
         ax.axhline(deadline, color="#444", lw=1.1, ls="--",
                    label=f"sampling deadline ({deadline:.0f}s)")
     ax.set_yscale("log")
-    from matplotlib.transforms import blended_transform_factory
-    tr = blended_transform_factory(ax.transData, ax.transAxes)
     for i, v in enumerate(d):
         if v <= 0:
             # Genuine zero, not missing data: custody replication left no
-            # erasures at this adversary level, so no decode ran. Anchored in
-            # axes fraction so it sits clear of the deadline rule.
-            ax.text(i + w / 2, 0.04, "no erasures\nto decode", transform=tr,
-                    ha="center", va="bottom", fontsize=6.5, color="#666")
+            # erasures at this adversary level, so no decode ran. Centred over
+            # the whole group, just above its gather bar: the empty decode
+            # slot alone is narrower than the note once seven groups share
+            # the axis, and a note wider than its slot ran under the bar.
+            ax.text(i, g[i] * 1.2, "no erasures,\nso no decode",
+                    ha="center", va="bottom", fontsize=6.5, color="#666",
+                    zorder=5)
     ax.set_xticks(list(x))
     ax.set_xticklabels([disp(x) for x in schemes], rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("Time per slot (s)")

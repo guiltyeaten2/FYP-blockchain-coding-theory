@@ -234,7 +234,7 @@ SELECTION = [
            "slot at 50 Mbps, 4 s deadline, 30 trials per point, withholding "
            "swept 0 to 80%. docs/runA.json.",
       reading="Realised erasure against the fraction of peers refusing to "
-              "serve, with the p^4 prediction dashed. All six schemes are "
+              "serve, with the p^4 prediction dashed. All seven schemes are "
               "drawn; they coincide.",
       shows="A cell is lost only if all four of its custodians withhold, so "
             "the erasure the code sees is roughly the fourth power of the "
@@ -317,10 +317,12 @@ SELECTION = [
             "tolerates the most erasure of any scheme and reconstructs the "
             "fewest blobs, about 0.4 of the six, because one 8192-length "
             "polynomial division costs about 31 s per blob. BC omega1024 "
-            "lambda3 and lambda4 keep up with all six until 20% withholding; "
-            "at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 "
-            "and omega2048 lambda2 2.8 - the exception to a clean inversion, "
-            "its large blocks being slow to decode.",
+            "lambda3 and lambda4 keep up with all six until 20% withholding, "
+            "and so does omega512 lambda2; at zero withholding omega1024 "
+            "lambda2 manages 5.3, 2D-RS 4.3 and omega2048 lambda2 2.8. Two "
+            "rows break a clean inversion: omega2048 lambda2, whose large "
+            "blocks are slow to decode, and omega512 lambda2, which keeps up "
+            "with all six while being the most tolerant block-circulant row.",
       caveat="Covers the brief's 'block processing throughput'.")),
 
     (6, M.fig_net_time_budget, "netB", "time-budget-vs-slot", "net",
@@ -331,8 +333,9 @@ SELECTION = [
       reading="Log seconds against withholding, with the 4 s sampling "
               "deadline and the 12 s slot both marked. Anything above the "
               "12 s line cannot keep up with the chain.",
-      shows="At zero adversaries only BC omega1024 lambda3 (5.9 s) and "
-            "lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 "
+      shows="At zero adversaries only BC omega512 lambda2 (7.8 s), omega1024 "
+            "lambda3 (5.9 s) and lambda4 (1.2 s) finish inside a slot, with "
+            "omega1024 lambda2 "
             "just over at 13.7 s. By 40% withholding only lambda4 still "
             "averages under 12 s, and it recovers in only 19 of 30 trials. "
             "1D-RS is not close at any setting - 187 s, roughly fifteen "

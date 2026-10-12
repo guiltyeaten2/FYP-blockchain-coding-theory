@@ -279,7 +279,7 @@ Everything downstream is the same adapter code.
 
 <figure>
 <img src="figures/net_erasure_vs_adversarial.svg" alt="Realised erasure fraction against the fraction of withholding peers, with the p-to-the-fourth prediction.">
-<figcaption>The first real finding of the network layer, and a slightly deflating one for the coding schemes. Because a cell needs all four of its custodians to withhold before it is lost, the erasure rate the code actually sees is roughly the <em>fourth power</em> of the fraction of bad peers. At 50% of the network withholding, the code sees about 6% erasure. All six schemes produce the same curve, because this quantity is a property of the network and custody, not of the code being carried.</figcaption>
+<figcaption>The first real finding of the network layer, and a slightly deflating one for the coding schemes. Because a cell needs all four of its custodians to withhold before it is lost, the erasure rate the code actually sees is roughly the <em>fourth power</em> of the fraction of bad peers. At 50% of the network withholding, the code sees about 6% erasure. All seven schemes produce the same curve, because this quantity is a property of the network and custody, not of the code being carried.</figcaption>
 </figure>
 
 This reframes things considerably. Custody replication absorbs most peer

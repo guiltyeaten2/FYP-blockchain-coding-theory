@@ -151,7 +151,7 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 **Short.** Custody replication turns withholding into a much smaller erasure rate — and the code carried makes no difference
 
-**Full.** Custody replication turns withholding into a much smaller erasure rate — and the code carried makes no difference. Realised erasure against the fraction of peers refusing to serve, with the p^4 prediction dashed. All six schemes are drawn; they coincide. 64 peers, custody replication 4, 30 trials per point; a cell is lost only if every custodian withholds it.
+**Full.** Custody replication turns withholding into a much smaller erasure rate — and the code carried makes no difference. Realised erasure against the fraction of peers refusing to serve, with the p^4 prediction dashed. All seven schemes are drawn; they coincide. 64 peers, custody replication 4, 30 trials per point; a cell is lost only if every custodian withholds it.
 
 ```latex
 \begin{figure}[t]

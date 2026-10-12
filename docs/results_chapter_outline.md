@@ -191,7 +191,7 @@ an *input you invent*; here it is an *output* — whatever failed to arrive
 before the deadline. Make that the opening sentence of the section.
 
 - Realised erasure ≈ p⁴ under custody replication 4 (net `01`), the same
-  for all six schemes (2D-RS, with 132 cells rather than 128, differs only
+  for all seven schemes (2D-RS, with 132 cells rather than 128, differs only
   in the fourth decimal). This is the network layer's own measurement and
   does not depend on the coding benchmark.
 - **What the thresholds mean in withholding terms** (net `02`): BC ω1024 λ4
@@ -211,12 +211,13 @@ before the deadline. Make that the opening sentence of the section.
   measured part is the overhead above it.
 - **Throughput** (net `05`): blobs reconstructed per slot broadly inverts
   the tolerance ordering — the scheme surviving the most erasure rebuilds
-  the fewest blobs (1D-RS, 0.39 of six). The one exception is ω2048 λ2,
-  whose large blocks make it slower to decode than 2D-RS.
+  the fewest blobs (1D-RS, 0.39 of six). Two exceptions: ω2048 λ2, whose
+  large blocks make it slower to decode than 2D-RS, and ω512 λ2, which keeps
+  up with all six while being the most tolerant block-circulant row.
 - **Does it fit in a slot?** (net `06`): at six blobs and no adversaries
-  only BC ω1024 λ3 (5.9 s) and λ4 (1.2 s) finish inside twelve seconds, with
-  ω1024 λ2 just over at 13.7 s; by 40% withholding only λ4 still averages
-  under twelve, and it recovers in 19 of 30. 1D-RS takes 187 s — roughly
+  only BC ω512 λ2 (7.8 s), ω1024 λ3 (5.9 s) and λ4 (1.2 s) finish inside
+  twelve seconds, with ω1024 λ2 just over at 13.7 s; by 40% withholding
+  only λ4 still averages under twelve, and it recovers in 19 of 30. 1D-RS takes 187 s — roughly
   fifteen slots of work for one slot of data.
 
 ### B.5 Scalability — **net 08**

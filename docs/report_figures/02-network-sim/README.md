@@ -50,7 +50,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run. Throughput implied by the measured time - blobs attempted, scaled by recovery rate and by the share of the work that fits in the 12 s slot - not an independently measured rate.
 
-**Shows.** The ordering broadly inverts the tolerance ordering. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31 s per blob. BC omega1024 lambda3 and lambda4 keep up with all six until 20% withholding; at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 and omega2048 lambda2 2.8 - the exception to a clean inversion, its large blocks being slow to decode.
+**Shows.** The ordering broadly inverts the tolerance ordering. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31 s per blob. BC omega1024 lambda3 and lambda4 keep up with all six until 20% withholding, and so does omega512 lambda2; at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 and omega2048 lambda2 2.8. Two rows break a clean inversion: omega2048 lambda2, whose large blocks are slow to decode, and omega512 lambda2, which keeps up with all six while being the most tolerant block-circulant row.
 
 ## 06-time-budget-vs-slot
 
@@ -60,7 +60,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run. Gather plus decode summed per slot.
 
-**Shows.** At zero adversaries only BC omega1024 lambda3 (5.9 s) and lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 just over at 13.7 s. By 40% withholding only lambda4 still averages under 12 s, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting - 187 s, roughly fifteen slots of work for one slot of data.
+**Shows.** At zero adversaries only BC omega512 lambda2 (7.8 s), omega1024 lambda3 (5.9 s) and lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 just over at 13.7 s. By 40% withholding only lambda4 still averages under 12 s, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting - 187 s, roughly fifteen slots of work for one slot of data.
 
 ## 07-gather-vs-decode
 

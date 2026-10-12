@@ -2243,8 +2243,31 @@ L 414.412636 33.91075
      <use xlink:href="#mf9a3fa0348" x="414.412636" y="33.91075" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
     </g>
    </g>
-   <g id="line2d_157"/>
-   <g id="line2d_158">
+   <g id="line2d_157">
+    <path d="M 51.205364 171.72325 
+L 96.606273 171.633528 
+L 142.007182 171.274642 
+L 187.408091 169.659651 
+L 232.809 164.635237 
+L 278.209909 152.343367 
+L 323.610818 132.604598 
+L 369.011727 91.60179 
+L 414.412636 33.91075 
+" clip-path="url(#p945283797b)" style="fill: none; stroke: #2e75b6; stroke-opacity: 0.55; stroke-width: 1.2; stroke-linecap: square"/>
+    <g clip-path="url(#p945283797b)">
+     <use xlink:href="#mf9a3fa0348" x="51.205364" y="171.72325" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="96.606273" y="171.633528" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="142.007182" y="171.274642" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="187.408091" y="169.659651" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="232.809" y="164.635237" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="278.209909" y="152.343367" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="323.610818" y="132.604598" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="369.011727" y="91.60179" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+     <use xlink:href="#mf9a3fa0348" x="414.412636" y="33.91075" style="fill: #2e75b6; fill-opacity: 0.55; stroke: #2e75b6; stroke-opacity: 0.55"/>
+    </g>
+   </g>
+   <g id="line2d_158"/>
+   <g id="line2d_159">
     <path d="M 51.205364 171.72325 
 L 73.905818 171.721097 
 L 96.606273 171.688797 
@@ -2806,7 +2829,7 @@ z
     </g>
    </g>
    <g id="legend_1">
-    <g id="line2d_159">
+    <g id="line2d_160">
      <path d="M 38.895 31.67225 
 L 46.045 31.67225 
 L 53.195 31.67225 
@@ -2816,13 +2839,13 @@ L 53.195 31.67225
      </g>
     </g>
     <g id="text_18">
-     <!-- all 6 schemes (curves coincide) -->
+     <!-- all 7 schemes (curves coincide) -->
      <g transform="translate(58.395 33.94725) scale(0.065 -0.065)">
       <use xlink:href="#TimesNewRomanPSMT-61"/>
       <use xlink:href="#TimesNewRomanPSMT-6c" x="44.384766"/>
       <use xlink:href="#TimesNewRomanPSMT-6c" x="72.167969"/>
       <use xlink:href="#TimesNewRomanPSMT-20" x="99.951172"/>
-      <use xlink:href="#TimesNewRomanPSMT-36" x="124.951172"/>
+      <use xlink:href="#TimesNewRomanPSMT-37" x="124.951172"/>
       <use xlink:href="#TimesNewRomanPSMT-20" x="174.951172"/>
       <use xlink:href="#TimesNewRomanPSMT-73" x="199.951172"/>
       <use xlink:href="#TimesNewRomanPSMT-63" x="238.867188"/>
@@ -2851,7 +2874,7 @@ L 53.195 31.67225
       <use xlink:href="#TimesNewRomanPSMT-29" x="1221.728516"/>
      </g>
     </g>
-    <g id="line2d_160">
+    <g id="line2d_161">
      <path d="M 38.895 41.707641 
 L 46.045 41.707641 
 L 53.195 41.707641 

@@ -136,7 +136,7 @@ an artifact of the fetch policy, not a property of the code.
 ## Results
 
 The figures below come from three sweeps, all with 30 trials per point:
-**A** — one blob at 50 Mbps, six schemes, withholding swept 0–80%;
+**A** — one blob at 50 Mbps, all seven schemes, withholding swept 0–80%;
 **B** — six blobs at 25 Mbps, the same schemes, 0–60%;
 **C** — peer count 8→256 at 30% and 60% withholding. Raw rows are in the
 accompanying JSON.
@@ -190,6 +190,12 @@ what production arithmetic would look like.
 | BC ω1024 λ2 | 60% | 30/30 | 0.114 | 232 | 1.16s | 1.51s | 2.67s | 1.00 |
 | BC ω1024 λ2 | 70% | 29/30 | 0.233 | 201 | 2.72s | 3.23s | 5.90s | 0.97 |
 | BC ω1024 λ2 | 80% | 1/30 | 0.400 | 157 | 4.00s | 4.98s | 8.98s | 0.03 |
+| BC ω512 λ2 | 0% | 30/30 | 0.000 | 262 | 0.18s | 0.00s | 0.18s | 1.00 |
+| BC ω512 λ2 | 20% | 30/30 | 0.001 | 262 | 0.32s | 0.03s | 0.35s | 1.00 |
+| BC ω512 λ2 | 40% | 30/30 | 0.021 | 257 | 0.65s | 0.20s | 0.85s | 1.00 |
+| BC ω512 λ2 | 60% | 30/30 | 0.114 | 232 | 1.16s | 0.82s | 1.98s | 1.00 |
+| BC ω512 λ2 | 70% | 29/30 | 0.233 | 201 | 2.72s | 1.74s | 4.41s | 0.97 |
+| BC ω512 λ2 | 80% | 1/30 | 0.400 | 157 | 4.00s | 2.63s | 6.63s | 0.03 |
 | BC ω1024 λ3 | 0% | 30/30 | 0.000 | 262 | 0.21s | 0.00s | 0.21s | 1.00 |
 | BC ω1024 λ3 | 20% | 30/30 | 0.001 | 262 | 0.52s | 0.06s | 0.59s | 1.00 |
 | BC ω1024 λ3 | 40% | 30/30 | 0.021 | 257 | 0.94s | 0.43s | 1.38s | 1.00 |
@@ -223,6 +229,10 @@ what production arithmetic would look like.
 | BC ω1024 λ2 | 20% | 30/30 | 0.157 | 1325 | 2.03s | 12.72s | 14.75s | 4.88 |
 | BC ω1024 λ2 | 40% | 29/30 | 0.214 | 1242 | 3.79s | 17.65s | 21.43s | 3.25 |
 | BC ω1024 λ2 | 60% | 1/30 | 0.511 | 756 | 4.00s | 25.47s | 29.47s | 0.08 |
+| BC ω512 λ2 | 0% | 30/30 | 0.156 | 1326 | 0.99s | 6.85s | 7.84s | 6.00 |
+| BC ω512 λ2 | 20% | 30/30 | 0.157 | 1325 | 2.03s | 6.87s | 8.90s | 6.00 |
+| BC ω512 λ2 | 40% | 29/30 | 0.214 | 1242 | 3.79s | 9.56s | 13.34s | 5.22 |
+| BC ω512 λ2 | 60% | 1/30 | 0.511 | 756 | 4.00s | 13.63s | 17.63s | 0.14 |
 | BC ω1024 λ3 | 0% | 30/30 | 0.047 | 1498 | 1.11s | 4.76s | 5.88s | 6.00 |
 | BC ω1024 λ3 | 20% | 30/30 | 0.047 | 1497 | 2.26s | 4.81s | 7.07s | 6.00 |
 | BC ω1024 λ3 | 40% | 24/30 | 0.183 | 1297 | 3.94s | 16.24s | 20.17s | 2.86 |
@@ -234,7 +244,7 @@ what production arithmetic would look like.
 
 <figure>
 <img src="figures/net_throughput.svg" alt="Blobs reconstructed per slot out of six, against withholding peers, for each coding scheme.">
-<figcaption><b>Throughput at six blobs per slot and 25 Mbps — the ordering broadly inverts.</b> 1D-RS tolerates the most erasure of any scheme here and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31&nbsp;s per blob. BC ω1024 λ3 and λ4 keep up with all six until 20% withholding; at zero withholding ω1024 λ2 manages 5.3, 2D-RS 4.3 and ω2048 λ2 2.8. The inversion is not strict: ω2048 λ2's large blocks make it slower to decode than both 2D-RS and ω1024 λ2. Note this is throughput <em>implied by</em> the measured time — blobs attempted, scaled by the measured recovery rate and by the share of the work that fits in the 12s slot — not an independently measured rate.</figcaption>
+<figcaption><b>Throughput at six blobs per slot and 25 Mbps — the ordering broadly inverts.</b> 1D-RS tolerates the most erasure of any scheme here and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31&nbsp;s per blob. BC ω512 λ2, ω1024 λ3 and λ4 keep up with all six until 20% withholding; at zero withholding ω1024 λ2 manages 5.3, 2D-RS 4.3 and ω2048 λ2 2.8. The inversion is not strict: ω2048 λ2's large blocks make it slower to decode than both 2D-RS and ω1024 λ2, and ω512 λ2 keeps up with all six while being the most tolerant block-circulant row. Note this is throughput <em>implied by</em> the measured time — blobs attempted, scaled by the measured recovery rate and by the share of the work that fits in the 12s slot — not an independently measured rate.</figcaption>
 </figure>
 
 <figure>
@@ -249,7 +259,7 @@ what production arithmetic would look like.
 
 <figure>
 <img src="figures/net_time_budget.svg" alt="Gather plus decode time per slot against the sampling deadline and the twelve second slot.">
-<figcaption><b>The question the whole network layer exists to answer.</b> A scheme is only usable if gather plus decode finishes inside an Ethereum slot. At six blobs and zero adversaries only BC &omega;1024 &lambda;3 (5.9&nbsp;s) and &lambda;4 (1.2&nbsp;s) are under twelve seconds, with &omega;1024 &lambda;2 just over at 13.7&nbsp;s; by 40% withholding only &lambda;4 still averages under twelve seconds, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting &mdash; 187&nbsp;s at zero adversaries, roughly fifteen slots' worth of work for one slot's data. This is the figure that reframes the comparison: erasure tolerance is not the binding constraint, decode throughput is.</figcaption>
+<figcaption><b>The question the whole network layer exists to answer.</b> A scheme is only usable if gather plus decode finishes inside an Ethereum slot. At six blobs and zero adversaries only BC &omega;512 &lambda;2 (7.8&nbsp;s), &omega;1024 &lambda;3 (5.9&nbsp;s) and &lambda;4 (1.2&nbsp;s) are under twelve seconds, with &omega;1024 &lambda;2 just over at 13.7&nbsp;s; by 40% withholding only &lambda;4 still averages under twelve seconds, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting &mdash; 187&nbsp;s at zero adversaries, roughly fifteen slots' worth of work for one slot's data. This is the figure that reframes the comparison: erasure tolerance is not the binding constraint, decode throughput is.</figcaption>
 </figure>
 
 <figure>
@@ -282,13 +292,16 @@ do it, more than three times the slot. At six blobs it reconstructs 0.39 of
 them per slot. Best fault tolerance in the study, worst throughput, and the
 two facts have the same cause: one enormous polynomial division.
 
-**Two block-circulant rows keep up with six blobs; nothing else does.**
-BC ω1024 λ3 and λ4 reconstruct all six, against ω1024 λ2's 5.27, 2D-RS's
-4.32, BC ω2048 λ2's 2.81 and 1D-RS's 0.39. Their decoders are among the
-weakest in the study — λ3 tolerates 0.255 where 1D-RS tolerates 0.499 —
-but λ3 decodes roughly 39× faster (4.8s against 185.9s for the same six
-blobs), and inside a deadline that trade is strongly favourable. ω1024 λ2,
-decoding 15× faster than 1D-RS, misses the slot by under two seconds.
+**Three block-circulant rows keep up with six blobs; nothing else does.**
+BC ω512 λ2, ω1024 λ3 and ω1024 λ4 reconstruct all six, against ω1024 λ2's
+5.27, 2D-RS's 4.32, BC ω2048 λ2's 2.81 and 1D-RS's 0.39. ω512 λ2 does it
+without giving up much tolerance: at 0.349 it is the most tolerant
+block-circulant row, and its small blocks decode 27× faster than 1D-RS
+(6.9s against 185.9s for the same six blobs). λ3 and λ4 trade tolerance
+for speed — λ3 tolerates 0.255 where 1D-RS tolerates 0.499, but decodes
+roughly 39× faster (4.8s) — and inside a deadline that trade is strongly
+favourable. ω1024 λ2, decoding 15× faster than 1D-RS, misses the slot by
+under two seconds.
 
 There is a visible progression inside the three ω1024 rows, and it is a
 bandwidth-for-compute trade. λ2 fetches 1326 KiB and decodes for 12.7s;
@@ -424,7 +437,7 @@ decode cost is read from `benchmark_results.json`, so they should be re-run
 whenever that file changes:
 
 ```
-S=1D-RS,2D-RS,BC-1024-L2,BC-1024-L3,BC-1024-L4,BC-2048-L2
+S=1D-RS,2D-RS,BC-1024-L2,BC-1024-L3,BC-1024-L4,BC-2048-L2,BC-512-L2
 python3 network_sim.py --schemes $S --adversarial 0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8 \
     --peers 64 --blobs 1 --downlink 50 --replication 4 --trials 30 --json docs/runA.json --no-visuals
 python3 network_sim.py --schemes $S --adversarial 0,0.2,0.4,0.6 \
