@@ -73,8 +73,9 @@ takes 40 real seconds still takes 40 real seconds. So decode is handled two
 ways, chosen by `--real-decode`:
 
   * calibrated (default): decode time is interpolated from the measured
-    curve already in benchmark_results.json, and success is decided by the
-    decoder's own budget rule. Fast enough to sweep hundreds of rounds.
+    curve already in benchmark_results.json, and success is read off the
+    same sweep's measured transition (see DecodeModel.recovers). Fast
+    enough to sweep hundreds of rounds.
   * real: the emergent mask is handed to the actual adapter and decoded for
     real. Slow (1D-RS runs to ~80s per call) but it is ground truth, and it
     is the only way to find out how the schemes behave under CLUSTERED

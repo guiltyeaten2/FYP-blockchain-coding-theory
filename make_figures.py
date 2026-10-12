@@ -1262,6 +1262,12 @@ def fig_net_gather_vs_decode(runB):
          for s in schemes]
     d = [next(r for r in rows if r["scheme"] == s)["mean_decode_s"]
          for s in schemes]
+    # Nothing was lost, so nothing was reconstructed. Under --real-decode the
+    # decoder still takes a millisecond or so to return; that is call
+    # overhead, not decode work, and on a log axis it would read as a bar.
+    nothing = [next(r for r in rows if r["scheme"] == s)["mean_erasure_fraction"] == 0
+               for s in schemes]
+    d = [0.0 if z else v for v, z in zip(d, nothing)]
     x = range(len(schemes))
     w = 0.38
     fig, ax = plt.subplots(figsize=(COL2, 2.9))
@@ -1272,8 +1278,8 @@ def fig_net_gather_vs_decode(runB):
         ax.axhline(deadline, color="#444", lw=1.1, ls="--",
                    label=f"sampling deadline ({deadline:.0f}s)")
     ax.set_yscale("log")
-    for i, v in enumerate(d):
-        if v <= 0:
+    for i, z in enumerate(nothing):
+        if z:
             # Genuine zero, not missing data: custody replication left no
             # erasures at this adversary level, so no decode ran. Centred over
             # the whole group, just above its gather bar: the empty decode
@@ -1318,7 +1324,7 @@ def fig_net_throughput(runB):
     ax.axhline(target, color="#444", ls="--", lw=1.1)
     ax.set_xlabel("Peers refusing to serve (%)")
     ax.set_ylabel("Blobs reconstructed per slot (count)")
-    ax.set_title("Throughput broadly inverts the tolerance ordering")
+    ax.set_title("Tolerance does not buy throughput")
     ax.xaxis.set_major_formatter(FuncFormatter(_pct))
     _label_ends(ax, series)
     # Labelled on the line, after the scheme names: the curves that keep up

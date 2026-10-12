@@ -209,15 +209,15 @@ Each entry gives a short caption (the title, as a noun phrase) and a full captio
 
 ### 05-throughput-blobs-per-slot
 
-**Short.** Throughput broadly inverts the tolerance ordering
+**Short.** Tolerance does not buy throughput
 
-**Full.** Throughput broadly inverts the tolerance ordering. Blobs reconstructed per slot out of six, against withholding, with a dashed line at six.
+**Full.** Tolerance does not buy throughput. Blobs reconstructed per slot out of six, against withholding, with a dashed line at six.
 
 ```latex
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/05-throughput-blobs-per-slot}
-  \caption{Throughput broadly inverts the tolerance ordering.}
+  \caption{Tolerance does not buy throughput.}
   \label{fig:05-throughput-blobs-per-slot}
 \end{figure}
 ```

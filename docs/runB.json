@@ -14,7 +14,7 @@
     "seed": 12345
   },
   "speedup": 1.0,
-  "real_decode": false,
+  "real_decode": true,
   "rows": [
     {
       "scheme": "1D-RS",
@@ -25,10 +25,10 @@
       "mean_erasure_fraction": 0.3359375,
       "mean_kib_fetched": 1043.90625,
       "mean_gather_s": 0.7804260587686186,
-      "mean_decode_s": 185.89683749999998,
-      "mean_total_s": 186.6772635587686,
+      "mean_decode_s": 139.54574971199037,
+      "mean_total_s": 140.326175770759,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 0.38569239031797464
+      "blobs_per_slot": 0.5130903026789624
     },
     {
       "scheme": "1D-RS",
@@ -39,10 +39,10 @@
       "mean_erasure_fraction": 0.33645833333333336,
       "mean_kib_fetched": 1043.0875,
       "mean_gather_s": 1.5868843339036,
-      "mean_decode_s": 186.486965,
-      "mean_total_s": 188.07384933390358,
+      "mean_decode_s": 137.41035079956055,
+      "mean_total_s": 138.99723513346413,
       "mean_timeouts": 122.46666666666667,
-      "blobs_per_slot": 0.38282834245696884
+      "blobs_per_slot": 0.5179959150328862
     },
     {
       "scheme": "1D-RS",
@@ -53,10 +53,10 @@
       "mean_erasure_fraction": 0.34765625,
       "mean_kib_fetched": 1027.8723958333333,
       "mean_gather_s": 3.1417643217457463,
-      "mean_decode_s": 194.065795,
-      "mean_total_s": 197.20755932174572,
+      "mean_decode_s": 140.81148233413697,
+      "mean_total_s": 143.9532466558827,
       "mean_timeouts": 348.96666666666664,
-      "blobs_per_slot": 0.36509756648086406
+      "blobs_per_slot": 0.5001623907247783
     },
     {
       "scheme": "1D-RS",
@@ -67,10 +67,10 @@
       "mean_erasure_fraction": 0.5143229166666666,
       "mean_kib_fetched": 753.4546875,
       "mean_gather_s": 3.997448097156371,
-      "mean_decode_s": 240.94458416666666,
-      "mean_total_s": 244.93948036097942,
+      "mean_decode_s": 174.34758958816528,
+      "mean_total_s": 178.342485782478,
       "mean_timeouts": 482.5,
-      "blobs_per_slot": 0.14697508113818572
+      "blobs_per_slot": 0.20185879905200338
     },
     {
       "scheme": "2D-RS",
@@ -81,10 +81,10 @@
       "mean_erasure_fraction": 0.21212121212121213,
       "mean_kib_fetched": 1277.25,
       "mean_gather_s": 0.9533856735642854,
-      "mean_decode_s": 15.711545454545456,
-      "mean_total_s": 16.664931128109743,
+      "mean_decode_s": 8.396329927444459,
+      "mean_total_s": 9.349715601008743,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 4.320449898442921
+      "blobs_per_slot": 6.0
     },
     {
       "scheme": "2D-RS",
@@ -95,24 +95,24 @@
       "mean_erasure_fraction": 0.2128787878787879,
       "mean_kib_fetched": 1276.021875,
       "mean_gather_s": 1.984351682303841,
-      "mean_decode_s": 15.872454545454548,
-      "mean_total_s": 17.856806227758387,
+      "mean_decode_s": 8.410085916519165,
+      "mean_total_s": 10.394437598823005,
       "mean_timeouts": 152.03333333333333,
-      "blobs_per_slot": 4.032076009654855
+      "blobs_per_slot": 6.0
     },
     {
       "scheme": "2D-RS",
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 30,
+      "recovered": 29,
       "mean_erasure_fraction": 0.24823232323232325,
       "mean_kib_fetched": 1221.6432291666667,
       "mean_gather_s": 3.718937014326059,
-      "mean_decode_s": 17.01232,
-      "mean_total_s": 20.731257014326058,
+      "mean_decode_s": 8.760180226687726,
+      "mean_total_s": 12.46942541392158,
       "mean_timeouts": 398.8333333333333,
-      "blobs_per_slot": 3.473016612077375
+      "blobs_per_slot": 5.581652537276864
     },
     {
       "scheme": "2D-RS",
@@ -123,10 +123,10 @@
       "mean_erasure_fraction": 0.5174242424242425,
       "mean_kib_fetched": 768.6015625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 18.993654545454547,
-      "mean_total_s": 22.993654545454547,
+      "mean_decode_s": 11.187185525894165,
+      "mean_total_s": 15.187185525894165,
       "mean_timeouts": 481.1666666666667,
-      "blobs_per_slot": 0.20875324496639783
+      "blobs_per_slot": 0.3160559270060931
     },
     {
       "scheme": "BC-1024-L2",
@@ -137,10 +137,10 @@
       "mean_erasure_fraction": 0.15625,
       "mean_kib_fetched": 1326.375,
       "mean_gather_s": 0.9907224021807299,
-      "mean_decode_s": 12.680625,
-      "mean_total_s": 13.67134740218073,
+      "mean_decode_s": 12.636688899993896,
+      "mean_total_s": 13.627411302174627,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 5.26648894815702
+      "blobs_per_slot": 5.283468620963281
     },
     {
       "scheme": "BC-1024-L2",
@@ -151,38 +151,38 @@
       "mean_erasure_fraction": 0.15677083333333333,
       "mean_kib_fetched": 1325.4880208333334,
       "mean_gather_s": 2.0281391665766733,
-      "mean_decode_s": 12.71897125,
-      "mean_total_s": 14.747110416576673,
+      "mean_decode_s": 12.766269397735595,
+      "mean_total_s": 14.79440856431227,
       "mean_timeouts": 155.76666666666668,
-      "blobs_per_slot": 4.88231239654024
+      "blobs_per_slot": 4.866703504030678
     },
     {
       "scheme": "BC-1024-L2",
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 29,
+      "recovered": 30,
       "mean_erasure_fraction": 0.21432291666666667,
       "mean_kib_fetched": 1242.1119791666667,
       "mean_gather_s": 3.788751443994186,
-      "mean_decode_s": 17.64963879310345,
-      "mean_total_s": 21.431105804131914,
+      "mean_decode_s": 18.34038887023926,
+      "mean_total_s": 22.129140314233442,
       "mean_timeouts": 408.06666666666666,
-      "blobs_per_slot": 3.2476159016760175
+      "blobs_per_slot": 3.2536284273858422
     },
     {
       "scheme": "BC-1024-L2",
       "adversarial": 0.6,
       "peers": 64,
       "trials": 30,
-      "recovered": 1,
+      "recovered": 2,
       "mean_erasure_fraction": 0.5114583333333333,
       "mean_kib_fetched": 755.70625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 25.4716875,
-      "mean_total_s": 29.4716875,
+      "mean_decode_s": 29.385831356048584,
+      "mean_total_s": 33.385831356048584,
       "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.0814340882245036
+      "blobs_per_slot": 0.14377356516330614
     },
     {
       "scheme": "BC-1024-L3",
@@ -193,8 +193,8 @@
       "mean_erasure_fraction": 0.046875,
       "mean_kib_fetched": 1498.3125,
       "mean_gather_s": 1.1147356418445304,
-      "mean_decode_s": 4.7637,
-      "mean_total_s": 5.878435641844531,
+      "mean_decode_s": 4.673966264724731,
+      "mean_total_s": 5.788701906569262,
       "mean_timeouts": 0.0,
       "blobs_per_slot": 6.0
     },
@@ -207,8 +207,8 @@
       "mean_erasure_fraction": 0.04739583333333333,
       "mean_kib_fetched": 1497.3572916666667,
       "mean_gather_s": 2.2591276032421015,
-      "mean_decode_s": 4.8127812500000005,
-      "mean_total_s": 7.071908853242102,
+      "mean_decode_s": 4.87428126335144,
+      "mean_total_s": 7.133408866593542,
       "mean_timeouts": 175.2,
       "blobs_per_slot": 6.0
     },
@@ -217,28 +217,28 @@
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 24,
+      "recovered": 26,
       "mean_erasure_fraction": 0.18333333333333332,
       "mean_kib_fetched": 1296.9,
       "mean_gather_s": 3.939473230243949,
-      "mean_decode_s": 16.24075546875,
-      "mean_total_s": 20.165097006554934,
+      "mean_decode_s": 17.50947618484497,
+      "mean_total_s": 21.43963760435722,
       "mean_timeouts": 416.8333333333333,
-      "blobs_per_slot": 2.8564206748559826
+      "blobs_per_slot": 2.9104969566891525
     },
     {
       "scheme": "BC-1024-L3",
       "adversarial": 0.6,
       "peers": 64,
       "trials": 30,
-      "recovered": 0,
+      "recovered": 1,
       "mean_erasure_fraction": 0.5114583333333333,
       "mean_kib_fetched": 755.70625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": null,
-      "mean_total_s": null,
+      "mean_decode_s": 32.09616708755493,
+      "mean_total_s": 36.09616708755493,
       "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.0
+      "blobs_per_slot": 0.06648905392582419
     },
     {
       "scheme": "BC-1024-L4",
@@ -249,8 +249,8 @@
       "mean_erasure_fraction": 0.0,
       "mean_kib_fetched": 1572.0,
       "mean_gather_s": 1.1738560050410767,
-      "mean_decode_s": 0.0,
-      "mean_total_s": 1.1738560050410767,
+      "mean_decode_s": 0.006715536117553711,
+      "mean_total_s": 1.1805715411586304,
       "mean_timeouts": 0.0,
       "blobs_per_slot": 6.0
     },
@@ -263,8 +263,8 @@
       "mean_erasure_fraction": 0.0013020833333333333,
       "mean_kib_fetched": 1569.953125,
       "mean_gather_s": 2.36740044833354,
-      "mean_decode_s": 0.19410000000000002,
-      "mean_total_s": 2.56150044833354,
+      "mean_decode_s": 0.07518014907836915,
+      "mean_total_s": 2.4425805974119092,
       "mean_timeouts": 184.93333333333334,
       "blobs_per_slot": 6.0
     },
@@ -273,14 +273,14 @@
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 19,
+      "recovered": 21,
       "mean_erasure_fraction": 0.17890625,
       "mean_kib_fetched": 1304.4734375,
       "mean_gather_s": 3.970500876629233,
-      "mean_decode_s": 6.978277302631579,
-      "mean_total_s": 10.931699739414578,
+      "mean_decode_s": 7.6982623508998325,
+      "mean_total_s": 11.65612074608445,
       "mean_timeouts": 418.06666666666666,
-      "blobs_per_slot": 3.8
+      "blobs_per_slot": 4.199999999999999
     },
     {
       "scheme": "BC-1024-L4",
@@ -305,10 +305,10 @@
       "mean_erasure_fraction": 0.15625,
       "mean_kib_fetched": 1326.375,
       "mean_gather_s": 0.9907224021807299,
-      "mean_decode_s": 24.671475,
-      "mean_total_s": 25.66219740218073,
+      "mean_decode_s": 24.872627830505373,
+      "mean_total_s": 25.863350232686102,
       "mean_timeouts": 0.0,
-      "blobs_per_slot": 2.805683350946461
+      "blobs_per_slot": 2.783862080984636
     },
     {
       "scheme": "BC-2048-L2",
@@ -319,38 +319,38 @@
       "mean_erasure_fraction": 0.15677083333333333,
       "mean_kib_fetched": 1325.4880208333334,
       "mean_gather_s": 2.0281391665766733,
-      "mean_decode_s": 24.74366625,
-      "mean_total_s": 26.771805416576676,
+      "mean_decode_s": 24.83207187652588,
+      "mean_total_s": 26.860211043102552,
       "mean_timeouts": 155.76666666666668,
-      "blobs_per_slot": 2.689396507992649
+      "blobs_per_slot": 2.6805448357967734
     },
     {
       "scheme": "BC-2048-L2",
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 29,
+      "recovered": 28,
       "mean_erasure_fraction": 0.21432291666666667,
       "mean_kib_fetched": 1242.1119791666667,
       "mean_gather_s": 3.788751443994186,
-      "mean_decode_s": 34.59236573275862,
-      "mean_total_s": 38.37383274378709,
+      "mean_decode_s": 34.09657614571707,
+      "mean_total_s": 37.87023840713942,
       "mean_timeouts": 408.06666666666666,
-      "blobs_per_slot": 1.8137359503467523
+      "blobs_per_slot": 1.7744805109896336
     },
     {
       "scheme": "BC-2048-L2",
       "adversarial": 0.6,
       "peers": 64,
       "trials": 30,
-      "recovered": 1,
+      "recovered": 2,
       "mean_erasure_fraction": 0.5114583333333333,
       "mean_kib_fetched": 755.70625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 50.356350000000006,
-      "mean_total_s": 54.356350000000006,
+      "mean_decode_s": 58.71214199066162,
+      "mean_total_s": 62.71214199066162,
       "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.04415307503171202
+      "blobs_per_slot": 0.07654020174776938
     },
     {
       "scheme": "BC-512-L2",
@@ -361,8 +361,8 @@
       "mean_erasure_fraction": 0.15625,
       "mean_kib_fetched": 1326.375,
       "mean_gather_s": 0.9907224021807299,
-      "mean_decode_s": 6.8488500000000005,
-      "mean_total_s": 7.839572402180731,
+      "mean_decode_s": 6.999526071548462,
+      "mean_total_s": 7.990248473729192,
       "mean_timeouts": 0.0,
       "blobs_per_slot": 6.0
     },
@@ -375,8 +375,8 @@
       "mean_erasure_fraction": 0.15677083333333333,
       "mean_kib_fetched": 1325.4880208333334,
       "mean_gather_s": 2.0281391665766733,
-      "mean_decode_s": 6.870911250000001,
-      "mean_total_s": 8.899050416576674,
+      "mean_decode_s": 7.022001791000366,
+      "mean_total_s": 9.05014095757704,
       "mean_timeouts": 155.76666666666668,
       "blobs_per_slot": 6.0
     },
@@ -385,28 +385,28 @@
       "adversarial": 0.4,
       "peers": 64,
       "trials": 30,
-      "recovered": 29,
+      "recovered": 30,
       "mean_erasure_fraction": 0.21432291666666667,
       "mean_kib_fetched": 1242.1119791666667,
       "mean_gather_s": 3.788751443994186,
-      "mean_decode_s": 9.555846336206896,
-      "mean_total_s": 13.337313347235364,
+      "mean_decode_s": 10.05294828414917,
+      "mean_total_s": 13.841699728143356,
       "mean_timeouts": 408.06666666666666,
-      "blobs_per_slot": 5.2184422895355524
+      "blobs_per_slot": 5.201673307043892
     },
     {
       "scheme": "BC-512-L2",
       "adversarial": 0.6,
       "peers": 64,
       "trials": 30,
-      "recovered": 1,
+      "recovered": 2,
       "mean_erasure_fraction": 0.5114583333333333,
       "mean_kib_fetched": 755.70625,
       "mean_gather_s": 4.0,
-      "mean_decode_s": 13.630987500000003,
-      "mean_total_s": 17.630987500000003,
+      "mean_decode_s": 17.41185235977173,
+      "mean_total_s": 21.41185235977173,
       "mean_timeouts": 483.03333333333336,
-      "blobs_per_slot": 0.136123969233147
+      "blobs_per_slot": 0.22417490646527008
     }
   ]
 }

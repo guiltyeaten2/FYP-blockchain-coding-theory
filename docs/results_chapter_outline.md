@@ -194,13 +194,16 @@ before the deadline. Make that the opening sentence of the section.
   for all seven schemes (2D-RS, with 132 cells rather than 128, differs only
   in the fourth decimal). This is the network layer's own measurement and
   does not depend on the coding benchmark.
-- **What the thresholds mean in withholding terms** (net `02`): BC ω1024 λ4
-  breaks first, at 70% withholding (5/30 recovered), and 1D-RS never does
-  up to 80%. The order itself is inherited from the benchmark — the
-  simulation reads recovery off the benchmark's measured curve — so present
-  this as what the thresholds mean operationally, not as an independent
-  confirmation of them. **Do not call it cross-validation**; a marker who
-  reads the method will see why.
+- **What each scheme survives when peers withhold** (net `02`), every
+  trial decoded for real: BC ω1024 λ4 breaks first (17/30 at 70%), and at
+  80% the λ2 rows outlast 2D-RS — ω1024 λ2 18/30 and ω512 λ2 14/30 against
+  2D-RS's 7/30 — the reverse of the benchmark's order. 1D-RS recovers every
+  trial. The network loses whole cells where the benchmark erases scattered
+  symbols, and that changes who fails near the thresholds. This is an
+  independent measurement and a genuine finding — give it room in §C. (The
+  simulator's quick calibrated mode, which reads recovery off the
+  benchmark's curves, gets exactly these points wrong; the network report
+  shows the side-by-side.)
 - **Latency** (net `03`): withholding costs time, not just data, because
   the client must burn its request timeout before falling back. The scheme
   needing the most cells hits the deadline first — BC ω1024 λ4 at 60%
@@ -209,16 +212,17 @@ before the deadline. Make that the opening sentence of the section.
   by BC ω1024 λ4 (the whole codeword), for 0.73 MiB of payload. Same
   ordering as the benchmark's surviving-data figure by construction; the
   measured part is the overhead above it.
-- **Throughput** (net `05`): blobs reconstructed per slot broadly inverts
-  the tolerance ordering — the scheme surviving the most erasure rebuilds
-  the fewest blobs (1D-RS, 0.39 of six). Two exceptions: ω2048 λ2, whose
-  large blocks make it slower to decode than 2D-RS, and ω512 λ2, which keeps
-  up with all six while being the most tolerant block-circulant row.
+- **Throughput** (net `05`): tolerance does not buy throughput. The scheme
+  surviving the most erasure rebuilds the fewest blobs (1D-RS, 0.51 of six),
+  while 2D-RS, ω512 λ2, ω1024 λ3 and λ4 keep up with all six until 20%
+  withholding; ω1024 λ2 manages 5.3 and ω2048 λ2, the slowest
+  block-circulant decode, 2.8.
 - **Does it fit in a slot?** (net `06`): at six blobs and no adversaries
-  only BC ω512 λ2 (7.8 s), ω1024 λ3 (5.9 s) and λ4 (1.2 s) finish inside
-  twelve seconds, with ω1024 λ2 just over at 13.7 s; by 40% withholding
-  only λ4 still averages under twelve, and it recovers in 19 of 30. 1D-RS takes 187 s — roughly
-  fifteen slots of work for one slot of data.
+  2D-RS (9.3 s), BC ω512 λ2 (8.0 s), ω1024 λ3 (5.8 s) and λ4 (1.2 s) finish
+  inside twelve seconds, with ω1024 λ2 just over at 13.6 s; by 40%
+  withholding only λ4 still averages under twelve (11.7 s), and it recovers
+  in 21 of 30. 1D-RS takes 140 s — roughly twelve slots of work for one slot
+  of data.
 
 ### B.5 Scalability — **net 08**
 
@@ -272,12 +276,13 @@ the tolerance numbers alone do not make.
 
 ### C.5 The result that reframes the rest — **net 07, net 06**
 
-Every scheme gathers in about a second; decode runs from about 5 s to 186 s
-above that, and at six blobs most schemes miss the 12-second slot. The one
-exception, BC ω1024 λ4, avoids decoding by ending up with the whole
-codeword. **Bandwidth was the expected constraint and is not close.** Decode
-arithmetic is the binding one: cutting the link from 25 to 5 Mbps moves
-2D-RS's six-blob total by only 6%.
+Every scheme gathers in about a second; decode runs from about 5 s to 140 s
+above that, and at six blobs 1D-RS, ω2048 λ2 and ω1024 λ2 miss the
+12-second slot on decode time alone. BC ω1024 λ4 avoids decoding entirely
+by ending up with the whole codeword. **Bandwidth was the expected
+constraint and is not close.** Decode arithmetic is the binding one: cutting
+the link from 25 to 5 Mbps moves 2D-RS's six-blob total by about 11% (9.5 s
+to 10.6 s), and it still fits the slot.
 
 This has a consequence worth stating: it reorders the research question's own
 priorities. A scheme's erasure tolerance matters less than expected, because
@@ -292,7 +297,11 @@ everything else.
 - **Random, not adversarial, erasures.** Patterns are drawn i.i.d.; a real
   adversary chooses the worst pattern. Measured tolerances are therefore
   upper bounds on adversarial performance — directly relevant to 2D-RS and
-  the λ=2 rows, which exceed their worst-case guarantees.
+  the λ=2 rows, which exceed their worst-case guarantees. *How* erasures
+  cluster matters too, and the network runs show it: under cell-level loss
+  the block-circulant rows recover more often than their i.i.d. thresholds
+  predict and 2D-RS less often (net 02). Treat the benchmark's thresholds as
+  behaviour under scattered loss, not a universal ranking.
 - **Single-threaded Python.** Relative comparisons hold; absolute seconds
   would not survive an optimised implementation.
 - **The block-circulant rows carry a ~2.3× implementation penalty** that the
@@ -313,28 +322,27 @@ everything else.
   256-unknown budget and was skipped. So BC thresholds are exactly what
   phase 1 achieves — a limit of this implementation and its layout choice,
   not of the code. Say which.
-- **Network recovery is calibrated, not re-decoded.** The simulation reads
-  recovery and download size off the benchmark's measured curves, so its
-  failure and bandwidth orderings are inherited from the benchmark.
-  `--real-decode` checked decode cost and recovery under clustered erasure,
-  but only at 1–10% erasure, far below every threshold.
+- **The network's fetch policy is calibrated.** How much a node downloads
+  is set from the benchmark's measured tolerance, so the bandwidth ordering
+  follows the benchmark by construction. Recovery and decode time are
+  measured by the real decoders.
+- **One blob decoded per slot.** The six-blob run decodes the first blob's
+  erasure pattern and counts its time six times; the other five blobs lose
+  different cells.
 - **One network topology**, where the brief asks for several.
 - **Simulated network.** Latency and bandwidth are modelled, not measured on
   real hardware.
 
 ### C.7 Limitations and further work
 
-Four concrete items, each with a named fix:
+Three concrete items, each with a named fix:
 
 1. Implement Algorithm 1's auxiliary GRS construction for phase 2 — would
    raise the correction radius from ρ toward 2ρ and drop the cost from cubic
    to quadratic.
 2. Replace the NTT path's polynomial division with Newton iteration — the
    transform is only 12% of that decode; ~80% is a schoolbook division.
-3. Run the network's near-threshold points with `--real-decode`, which would
-   turn the inherited failure ordering into an independent check of how the
-   codes behave under clustered, cell-level erasure.
-4. Add further network topologies.
+3. Add further network topologies.
 
 ---
 
@@ -367,7 +375,8 @@ criterion or a brief item; cut one and that item goes unanswered.
 | bench 08 (the trade-off — if you keep one, keep this) | bench 09 (bandwidth) | bench 04 (guarantee vs behaviour) |
 | bench 01 or 02 (tolerance) | net 03 (latency) | bench 06 (cost per erasure) |
 | bench 03 (theory agreeing) | net 04 (bandwidth saturation) | bench 07 (encode vs decode) |
-| bench 05 (decode cost) | net 05 (throughput) | net 02 (withholding at which each breaks) |
+| bench 05 (decode cost) | net 05 (throughput) | |
 | net 07, net 06 (the bottleneck) | net 08 (scalability) | |
+| net 02 (cell-level loss changes who fails) | | |
 | net 01 (p⁴) | | |
 | method 01 (move to methodology) | | |

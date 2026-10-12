@@ -289,7 +289,7 @@ half the network is hostile.
 
 <figure>
 <img src="figures/net_gather_vs_decode.svg" alt="Gather time against decode time per scheme on a log axis, with the four-second sampling deadline marked.">
-<figcaption>The central result of the network layer. Every scheme gathers its data in about a second; decode runs from about 5&nbsp;s to 186&nbsp;s above that, and every scheme except one blows through the four-second deadline. Apart from the one scheme that avoids decoding altogether, the bottleneck is arithmetic &mdash; not bandwidth, not latency.</figcaption>
+<figcaption>The central result of the network layer. Every scheme gathers its data in about a second; decode runs from about 5&nbsp;s to 140&nbsp;s above that, and every scheme except one blows through the four-second deadline. Apart from the one scheme that avoids decoding altogether, the bottleneck is arithmetic &mdash; not bandwidth, not latency.</figcaption>
 </figure>
 
 That last figure is the one that should change how you read the rest of the

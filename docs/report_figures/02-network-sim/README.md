@@ -18,9 +18,9 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Question.** At what level of peer withholding does each scheme stop recovering the blob?
 
-**Data.** Same run. No erasure rate is injected here - losses are whatever failed to arrive before the 4 s deadline. Whether a realised erasure is survivable is read from the coding benchmark's measured recovery curve (calibrated mode).
+**Data.** Same run. No erasure rate is injected here - losses are whatever failed to arrive before the 4 s deadline, a whole cell at a time - and every trial is decoded by the real decoder (--real-decode).
 
-**Shows.** BC omega1024 lambda4 breaks first (5/30 at 70% withholding, which yields 0.233 erasure against its 0.204 threshold), with omega1024 lambda3 close behind (21/30). 2D-RS and the lambda2 rows hold until 80%, where erasure reaches 0.400; 1D-RS is still at 30/30 when 80% of peers refuse.
+**Shows.** BC omega1024 lambda4 breaks first (17/30 at 70% withholding, erasure 0.233), with omega1024 lambda3 close behind (28/30). At 80% (erasure 0.400) the lambda2 rows outlast 2D-RS - omega1024 lambda2 18/30 and omega512 lambda2 14/30 against 2D-RS's 7/30 - the reverse of the coding benchmark's order. 1D-RS recovers every trial.
 
 ## 03-latency-gather-time
 
@@ -50,7 +50,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run. Throughput implied by the measured time - blobs attempted, scaled by recovery rate and by the share of the work that fits in the 12 s slot - not an independently measured rate.
 
-**Shows.** The ordering broadly inverts the tolerance ordering. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.4 of the six, because one 8192-length polynomial division costs about 31 s per blob. BC omega1024 lambda3 and lambda4 keep up with all six until 20% withholding, and so does omega512 lambda2; at zero withholding omega1024 lambda2 manages 5.3, 2D-RS 4.3 and omega2048 lambda2 2.8. Two rows break a clean inversion: omega2048 lambda2, whose large blocks are slow to decode, and omega512 lambda2, which keeps up with all six while being the most tolerant block-circulant row.
+**Shows.** Tolerance does not buy throughput. 1D-RS tolerates the most erasure of any scheme and reconstructs the fewest blobs, about 0.5 of the six, because one 8192-length polynomial division costs about 23 s per blob. 2D-RS, omega512 lambda2, omega1024 lambda3 and lambda4 keep up with all six until 20% withholding; at zero withholding omega1024 lambda2 manages 5.3 and omega2048 lambda2, the slowest block-circulant decode, 2.8.
 
 ## 06-time-budget-vs-slot
 
@@ -60,7 +60,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run. Gather plus decode summed per slot.
 
-**Shows.** At zero adversaries only BC omega512 lambda2 (7.8 s), omega1024 lambda3 (5.9 s) and lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 just over at 13.7 s. By 40% withholding only lambda4 still averages under 12 s, and it recovers in only 19 of 30 trials. 1D-RS is not close at any setting - 187 s, roughly fifteen slots of work for one slot of data.
+**Shows.** At zero adversaries 2D-RS (9.3 s), BC omega512 lambda2 (8.0 s), omega1024 lambda3 (5.8 s) and lambda4 (1.2 s) finish inside a slot, with omega1024 lambda2 just over at 13.6 s. By 40% withholding only lambda4 still averages under 12 s (11.7 s), and it recovers in only 21 of 30 trials. 1D-RS is not close at any setting - 140 s, roughly twelve slots of work for one slot of data.
 
 ## 07-gather-vs-decode
 
@@ -70,7 +70,7 @@ The same schemes inside a simulated peer-to-peer network, where the erasure patt
 
 **Data.** Same six-blob run, at zero adversaries so neither side is inflated by timeouts.
 
-**Shows.** Every scheme gathers in about one second. Decode runs from effectively zero - omega1024 lambda4, which ends up holding the whole codeword - to 186 s for 1D-RS. Apart from that one scheme, arithmetic rather than bandwidth or latency decides the outcome.
+**Shows.** Every scheme gathers in about one second. Decode runs from effectively zero - omega1024 lambda4, which ends up holding the whole codeword - to 140 s for 1D-RS. Apart from that one scheme, arithmetic rather than bandwidth or latency decides the outcome.
 
 ## 08-scalability-peer-count
 
