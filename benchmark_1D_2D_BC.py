@@ -284,7 +284,7 @@ BC_VARIANTS = [
 #
 # Pairs skipped by this cap are counted and their positions stay honestly
 # flagged as erased. Nothing is guessed at.
-BC_PAIR_UNKNOWN_CAP = 256
+BC_PAIR_UNKNOWN_CAP = None
 
 def _grid(lo, hi, step):
     n = int(round((hi - lo) / step)) + 1
@@ -541,8 +541,11 @@ class BCAdapter:
 
     def encode(self, blob):
         m = GF(blob)
+        if self.lambda_ == 2:
+            return bc.encode_bc_paper(GF, m, self.mu, self.lambda_,
+                                    self.omega, self.rho)
         return bc.encode_bc_structured(GF, m, self.mu, self.lambda_,
-                                       self.omega, self.rho)
+                                    self.omega, self.rho)
 
     def random_mask(self, rate, rng):
         return rng.random(self.n) < rate
@@ -574,6 +577,15 @@ class BCAdapter:
         return recovered, ok, time.time() - t0
 
     def extract_message(self, recovered):
+        if self.lambda_ == 2:
+            # Paper layout: the message occupies the even-indexed segments
+            # (0, 2, 4, ..., 2*mu-2), each of omega symbols, starting at
+            # j*(omega+rho). The odd-indexed segments are parity.
+            msg = []
+            for j in range(self.mu):
+                start = j * (self.omega + self.rho)
+                msg.extend(int(v) for v in recovered[start:start + self.omega])
+            return msg
         return [int(v) for v in recovered[:self.k]]
 
 

@@ -1081,7 +1081,7 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                 if next_i == i:
                     continue
 
-                sup_i, sup_j = supports[i], supports[next_i]
+                sup_i, sup_j = supports[i], supports[next_i]          # <-- sup_i defined here
                 combined = np.array(
                     sorted(set(sup_i.tolist()) | set(sup_j.tolist())))
                 pair_mask = mask[combined]
@@ -1094,13 +1094,15 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
                     _note("phase2", f"over compute cap ({num_pair} > {cap})")
                     continue
 
-                # Algorithm 1. No Gaussian fallback: if the auxiliary
-                # construction cannot resolve the pair, the pair's erasures
-                # stay honestly flagged and the decoder moves on. This is
-                # deliberate -- at benchmark sizes the Gaussian fallback is
-                # O(e^3) and takes hours per pair, so it is not a decoder
-                # any deployment would use. See the NTT section of
-                # docs/benchmark_1D_2D_BC_report.md.
+                # <-- J2 check goes HERE, after sup_i / sup_j / num_pair exist
+                if layout == "paper":
+                    sup_before = supports[(i - 1) % mu]
+                    sup_after  = supports[(i + 2) % mu]
+                    overlap_left  = np.intersect1d(sup_i, sup_before)
+                    overlap_right = np.intersect1d(sup_j, sup_after)
+                    if (mask[overlap_left].any() or mask[overlap_right].any()):
+                        _note("phase2", "boundary overlap has erasures")
+                        continue
 
                 new_r, new_mask, ok, reason = _decode_pair_alg1(
                     r, mask, i, mu, omega, rho, p,
@@ -1135,17 +1137,23 @@ def dec_cbc_2_aux_ntt(r_in, mask_in, mu, lambda_, omega, rho,
 # BENCHMARK WRAPPER
 # ==============================================================================
 def dec_cbc_2(H_BC, r_in, mask_in, mu, lambda_, omega, rho,
-              pair_unknown_cap=None):
+              pair_unknown_cap=None, layout=None):
     """Signature-compatible wrapper for the benchmark.
 
-    layout="structured" because benchmark_1D_2D_BC.py encodes every row with
-    encode_bc_structured, including the lambda=2 rows. Leaving it to the
-    default would route lambda=2 into the paper layout and decode nothing.
+    Layout default:
+      - lambda == 2: "paper" (encode_bc_paper + the coset-structured
+        auxiliary code from Algorithm 1), so Phase 2 can run.
+      - lambda != 2: "structured" (the paper only proves Algorithm 1
+        for lambda = 2, so no Phase 2 for higher lambda).
+
+    Callers can override by passing layout explicitly.
     """
+    if layout is None:
+        layout = "paper" if lambda_ == 2 else "structured"
     return dec_cbc_2_aux_ntt(
         r_in, mask_in, mu, lambda_, omega, rho,
         pair_unknown_cap=pair_unknown_cap, verbose=False,
-        layout="structured")
+        layout=layout)
 # ==============================================================================
 # DEMO
 # ==============================================================================
